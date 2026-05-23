@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { AuthLayout } from "@/components/layouts/auth-layout";
+import { authApi } from "@/lib/api/auth";
 import { useAuthStore } from "@/lib/store/auth";
 
 import type { Branch } from "@/types/auth";
@@ -11,6 +12,7 @@ import type { Branch } from "@/types/auth";
 export default function BranchPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const activeBranch = useAuthStore((s) => s.activeBranch);
   const setActiveBranch = useAuthStore((s) => s.setActiveBranch);
 
   useEffect(() => {
@@ -19,7 +21,12 @@ export default function BranchPage() {
     }
   }, [user, router]);
 
-  function handleSelectBranch(branch: Branch) {
+  async function handleSelectBranch(branch: Branch) {
+    try {
+      await authApi.setBranch(branch.id, activeBranch?.id ?? null);
+    } catch {
+      // Log silently — branch switch logging failure must not block UX
+    }
     setActiveBranch(branch);
     router.push("/dashboard");
   }

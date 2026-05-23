@@ -21,4 +21,10 @@ export const authApi = {
 
   user: () =>
     apiClient.get<AuthUser>("/auth/user"),
+
+  setBranch: (branchId: number, fromBranchId: number | null = null) =>
+    apiClient.post<{ id: number; name: string; slug: string }>("/auth/branch", {
+      branch_id: branchId,
+      from_branch_id: fromBranchId,
+    }),
 };
