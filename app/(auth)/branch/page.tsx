@@ -1,0 +1,56 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+import { AuthLayout } from "@/components/layouts/auth-layout";
+import { useAuthStore } from "@/lib/store/auth";
+
+import type { Branch } from "@/types/auth";
+
+export default function BranchPage() {
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const setActiveBranch = useAuthStore((s) => s.setActiveBranch);
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
+    }
+  }, [user, router]);
+
+  function handleSelectBranch(branch: Branch) {
+    setActiveBranch(branch);
+    router.push("/dashboard");
+  }
+
+  if (!user) return null;
+
+  return (
+    <AuthLayout className="max-w-[600px]">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-foreground">Select a branch</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Choose the branch you are working at today.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {user.branches.map((branch) => (
+          <button
+            key={branch.id}
+            type="button"
+            onClick={() => handleSelectBranch(branch)}
+            className="rounded-xl border-2 border-border p-6 text-left transition-colors hover:border-primary hover:bg-primary/5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
+              {branch.name.charAt(0).toUpperCase()}
+            </div>
+            <p className="mt-3 font-semibold text-foreground">{branch.name}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{branch.slug}</p>
+          </button>
+        ))}
+      </div>
+    </AuthLayout>
+  );
+}

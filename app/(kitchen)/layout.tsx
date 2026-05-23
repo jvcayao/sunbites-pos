@@ -1,0 +1,26 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+import { KitchenLayout } from "@/components/layouts/kitchen-layout";
+import { useAuthStore } from "@/lib/store/auth";
+
+export default function KitchenGroupLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const token = useAuthStore((s) => s.token);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!token) {
+      router.replace("/login");
+    }
+  }, [token, router]);
+
+  if (!token) return null;
+
+  return <KitchenLayout>{children}</KitchenLayout>;
+}
