@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { AuthUser, Branch } from "@/types/auth";
 
@@ -11,11 +12,19 @@ interface AuthState {
   setActiveBranch: (branch: Branch) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  token: null,
-  user: null,
-  activeBranch: null,
-  login: (token, user) => set({ token, user }),
-  logout: () => set({ token: null, user: null, activeBranch: null }),
-  setActiveBranch: (branch) => set({ activeBranch: branch }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      activeBranch: null,
+      login: (token, user) => set({ token, user, activeBranch: null }),
+      logout: () => set({ token: null, user: null, activeBranch: null }),
+      setActiveBranch: (branch) => set({ activeBranch: branch }),
+    }),
+    {
+      name: "sunbites-pos-auth",
+      storage: createJSONStorage(() => sessionStorage),
+    }
+  )
+);
