@@ -1,26 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0.141 0.005 285.823);
+  --color-primary: oklch(0.577 0.245 27.325);
+  --color-primary-foreground: oklch(0.971 0.013 17.38);
+  --color-muted: oklch(0.967 0.001 286.375);
+  --color-muted-foreground: oklch(0.556 0.014 285.938);
+  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-border: oklch(0.92 0.004 286.32);
+  --color-input: oklch(0.92 0.004 286.32);
+  --color-ring: oklch(0.577 0.245 27.325);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.141 0.005 285.823);
+  --color-sidebar: oklch(0.985 0 0);
+  --color-sidebar-primary: oklch(0.577 0.245 27.325);
+  --color-sidebar-primary-foreground: oklch(0.971 0.013 17.38);
+  --color-sidebar-foreground: oklch(0.141 0.005 285.823);
+  --color-sidebar-border: oklch(0.92 0.004 286.32);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.141 0.005 285.823);
+  --color-secondary: oklch(0.967 0.001 286.375);
+  --color-secondary-foreground: oklch(0.141 0.005 285.823);
+  --color-accent: oklch(0.967 0.001 286.375);
+  --color-accent-foreground: oklch(0.141 0.005 285.823);
+  --radius-lg: 0.625rem;
+  --radius-md: calc(var(--radius-lg) - 2px);
+  --radius-sm: calc(var(--radius-lg) - 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', sans-serif;
+  }
 }
