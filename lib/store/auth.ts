@@ -3,13 +3,13 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { AuthUser, Branch } from "@/types/auth";
 
-interface AuthState {
+export interface AuthState {
   token: string | null;
   user: AuthUser | null;
   activeBranch: Branch | null;
   login: (token: string, user: AuthUser) => void;
   logout: () => void;
-  setActiveBranch: (branch: Branch) => void;
+  setActiveBranch: (branch: Branch | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(

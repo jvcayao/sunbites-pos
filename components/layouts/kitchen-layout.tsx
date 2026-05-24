@@ -14,6 +14,7 @@ import {
   Archive,
   CalendarDays,
   UserCog,
+  GitBranch,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -48,6 +49,7 @@ const referencesNav: NavItem[] = [
   { label: "Inventory", href: "/references/inventory", icon: Archive },
   { label: "Meal Planner", href: "/references/meal-planner", icon: CalendarDays },
   { label: "Users", href: "/references/users", icon: UserCog },
+  { label: "Branches", href: "/references/branches", icon: GitBranch },
 ];
 
 interface NavGroupProps {
@@ -180,10 +182,11 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
           <button
             type="button"
             onClick={handleLogout}
+            aria-label="Logout"
             className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
-            {!collapsed && <span>Logout</span>}
+            {!collapsed && <span aria-hidden="true">Logout</span>}
           </button>
 
           <button
@@ -211,14 +214,21 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
           <h1 className="text-lg font-semibold">{pageTitle}</h1>
 
           <div className="flex items-center gap-3">
-            {isAdmin && activeBranch && (
-              <Link
-                href="/branch"
-                className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                {activeBranch.name}
-              </Link>
-            )}
+            {activeBranch && (() => {
+              const canSwitch = isAdmin || (user?.branches?.length ?? 0) > 1;
+              return canSwitch ? (
+                <Link
+                  href="/branch"
+                  className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  {activeBranch.name}
+                </Link>
+              ) : (
+                <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-foreground cursor-default">
+                  {activeBranch.name}
+                </span>
+              );
+            })()}
             {user && (
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">

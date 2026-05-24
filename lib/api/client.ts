@@ -42,6 +42,10 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: "An error occurred." }));
+    if (response.status === 422 && typeof error.message === "string" && error.message.includes("No active branch")) {
+      useAuthStore.getState().setActiveBranch(null);
+      if (typeof window !== "undefined") window.location.href = "/branch";
+    }
     throw error as ApiError;
   }
 

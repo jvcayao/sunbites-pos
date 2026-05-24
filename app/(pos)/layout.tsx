@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { KitchenLayout } from "@/components/layouts/kitchen-layout";
 import { useAuthStore } from "@/lib/store/auth";
 
-export default function KitchenGroupLayout({
+export default function PosGroupLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -31,13 +30,13 @@ export default function KitchenGroupLayout({
       router.replace("/branch");
       return;
     }
-    if (user?.roles.includes("cashier")) {
-      router.replace("/pos");
+    if (user && !user.roles.includes("cashier")) {
+      router.replace("/dashboard");
     }
   }, [mounted, token, activeBranch, user, router]);
 
-  const isCashier = user?.roles.includes("cashier");
-  if (!mounted || !token || !activeBranch || isCashier) return null;
+  const isNonCashier = user && !user.roles.includes("cashier");
+  if (!mounted || !token || !activeBranch || isNonCashier) return null;
 
-  return <KitchenLayout>{children}</KitchenLayout>;
+  return <>{children}</>;
 }
