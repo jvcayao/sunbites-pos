@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import { authApi } from "@/lib/api/auth";
+import { getHomeRoute } from "@/lib/auth-utils";
 import { useAuthStore } from "@/lib/store/auth";
 
 import type { Branch } from "@/types/auth";
@@ -28,7 +29,7 @@ export default function BranchPage() {
       // Log silently — branch switch logging failure must not block UX
     }
     setActiveBranch(branch);
-    router.push("/dashboard");
+    router.push(getHomeRoute(user?.roles ?? []));
   }
 
   if (!user) return null;

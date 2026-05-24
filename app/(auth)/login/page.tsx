@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authApi } from "@/lib/api/auth";
+import { getHomeRoute } from "@/lib/auth-utils";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +48,7 @@ export default function LoginPage() {
 
       if (user.branches.length === 1) {
         store.setActiveBranch(user.branches[0]);
-        router.push("/dashboard");
+        router.push(getHomeRoute(user.roles));
       } else {
         router.push("/branch");
       }
