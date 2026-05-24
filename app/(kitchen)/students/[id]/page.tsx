@@ -45,6 +45,7 @@ import { cn } from "@/lib/utils";
 
 import type { ApiError } from "@/types/auth";
 import type { CreateContactPayload, StudentContact, UpdateContactPayload } from "@/types/contact";
+import type { Order } from "@/types/order";
 import type {
   EnrollmentStatus,
   MonthlyPayment,
@@ -481,6 +482,69 @@ function WalletTopUpModal({
             </DialogFooter>
           </form>
         )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ChangeTypeDialog
+// ---------------------------------------------------------------------------
+
+interface ChangeTypeDialogProps {
+  open: boolean;
+  onClose: () => void;
+  studentId: number;
+  currentType: "subscription" | "non_subscription";
+}
+
+function ChangeTypeDialog({
+  open,
+  onClose,
+  studentId,
+  currentType,
+}: ChangeTypeDialogProps) {
+  const queryClient = useQueryClient();
+  const newType = currentType === "subscription" ? "non_subscription" : "subscription";
+  const changeLabel =
+    currentType === "subscription"
+      ? "Switch from Subscription to Wallet (Pay-per-meal)"
+      : "Switch from Wallet (Pay-per-meal) to Subscription";
+
+  const mutation = useMutation({
+    mutationFn: () => studentApi.updateType(studentId, newType),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student", studentId] });
+      toast.success("Student type updated successfully.");
+      onClose();
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to update student type.");
+      onClose();
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{changeLabel}</DialogTitle>
+          <DialogDescription>
+            Ensure all pending subscription balances are settled before
+            switching. This cannot be undone automatically.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending ? "Updating…" : "Confirm"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -1619,6 +1683,121 @@ function parsePositiveInt(raw: string | undefined | null): number | null {
   return n > 0 ? n : null;
 }
 
+// ---------------------------------------------------------------------------
+// Order History Tab
+// ---------------------------------------------------------------------------
+
+function OrderHistoryTab({ studentId }: { studentId: number }) {
+  const [page, setPage] = useState(1);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["student-orders", studentId, page],
+    queryFn: () => studentApi.orders(studentId, page),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2 mt-4">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-12 w-full rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-4 rounded-xl border border-border bg-card p-5">
+        <p className="text-sm text-destructive">Failed to load order history. Please try again.</p>
+      </div>
+    );
+  }
+
+  if (!data?.data.length) {
+    return (
+      <div className="mt-4 rounded-xl border border-dashed border-border p-10 text-center">
+        <p className="text-sm text-muted-foreground">No orders yet.</p>
+      </div>
+    );
+  }
+
+  const { meta } = data;
+
+  return (
+    <div className="mt-4 space-y-4">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/50">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Receipt</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Items</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Method</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Status</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Total</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.data.map((order: Order) => (
+              <tr key={order.id} className="border-b border-border last:border-0">
+                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{order.receipt_number}</td>
+                <td className="px-4 py-3 text-sm">
+                  {order.items?.map((item) => `${item.name} x${item.quantity}`).join(", ") ?? "—"}
+                </td>
+                <td className="px-4 py-3 text-sm">{order.payment_method_label}</td>
+                <td className="px-4 py-3">
+                  <span className={cn(
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                    order.status === "completed"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  )}>
+                    {order.status === "completed" ? "Completed" : "Voided"}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                  ₱{Number(order.total).toFixed(2)}
+                </td>
+                <td className="px-4 py-3 text-right text-xs text-muted-foreground">
+                  {new Date(order.created_at).toLocaleDateString("en-PH", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {meta.last_page > 1 && (
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => p - 1)}
+            disabled={meta.current_page === 1}
+          >
+            Previous
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Page {meta.current_page} of {meta.last_page} &middot; {meta.total} orders
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => p + 1)}
+            disabled={meta.current_page === meta.last_page}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const routerParams = useParams<{ id: string }>();
   const rawId = routerParams?.id ?? params.id;
@@ -1633,10 +1812,16 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const canManageStatus =
     user?.roles.includes("admin") === true || user?.roles.includes("manager") === true;
 
+  const canChangeType =
+    user?.roles.includes("admin") === true ||
+    user?.roles.includes("manager") === true ||
+    user?.roles.includes("supervisor") === true;
+
   const canDeleteStudent = user?.roles.includes("admin") === true;
 
   const [showTopUp, setShowTopUp] = useState(false);
   const [showStatusPicker, setShowStatusPicker] = useState(false);
+  const [showChangeType, setShowChangeType] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -1792,6 +1977,16 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 >
                   {student.student_type_label}
                 </span>
+                {canChangeType && (
+                  <button
+                    type="button"
+                    onClick={() => setShowChangeType(true)}
+                    className="text-[11px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+                    aria-label="Change student type"
+                  >
+                    Change
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1884,46 +2079,6 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 </div>
               )}
             </div>
-
-            {/* Contacts */}
-            {student.contacts && student.contacts.length > 0 && (
-              <div className="rounded-xl border border-border bg-card p-5">
-                <h2 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3 pb-2 border-b border-border">
-                  Contacts
-                </h2>
-                <div className="space-y-3">
-                  {student.contacts.map((contact) => (
-                    <div
-                      key={contact.id}
-                      className="rounded-lg border border-border p-3"
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-semibold">
-                          {contact.full_name}
-                        </p>
-                        <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
-                          {contact.relationship}
-                        </span>
-                        {contact.is_primary && (
-                          <span className="text-xs font-bold text-primary bg-primary/10 rounded-full px-2 py-0.5">
-                            Primary
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {contact.phone}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {contact.email}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {contact.address}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* QR Code */}
             <div className="rounded-xl border border-border bg-card p-5 flex flex-col items-center gap-4">
@@ -2061,11 +2216,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
         {/* Order History Tab */}
         <TabsContent value="orders">
-          <div className="mt-4 rounded-xl border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">
-              Order history will be available in the next update.
-            </p>
-          </div>
+          <OrderHistoryTab studentId={studentId} />
         </TabsContent>
 
         {/* Payment Tab */}
@@ -2136,6 +2287,13 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
         onClose={() => setShowStatusPicker(false)}
         studentId={student.id}
         currentStatus={student.enrollment_status}
+      />
+
+      <ChangeTypeDialog
+        open={showChangeType}
+        onClose={() => setShowChangeType(false)}
+        studentId={student.id}
+        currentType={student.student_type}
       />
 
       <Dialog

@@ -4,7 +4,9 @@ import type { CreateContactPayload, StudentContact, UpdateContactPayload } from 
 
 export const contactApi = {
   list: (studentId: number) =>
-    apiClient.get<StudentContact[]>(`/students/${studentId}/contacts`),
+    apiClient
+      .get<{ data: StudentContact[] }>(`/students/${studentId}/contacts`)
+      .then((res) => res.data),
 
   create: (studentId: number, payload: CreateContactPayload) =>
     apiClient.post<StudentContact>(`/students/${studentId}/contacts`, payload),
