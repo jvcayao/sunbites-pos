@@ -591,8 +591,8 @@ export default function PosPage() {
         <h1 className="text-2xl font-bold text-foreground">Point of Sale</h1>
       </div>
 
-      <Tabs defaultValue="pos" className="mt-6">
-        <TabsList>
+      <Tabs defaultValue="pos" className="mt-6 flex-col">
+        <TabsList className="w-full justify-start h-auto">
           <TabsTrigger value="pos">POS</TabsTrigger>
           <TabsTrigger value="transaction-history">Transaction History</TabsTrigger>
           <TabsTrigger value="menu-mgmt">Menu Management</TabsTrigger>

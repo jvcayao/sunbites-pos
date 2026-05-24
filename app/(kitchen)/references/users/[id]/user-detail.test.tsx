@@ -4,6 +4,7 @@ import { render, screen, waitFor } from "@/__tests__/test-utils";
 import userEvent from "@testing-library/user-event";
 
 import { staffUserFixture } from "@/__tests__/mocks/handlers";
+import { useAuthStore } from "@/lib/store/auth";
 import UserDetailPage from "./page";
 
 const mockPush = jest.fn();
@@ -17,6 +18,24 @@ const API = process.env.NEXT_PUBLIC_API_URL;
 
 beforeEach(() => {
   mockPush.mockClear();
+  // Seed auth store as admin so Edit / Deactivate / Reset actions are rendered
+  useAuthStore.setState({
+    user: {
+      id: 99,
+      first_name: "Test",
+      last_name: "Admin",
+      full_name: "Test Admin",
+      email: "admin@sunbites.test",
+      roles: ["admin"],
+      branches: [],
+    },
+    token: "test-token",
+    activeBranch: null,
+  });
+});
+
+afterEach(() => {
+  useAuthStore.setState({ user: null, token: null, activeBranch: null });
 });
 
 describe("UserDetailPage", () => {

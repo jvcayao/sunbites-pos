@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { branchApi } from "@/lib/api/branches";
 import { userApi } from "@/lib/api/users";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/lib/store/auth";
 
 import type { ApiError } from "@/types/auth";
 
@@ -115,6 +116,9 @@ function FormField({
 // ---------------------------------------------------------------------------
 
 export default function CreateUserPage() {
+  const viewer = useAuthStore((s) => s.user);
+  const isAdmin = viewer?.roles.includes("admin") ?? false;
+
   const router = useRouter();
   const [values, setValues] = useState<Partial<FormData>>({ branch_ids: [] });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -414,7 +418,7 @@ export default function CreateUserPage() {
                   <SelectValue placeholder="Select role…" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  {isAdmin && <SelectItem value="admin">Admin</SelectItem>}
                   <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="supervisor">Supervisor</SelectItem>
                   <SelectItem value="cashier">Cashier</SelectItem>

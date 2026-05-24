@@ -15,9 +15,11 @@ import {
   CalendarDays,
   UserCog,
   GitBranch,
+  ClipboardList,
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Settings,
 } from "lucide-react";
 
 import { AppLogo } from "@/components/app-logo";
@@ -35,11 +37,12 @@ interface NavItem {
 const mainNav: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "POS", href: "/pos", icon: ShoppingCart },
+  { label: "Enrollment", href: "/enrollment", icon: ClipboardList },
+  { label: "Students", href: "/students", icon: Users },
 ];
 
 const reportsNav: NavItem[] = [
   { label: "Sales", href: "/reports/sales", icon: BarChart2 },
-  { label: "Students", href: "/reports/students", icon: Users },
   { label: "Wallet", href: "/reports/wallet", icon: Wallet },
   { label: "Inventory", href: "/reports/inventory", icon: Package },
   { label: "Daily Summary", href: "/reports/daily-summary", icon: FileText },
@@ -48,8 +51,10 @@ const reportsNav: NavItem[] = [
 const referencesNav: NavItem[] = [
   { label: "Inventory", href: "/references/inventory", icon: Archive },
   { label: "Meal Planner", href: "/references/meal-planner", icon: CalendarDays },
+  { label: "Subscription Config", href: "/references/subscription-config", icon: CalendarDays },
   { label: "Users", href: "/references/users", icon: UserCog },
   { label: "Branches", href: "/references/branches", icon: GitBranch },
+  { label: "System Settings", href: "/references/system-settings", icon: Settings },
 ];
 
 interface NavGroupProps {
@@ -104,6 +109,10 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
   const activeBranch = useAuthStore((s) => s.activeBranch);
 
   const isAdmin = user?.roles.includes("admin") ?? false;
+
+  const referencesNavFiltered = isAdmin
+    ? referencesNav
+    : referencesNav.filter((item) => item.href !== "/references/system-settings");
 
   const pageTitle = [...mainNav, ...reportsNav, ...referencesNav].find(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
@@ -171,7 +180,7 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
           />
           <NavGroup
             label="References"
-            items={referencesNav}
+            items={referencesNavFiltered}
             pathname={pathname}
             collapsed={collapsed}
           />

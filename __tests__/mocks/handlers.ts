@@ -3,6 +3,13 @@ import { http, HttpResponse } from "msw";
 import type { AdminBranch } from "@/types/branch";
 import type { InventoryItem } from "@/types/inventory";
 import type { PosMenuItem } from "@/types/pos-menu-item";
+import type { SystemConfiguration } from "@/types/system-configuration";
+import type {
+  EnrolledStudentResponse,
+  MonthlyPayment,
+  PaginatedStudents,
+  Student,
+} from "@/types/student";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -98,6 +105,150 @@ export const adminBranchesFixture: AdminBranch[] = [
     deleted_at: null,
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Spec 05 fixtures
+// ---------------------------------------------------------------------------
+
+export const studentFixture: Student = {
+  id: 1,
+  branch_id: 1,
+  student_number: "ANT-2025-001",
+  first_name: "Maria",
+  last_name: "Santos",
+  full_name: "Maria Santos",
+  grade_level: "Grade 3",
+  section: "Section Mabini",
+  birthday: "2015-03-14",
+  has_photo: false,
+  allergies: null,
+  notes: null,
+  qr_code: "SB-K8mP3xNzQr4w",
+  student_type: "subscription",
+  student_type_label: "Subscription",
+  enrollment_status: "enrolled",
+  enrollment_status_label: "Enrolled",
+  enrollment_date: "2025-06-01",
+  points: 0,
+  total_spent: "0.00",
+  credit_balance: "0.00",
+  wallet_balance: 450.0,
+  contacts: [
+    {
+      id: 1,
+      full_name: "Ana Santos",
+      relationship: "Mother",
+      phone: "09171234567",
+      address: "123 Rizal St",
+      email: "ana@example.com",
+      is_primary: true,
+    },
+  ],
+  monthly_payments: [
+    {
+      id: 1,
+      school_month: "june",
+      school_month_label: "June",
+      year: 2025,
+      status: "paid",
+      amount: "2970.00",
+      recorded_at: "2025-06-15T08:00:00Z",
+    },
+    {
+      id: 2,
+      school_month: "july",
+      school_month_label: "July",
+      year: 2025,
+      status: "unpaid",
+      amount: "2970.00",
+      recorded_at: null,
+    },
+  ],
+};
+
+export const nonSubStudentFixture: Student = {
+  ...studentFixture,
+  id: 2,
+  student_number: "ANT-2025-002",
+  full_name: "Carlo Mendoza",
+  first_name: "Carlo",
+  last_name: "Mendoza",
+  student_type: "non_subscription",
+  student_type_label: "Non-Subscription",
+  credit_balance: "135.00",
+  wallet_balance: 300.0,
+};
+
+export const enrolledStudentFixture: EnrolledStudentResponse = {
+  id: 10,
+  full_name: "Test Student",
+  student_number: "ANT-2025-010",
+  student_type: "subscription",
+  enrollment_date: "2025-06-01",
+  qr_code: "SB-TestQrCode123",
+};
+
+export const paymentsFixture: MonthlyPayment[] = [
+  {
+    id: 1,
+    school_month: "june",
+    school_month_label: "June",
+    year: 2025,
+    status: "paid",
+    amount: "2970.00",
+    recorded_at: "2025-06-15T08:00:00Z",
+  },
+  {
+    id: 2,
+    school_month: "july",
+    school_month_label: "July",
+    year: 2025,
+    status: "unpaid",
+    amount: "2970.00",
+    recorded_at: null,
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Spec 09 fixtures
+// ---------------------------------------------------------------------------
+
+export const systemConfigsFixture: SystemConfiguration[] = [
+  {
+    key: "daily_meal_rate",
+    value: "135",
+    type: "decimal",
+    label: "Daily Meal Rate (₱)",
+    description: "Daily rate used to compute monthly subscription amounts when no override is set.",
+  },
+  {
+    key: "credit_limit",
+    value: "300",
+    type: "decimal",
+    label: "Credit Limit (₱)",
+    description: "Maximum outstanding credit a student may carry.",
+  },
+  {
+    key: "loyalty_point_threshold",
+    value: "1000",
+    type: "decimal",
+    label: "Loyalty Point Threshold (₱)",
+    description: "Amount spent to earn one loyalty point.",
+  },
+];
+
+export const paginatedStudentsFixture: PaginatedStudents = {
+  data: [studentFixture, nonSubStudentFixture],
+  links: { first: null, last: null, prev: null, next: null },
+  meta: {
+    current_page: 1,
+    last_page: 1,
+    per_page: 20,
+    total: 2,
+    from: 1,
+    to: 2,
+  },
+};
 
 export const handlers = [
   http.post(`${API}/auth/login`, () =>
@@ -213,5 +364,95 @@ export const handlers = [
 
   http.get(`${API}/references/inventory/:id/logs`, () =>
     HttpResponse.json(inventoryLogsFixture)
+  ),
+
+  // Enrollment
+  http.get(`${API}/enrollment`, () =>
+    HttpResponse.json({
+      branches: branchesFixture,
+      grade_levels: [
+        "Nursery",
+        "Kinder 1",
+        "Kinder 2",
+        "Grade 1",
+        "Grade 2",
+        "Grade 3",
+        "Grade 4",
+        "Grade 5",
+        "Grade 6",
+      ],
+    })
+  ),
+
+  http.post(`${API}/enrollment`, () =>
+    HttpResponse.json(enrolledStudentFixture, { status: 201 })
+  ),
+
+  // Students
+  http.get(`${API}/students`, () =>
+    HttpResponse.json(paginatedStudentsFixture)
+  ),
+
+  http.get(`${API}/students/:id`, () =>
+    HttpResponse.json({
+      student: studentFixture,
+      wallet_transactions: [],
+      activity_logs: [],
+    })
+  ),
+
+  http.put(`${API}/students/:id`, () => HttpResponse.json(studentFixture)),
+
+  http.delete(`${API}/students/:id`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  http.post(`${API}/students/:id/regenerate-qr`, () =>
+    HttpResponse.json({ qr_code: "SB-NewCode123456" })
+  ),
+
+  http.patch(`${API}/students/:id/status`, () =>
+    HttpResponse.json({ ...studentFixture, enrollment_status: "paused" })
+  ),
+
+  http.post(`${API}/students/:id/wallet/top-up`, () =>
+    HttpResponse.json({
+      message: "Wallet topped up successfully.",
+      new_balance: 950.0,
+    })
+  ),
+
+  http.get(`${API}/students/:id/payments`, () =>
+    HttpResponse.json(paymentsFixture)
+  ),
+
+  http.patch(`${API}/students/:studentId/payments/:paymentId`, () =>
+    HttpResponse.json({ ...paymentsFixture[1], status: "paid" })
+  ),
+
+  http.patch(`${API}/students/:studentId/payments/:paymentId/amount`, () =>
+    HttpResponse.json({ id: 2, status: "unpaid", amount: "2500.00" })
+  ),
+
+  http.post(`${API}/students/:id/credit/settle`, () =>
+    HttpResponse.json({
+      message: "Credit balance settled.",
+      amount_settled: 135.0,
+    })
+  ),
+
+  // System Configurations
+  http.get(`${API}/system-configurations`, () =>
+    HttpResponse.json(systemConfigsFixture)
+  ),
+
+  http.put(`${API}/system-configurations/:key`, () =>
+    HttpResponse.json({
+      key: "daily_meal_rate",
+      value: "150",
+      type: "decimal",
+      label: "Daily Meal Rate (₱)",
+      description: "Daily rate used to compute monthly subscription amounts when no override is set.",
+    } satisfies SystemConfiguration)
   ),
 ];
