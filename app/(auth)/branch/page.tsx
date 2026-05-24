@@ -2,9 +2,11 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import { authApi } from "@/lib/api/auth";
+import { branchApi } from "@/lib/api/branches";
 import { getHomeRoute } from "@/lib/auth-utils";
 import { useAuthStore } from "@/lib/store/auth";
 
@@ -15,6 +17,17 @@ export default function BranchPage() {
   const user = useAuthStore((s) => s.user);
   const activeBranch = useAuthStore((s) => s.activeBranch);
   const setActiveBranch = useAuthStore((s) => s.setActiveBranch);
+
+  const isAdmin = user?.roles.includes("admin") ?? false;
+
+  // Admins can work from any branch — fetch the full list instead of relying on assigned branches
+  const { data: allBranches } = useQuery({
+    queryKey: ["branches"],
+    queryFn: () => branchApi.list(),
+    enabled: isAdmin,
+  });
+
+  const branches: Branch[] = isAdmin ? (allBranches ?? user?.branches ?? []) : (user?.branches ?? []);
 
   useEffect(() => {
     if (!user) {
@@ -44,7 +57,7 @@ export default function BranchPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {user.branches.map((branch) => (
+        {branches.map((branch) => (
           <button
             key={branch.id}
             type="button"

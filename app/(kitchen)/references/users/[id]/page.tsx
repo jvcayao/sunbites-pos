@@ -39,6 +39,7 @@ import { RoleBadge } from "@/components/users/role-badge";
 import { branchApi } from "@/lib/api/branches";
 import { userApi } from "@/lib/api/users";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/lib/store/auth";
 
 import type { ApiError } from "@/types/auth";
 import type { StaffUser } from "@/types/user";
@@ -200,6 +201,9 @@ function DetailSkeleton() {
 // ---------------------------------------------------------------------------
 
 export default function UserDetailPage() {
+  const viewer = useAuthStore((s) => s.user);
+  const isAdmin = viewer?.roles.includes("admin") ?? false;
+
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -548,7 +552,7 @@ export default function UserDetailPage() {
                     <SelectValue placeholder="Select role…" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    {isAdmin && <SelectItem value="admin">Admin</SelectItem>}
                     <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="supervisor">Supervisor</SelectItem>
                     <SelectItem value="cashier">Cashier</SelectItem>
@@ -673,9 +677,9 @@ export default function UserDetailPage() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <Button onClick={enterEditMode}>Edit</Button>
+          {isAdmin && <Button onClick={enterEditMode}>Edit</Button>}
 
-          <DropdownMenu>
+          {isAdmin && <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="outline" size="icon" aria-label="More actions" />}>
               <MoreHorizontal className="h-4 w-4" />
             </DropdownMenuTrigger>
@@ -706,7 +710,7 @@ export default function UserDetailPage() {
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu>}
         </div>
       </div>
 
@@ -735,8 +739,8 @@ export default function UserDetailPage() {
       </Dialog>
 
       {/* Tabs */}
-      <Tabs defaultValue="personal">
-        <TabsList>
+      <Tabs defaultValue="personal" className="flex-col">
+        <TabsList className="w-full justify-start h-auto">
           <TabsTrigger value="personal">Personal Info</TabsTrigger>
           <TabsTrigger value="employment">Employment</TabsTrigger>
           <TabsTrigger value="govids">Gov&apos;t IDs</TabsTrigger>

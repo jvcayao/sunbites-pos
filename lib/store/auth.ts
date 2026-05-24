@@ -4,6 +4,15 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import type { AuthUser, Branch } from "@/types/auth";
 
 export interface AuthState {
+  /**
+   * The Sanctum bearer token. Kept in-memory only — never persisted to
+   * localStorage or sessionStorage — to prevent XSS exfiltration.
+   *
+   * Non-sensitive session metadata (user profile, active branch) is
+   * persisted to sessionStorage so the UI can restore it on refresh without
+   * requiring a full re-login. The token itself is intentionally excluded
+   * from the persisted subset via the `partialize` option.
+   */
   token: string | null;
   user: AuthUser | null;
   activeBranch: Branch | null;
@@ -25,6 +34,17 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "sunbites-pos-auth",
       storage: createJSONStorage(() => sessionStorage),
+      /**
+       * Persist only non-sensitive session metadata. The bearer token is
+       * intentionally excluded: it lives in memory only and is lost on tab
+       * close, limiting the XSS exfiltration window.
+       *
+       * On refresh the user will be redirected to /login to re-authenticate.
+       */
+      partialize: (state) => ({
+        user: state.user,
+        activeBranch: state.activeBranch,
+      }),
     }
   )
 );
