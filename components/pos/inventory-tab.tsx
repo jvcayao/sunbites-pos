@@ -1,0 +1,325 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { z } from "zod";
+
+import { inventoryApi } from "@/lib/api/inventory";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import type { ApiError } from "@/types/auth";
+import type { AdjustStockPayload, InventoryItem, InventoryLogType } from "@/types/inventory";
+
+const LOG_TYPES: InventoryLogType[] = ["restock", "waste", "manual", "sale"];
+
+const STATUS_BADGE_STYLES: Record<string, string> = {
+  OK: "bg-green-100 text-green-700 border-green-300",
+  LOW: "bg-yellow-100 text-amber-700 border-yellow-300",
+  OUT: "bg-red-100 text-destructive border-red-300",
+};
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <Badge
+      variant="outline"
+      className={`text-xs font-medium ${STATUS_BADGE_STYLES[status] ?? "bg-muted text-muted-foreground"}`}
+    >
+      {status}
+    </Badge>
+  );
+}
+
+const adjustStockSchema = z.object({
+  direction: z.enum(["add", "deduct"] as const),
+  type: z.enum(["restock", "waste", "manual", "sale"] as const),
+  quantity: z
+    .string()
+    .min(1, "Quantity is required")
+    .refine(
+      (v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0,
+      "Must be greater than 0"
+    ),
+  reason: z.string().min(1, "Reason is required"),
+});
+
+type AdjustStockForm = z.infer<typeof adjustStockSchema>;
+
+interface StockAdjustmentModalProps {
+  item: InventoryItem | null;
+  onClose: () => void;
+}
+
+function StockAdjustmentModal({ item, onClose }: StockAdjustmentModalProps) {
+  const queryClient = useQueryClient();
+  const [values, setValues] = useState<AdjustStockForm>({
+    direction: "add",
+    type: "restock",
+    quantity: "",
+    reason: "",
+  });
+  const [errors, setErrors] = useState<Partial<Record<string, string[]>>>({});
+
+  useEffect(() => {
+    if (item) {
+      setValues({ direction: "add", type: "restock", quantity: "", reason: "" });
+      setErrors({});
+    }
+  }, [item]);
+
+  const mutation = useMutation({
+    mutationFn: (payload: AdjustStockPayload) => inventoryApi.adjust(item!.id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pos-inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["references-inventory"] });
+      toast.success("Stock adjusted successfully.");
+      onClose();
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to adjust stock.");
+    },
+  });
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const result = adjustStockSchema.safeParse(values);
+    if (!result.success) {
+      setErrors(result.error.flatten().fieldErrors);
+      return;
+    }
+    setErrors({});
+    mutation.mutate(result.data);
+  }
+
+  const currentQty = parseFloat(item?.quantity ?? "0");
+  const inputQty = parseFloat(values.quantity) || 0;
+  const newTotal =
+    values.direction === "add"
+      ? currentQty + inputQty
+      : Math.max(0, currentQty - inputQty);
+
+  return (
+    <Dialog
+      open={item !== null}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Adjust Stock — {item?.name}</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label>Direction</Label>
+            <RadioGroup
+              value={values.direction}
+              onValueChange={(v) =>
+                setValues((prev) => ({
+                  ...prev,
+                  direction: v as "add" | "deduct",
+                }))
+              }
+              className="flex gap-6"
+            >
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="add" id="dir-add" />
+                <Label htmlFor="dir-add">Add</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="deduct" id="dir-deduct" />
+                <Label htmlFor="dir-deduct">Deduct</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="adj-type">Type</Label>
+            <Select
+              value={values.type}
+              onValueChange={(v) =>
+                setValues((prev) => ({ ...prev, type: v as InventoryLogType }))
+              }
+            >
+              <SelectTrigger id="adj-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LOG_TYPES.map((t) => (
+                  <SelectItem key={t} value={t} className="capitalize">
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="adj-qty">Quantity ({item?.unit})</Label>
+            <Input
+              id="adj-qty"
+              type="number"
+              min="0"
+              step="0.01"
+              value={values.quantity}
+              onChange={(e) =>
+                setValues((prev) => ({ ...prev, quantity: e.target.value }))
+              }
+              aria-invalid={!!errors.quantity}
+            />
+            {errors.quantity && (
+              <p role="alert" className="text-xs text-destructive">
+                {errors.quantity[0]}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="adj-reason">Reason</Label>
+            <Input
+              id="adj-reason"
+              value={values.reason}
+              onChange={(e) =>
+                setValues((prev) => ({ ...prev, reason: e.target.value }))
+              }
+              aria-invalid={!!errors.reason}
+            />
+            {errors.reason && (
+              <p role="alert" className="text-xs text-destructive">
+                {errors.reason[0]}
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/50 p-3">
+            <p className="text-sm text-muted-foreground">
+              Current:{" "}
+              <span className="font-semibold text-foreground">
+                {item?.quantity} {item?.unit}
+              </span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              New Total:{" "}
+              <span className="font-semibold text-foreground">
+                {newTotal.toFixed(2)} {item?.unit}
+              </span>
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-border pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? "Saving…" : "Save Adjustment"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function InventoryTab() {
+  const [adjustingItem, setAdjustingItem] = useState<InventoryItem | null>(null);
+
+  const { data: items, isLoading, isError } = useQuery({
+    queryKey: ["pos-inventory"],
+    queryFn: inventoryApi.listForPos,
+  });
+
+  if (isError) {
+    return <p className="text-sm text-destructive">Failed to load inventory.</p>;
+  }
+
+  return (
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Item</TableHead>
+            <TableHead className="text-right">Qty</TableHead>
+            <TableHead>Unit</TableHead>
+            <TableHead className="text-right">Threshold</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            [...Array(3)].map((_, i) => (
+              <TableRow key={i}>
+                {[...Array(6)].map((_, j) => (
+                  <TableCell key={j}>
+                    <div className="h-4 animate-pulse rounded bg-muted" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : !items?.length ? (
+            <TableRow>
+              <TableCell
+                colSpan={6}
+                className="text-center text-sm text-muted-foreground"
+              >
+                No inventory items.
+              </TableCell>
+            </TableRow>
+          ) : (
+            items.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">{item.name}</TableCell>
+                <TableCell className="text-right">{item.quantity}</TableCell>
+                <TableCell>{item.unit}</TableCell>
+                <TableCell className="text-right">{item.restock_threshold}</TableCell>
+                <TableCell>
+                  <StatusBadge status={item.status} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setAdjustingItem(item)}
+                  >
+                    Adjust
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+
+      <StockAdjustmentModal
+        item={adjustingItem}
+        onClose={() => setAdjustingItem(null)}
+      />
+    </>
+  );
+}
