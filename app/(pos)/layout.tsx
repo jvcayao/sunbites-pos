@@ -12,7 +12,6 @@ export default function PosGroupLayout({
 }) {
   const [mounted, setMounted] = useState(false);
   const token = useAuthStore((s) => s.token);
-  const user = useAuthStore((s) => s.user);
   const activeBranch = useAuthStore((s) => s.activeBranch);
   const router = useRouter();
 
@@ -30,13 +29,9 @@ export default function PosGroupLayout({
       router.replace("/branch");
       return;
     }
-    if (user && !user.roles.includes("cashier")) {
-      router.replace("/dashboard");
-    }
-  }, [mounted, token, activeBranch, user, router]);
+  }, [mounted, token, activeBranch, router]);
 
-  const isNonCashier = user && !user.roles.includes("cashier");
-  if (!mounted || !token || !activeBranch || isNonCashier) return null;
+  if (!mounted || !token || !activeBranch) return null;
 
   return <>{children}</>;
 }

@@ -14,3 +14,5 @@ export interface CreateMenuItemPayload {
   price: string;
   category: MenuCategory;
 }
+
+export type UpdateMenuItemPayload = CreateMenuItemPayload;

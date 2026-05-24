@@ -34,14 +34,8 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "sunbites-pos-auth",
       storage: createJSONStorage(() => sessionStorage),
-      /**
-       * Persist only non-sensitive session metadata. The bearer token is
-       * intentionally excluded: it lives in memory only and is lost on tab
-       * close, limiting the XSS exfiltration window.
-       *
-       * On refresh the user will be redirected to /login to re-authenticate.
-       */
       partialize: (state) => ({
+        token: state.token,
         user: state.user,
         activeBranch: state.activeBranch,
       }),
