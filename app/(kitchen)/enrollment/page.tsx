@@ -110,7 +110,12 @@ const contactSchema = z.object({
     .min(1, "Phone is required")
     .regex(PH_PHONE_RE, "Enter a valid PH mobile number (e.g. 09171234567)"),
   address: z.string().min(1, "Address is required").max(500),
-  email: z.string().email("Valid email required").max(255),
+  email: z
+    .string()
+    .email("Valid email required")
+    .max(255)
+    .optional()
+    .or(z.literal("")),
 });
 
 const YEAR_MIN = 2020;
@@ -981,7 +986,6 @@ export default function EnrollmentPage() {
                     <FormField
                       label="Email"
                       htmlFor={`contact-${index}-email`}
-                      required
                       error={
                         (errors as Record<string, string[]>)[
                           `contacts.${index}.email`
@@ -996,6 +1000,9 @@ export default function EnrollmentPage() {
                           updateContact(index, "email", e.target.value)
                         }
                       />
+                      <p className="text-xs text-muted-foreground">
+                        If provided, a portal activation email will be sent to this address.
+                      </p>
                     </FormField>
                   </div>
 

@@ -16,6 +16,7 @@ import type {
   UpdateStudentPayload,
   WalletTopUpPayload,
 } from "@/types/student";
+import type { PaginatedOrders } from "@/types/order";
 
 interface StudentListParams {
   search?: string;
@@ -57,6 +58,9 @@ export const studentApi = {
   updateStatus: (id: number, payload: UpdateStatusPayload) =>
     apiClient.patch<Student>(`/students/${id}/status`, payload),
 
+  updateType: (id: number, studentType: "subscription" | "non_subscription") =>
+    apiClient.patch<Student>(`/students/${id}/type`, { student_type: studentType }),
+
   topUp: (id: number, payload: WalletTopUpPayload) =>
     apiClient.post<{ message: string; new_balance: number }>(
       `/students/${id}/wallet/top-up`,
@@ -81,6 +85,11 @@ export const studentApi = {
     apiClient.post<{ message: string; amount_settled: number }>(
       `/students/${id}/credit/settle`
     ),
+
+  orders: (id: number, page = 1) =>
+    apiClient.get<PaginatedOrders>(`/students/${id}/orders`, {
+      params: { page, per_page: 20 },
+    }),
 
   payments: (id: number) =>
     apiClient.get<MonthlyPayment[]>(`/students/${id}/payments`),
