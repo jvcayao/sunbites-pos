@@ -5,8 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { ChevronLeft, MoreHorizontal, Printer, RefreshCw } from "lucide-react";
+import { ChevronLeft, Mail, MoreHorizontal, Pencil, Printer, RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { QRCode } from "react-qr-code";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,11 +38,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { contactApi } from "@/lib/api/contacts";
 import { studentApi } from "@/lib/api/students";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
 import type { ApiError } from "@/types/auth";
+import type { CreateContactPayload, StudentContact, UpdateContactPayload } from "@/types/contact";
 import type {
   EnrollmentStatus,
   MonthlyPayment,
@@ -909,6 +912,511 @@ function EditAmountDialog({
 }
 
 // ---------------------------------------------------------------------------
+// Contact validation schema
+// ---------------------------------------------------------------------------
+
+const PH_PHONE_RE = /^(\+639|09)\d{9}$/;
+
+const contactFormSchema = z.object({
+  full_name: z.string().min(1, "Full name is required").max(255),
+  relationship: z.string().min(1, "Relationship is required"),
+  phone: z
+    .string()
+    .min(1, "Phone is required")
+    .regex(PH_PHONE_RE, "Enter a valid PH mobile number (e.g. 09171234567)"),
+  address: z.string().min(1, "Address is required").max(500),
+  email: z
+    .string()
+    .email("Valid email required")
+    .max(255)
+    .optional()
+    .or(z.literal("")),
+  is_primary: z.boolean().optional(),
+});
+
+type ContactFormData = z.infer<typeof contactFormSchema>;
+
+// ---------------------------------------------------------------------------
+// ContactFormModal
+// ---------------------------------------------------------------------------
+
+interface ContactFormModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (data: ContactFormData) => void;
+  isPending: boolean;
+  errors: Record<string, string[]>;
+  initialValues?: Partial<ContactFormData>;
+  title: string;
+}
+
+function ContactFormModal({
+  open,
+  onClose,
+  onSubmit,
+  isPending,
+  errors,
+  initialValues,
+  title,
+}: ContactFormModalProps) {
+  const [fullName, setFullName] = useState(initialValues?.full_name ?? "");
+  const [relationship, setRelationship] = useState(initialValues?.relationship ?? "");
+  const [phone, setPhone] = useState(initialValues?.phone ?? "");
+  const [address, setAddress] = useState(initialValues?.address ?? "");
+  const [email, setEmail] = useState(initialValues?.email ?? "");
+  const [isPrimary, setIsPrimary] = useState(initialValues?.is_primary ?? false);
+  const [localErrors, setLocalErrors] = useState<Record<string, string[]>>({});
+
+  const allErrors = { ...localErrors, ...errors };
+
+  function handleClose() {
+    setLocalErrors({});
+    onClose();
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const raw = {
+      full_name: fullName,
+      relationship,
+      phone,
+      address,
+      email: email || "",
+      is_primary: isPrimary,
+    };
+    const result = contactFormSchema.safeParse(raw);
+    if (!result.success) {
+      setLocalErrors(result.error.flatten().fieldErrors as Record<string, string[]>);
+      return;
+    }
+    setLocalErrors({});
+    onSubmit(result.data);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="cf-full-name">
+                Full Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="cf-full-name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                aria-invalid={!!allErrors.full_name?.length}
+                className={cn(allErrors.full_name?.length && "border-destructive")}
+              />
+              {allErrors.full_name?.[0] && (
+                <p role="alert" className="text-xs text-destructive">{allErrors.full_name[0]}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cf-relationship">
+                Relationship <span className="text-destructive">*</span>
+              </Label>
+              <Select value={relationship} onValueChange={(v) => setRelationship(v ?? "")}>
+                <SelectTrigger
+                  id="cf-relationship"
+                  aria-invalid={!!allErrors.relationship?.length}
+                  className={cn(allErrors.relationship?.length && "border-destructive")}
+                >
+                  <SelectValue placeholder="Select…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Mother">Mother</SelectItem>
+                  <SelectItem value="Father">Father</SelectItem>
+                  <SelectItem value="Guardian">Guardian</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              {allErrors.relationship?.[0] && (
+                <p role="alert" className="text-xs text-destructive">{allErrors.relationship[0]}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cf-phone">
+                Phone <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="cf-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="09171234567"
+                aria-invalid={!!allErrors.phone?.length}
+                className={cn(allErrors.phone?.length && "border-destructive")}
+              />
+              {allErrors.phone?.[0] && (
+                <p role="alert" className="text-xs text-destructive">{allErrors.phone[0]}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cf-email">Email</Label>
+              <Input
+                id="cf-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="optional"
+                aria-invalid={!!allErrors.email?.length}
+                className={cn(allErrors.email?.length && "border-destructive")}
+              />
+              {allErrors.email?.[0] && (
+                <p role="alert" className="text-xs text-destructive">{allErrors.email[0]}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="cf-address">
+              Address <span className="text-destructive">*</span>
+            </Label>
+            <Textarea
+              id="cf-address"
+              rows={2}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              aria-invalid={!!allErrors.address?.length}
+              className={cn(allErrors.address?.length && "border-destructive")}
+            />
+            {allErrors.address?.[0] && (
+              <p role="alert" className="text-xs text-destructive">{allErrors.address[0]}</p>
+            )}
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              id="cf-is-primary"
+              checked={isPrimary}
+              onCheckedChange={(checked) => setIsPrimary(checked === true)}
+            />
+            <span className="text-sm text-foreground">Set as primary contact</span>
+          </label>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Saving…" : "Save Contact"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Portal status badge
+// ---------------------------------------------------------------------------
+
+function PortalStatusBadge({ status }: { status: StudentContact["portal_status"] }) {
+  if (status === "activated") {
+    return (
+      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-green-100 text-green-700 border-green-300">
+        Portal: Active
+      </span>
+    );
+  }
+  if (status === "pending_activation") {
+    return (
+      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-yellow-100 text-amber-700 border-yellow-300">
+        Portal: Pending
+      </span>
+    );
+  }
+  return (
+    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
+      No Portal
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Contacts tab
+// ---------------------------------------------------------------------------
+
+interface ContactsTabProps {
+  studentId: number;
+  canManageContacts: boolean;
+  canResendActivation: boolean;
+}
+
+function ContactsTab({ studentId, canManageContacts, canResendActivation }: ContactsTabProps) {
+  const queryClient = useQueryClient();
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingContact, setEditingContact] = useState<StudentContact | null>(null);
+  const [deletingContactId, setDeletingContactId] = useState<number | null>(null);
+  const [mutationErrors, setMutationErrors] = useState<Record<string, string[]>>({});
+
+  const { data: contacts, isLoading } = useQuery({
+    queryKey: ["contacts", studentId],
+    queryFn: () => contactApi.list(studentId),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (payload: CreateContactPayload) =>
+      contactApi.create(studentId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts", studentId] });
+      setShowAddModal(false);
+      setMutationErrors({});
+      toast.success("Contact added.");
+    },
+    onError: (err: ApiError) => {
+      if (err.errors) setMutationErrors(err.errors as Record<string, string[]>);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ contactId, payload }: { contactId: number; payload: UpdateContactPayload }) =>
+      contactApi.update(studentId, contactId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts", studentId] });
+      setEditingContact(null);
+      setMutationErrors({});
+      toast.success("Contact updated.");
+    },
+    onError: (err: ApiError) => {
+      if (err.errors) setMutationErrors(err.errors as Record<string, string[]>);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (contactId: number) => contactApi.remove(studentId, contactId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts", studentId] });
+      setDeletingContactId(null);
+      import("sonner").then(({ toast }) => toast.success("Contact removed."));
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to remove contact.");
+    },
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: (contactId: number) =>
+      contactApi.resendActivation(studentId, contactId),
+    onSuccess: () => {
+      toast.success("Activation email resent.");
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to resend activation email.");
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="mt-4 space-y-3">
+        {[1, 2].map((k) => (
+          <Skeleton key={k} className="h-24 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-4">
+      {canManageContacts && (contacts?.length ?? 0) < 3 && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => {
+              setMutationErrors({});
+              setShowAddModal(true);
+            }}
+          >
+            <UserPlus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Add Contact
+          </Button>
+        </div>
+      )}
+
+      {!contacts?.length ? (
+        <p className="text-sm text-muted-foreground">No contacts yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {contacts.map((contact) => (
+            <div
+              key={contact.id}
+              className="rounded-lg border border-border bg-card p-4 space-y-2"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold text-foreground">
+                  {contact.full_name}
+                </p>
+                <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+                  {contact.relationship}
+                </span>
+                {contact.is_primary && (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/30">
+                    Primary
+                  </span>
+                )}
+                <PortalStatusBadge status={contact.portal_status} />
+              </div>
+
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                <p>{contact.phone}</p>
+                {contact.email ? (
+                  <p>{contact.email}</p>
+                ) : (
+                  <p className="italic">No email</p>
+                )}
+                <p>{contact.address}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                {canManageContacts && (
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setMutationErrors({});
+                        setEditingContact(contact);
+                      }}
+                      aria-label={`Edit ${contact.full_name}`}
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5"
+                      onClick={() => setDeletingContactId(contact.id)}
+                      aria-label={`Delete ${contact.full_name}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                      Delete
+                    </Button>
+                  </>
+                )}
+
+                {canResendActivation && contact.portal_status === "pending_activation" && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => resendMutation.mutate(contact.id)}
+                    disabled={resendMutation.isPending}
+                    aria-label={`Resend activation email to ${contact.full_name}`}
+                  >
+                    <Mail className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                    Resend Activation
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add Contact Modal */}
+      <ContactFormModal
+        open={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setMutationErrors({});
+        }}
+        onSubmit={(data) => {
+          const payload: CreateContactPayload = {
+            full_name: data.full_name,
+            relationship: data.relationship,
+            phone: data.phone,
+            address: data.address,
+            email: data.email || undefined,
+            is_primary: data.is_primary,
+          };
+          createMutation.mutate(payload);
+        }}
+        isPending={createMutation.isPending}
+        errors={mutationErrors}
+        title="Add Contact"
+      />
+
+      {/* Edit Contact Modal */}
+      {editingContact && (
+        <ContactFormModal
+          open={editingContact !== null}
+          onClose={() => {
+            setEditingContact(null);
+            setMutationErrors({});
+          }}
+          onSubmit={(data) => {
+            const payload: UpdateContactPayload = {
+              full_name: data.full_name,
+              relationship: data.relationship,
+              phone: data.phone,
+              address: data.address,
+              email: data.email || undefined,
+              is_primary: data.is_primary,
+            };
+            updateMutation.mutate({ contactId: editingContact.id, payload });
+          }}
+          isPending={updateMutation.isPending}
+          errors={mutationErrors}
+          initialValues={{
+            full_name: editingContact.full_name,
+            relationship: editingContact.relationship,
+            phone: editingContact.phone,
+            address: editingContact.address,
+            email: editingContact.email ?? "",
+            is_primary: editingContact.is_primary,
+          }}
+          title="Edit Contact"
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deletingContactId !== null}
+        onOpenChange={(o) => !o && setDeletingContactId(null)}
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Remove Contact?</DialogTitle>
+            <DialogDescription>
+              This contact will be permanently removed from the student record.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingContactId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deletingContactId !== null) {
+                  deleteMutation.mutate(deletingContactId);
+                }
+              }}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Removing…" : "Remove Contact"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Payment tab
 // ---------------------------------------------------------------------------
 
@@ -1323,6 +1831,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       <Tabs defaultValue="profile" className="flex-col">
         <TabsList className="no-print w-full justify-start h-auto">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="contacts">Contacts</TabsTrigger>
           <TabsTrigger value="wallet">Wallet</TabsTrigger>
           <TabsTrigger value="orders">Order History</TabsTrigger>
           <TabsTrigger value="payment">Payment</TabsTrigger>
@@ -1460,6 +1969,24 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 </Button>
               </div>
             </div>
+          </div>
+        </TabsContent>
+
+        {/* Contacts Tab */}
+        <TabsContent value="contacts">
+          <div className="mt-4 rounded-xl border border-border bg-card p-5">
+            <ContactsTab
+              studentId={student.id}
+              canManageContacts={
+                user?.roles.includes("admin") === true ||
+                user?.roles.includes("manager") === true ||
+                user?.roles.includes("supervisor") === true
+              }
+              canResendActivation={
+                user?.roles.includes("admin") === true ||
+                user?.roles.includes("manager") === true
+              }
+            />
           </div>
         </TabsContent>
 

@@ -20,6 +20,8 @@ import {
   ChevronRight,
   LogOut,
   Settings,
+  UserRound,
+  MessageSquare,
 } from "lucide-react";
 
 import { AppLogo } from "@/components/app-logo";
@@ -54,6 +56,8 @@ const referencesNav: NavItem[] = [
   { label: "Subscription Config", href: "/references/subscription-config", icon: CalendarDays },
   { label: "Users", href: "/references/users", icon: UserCog },
   { label: "Branches", href: "/references/branches", icon: GitBranch },
+  { label: "Parents", href: "/references/parents", icon: UserRound },
+  { label: "Feedback", href: "/references/feedback", icon: MessageSquare },
   { label: "System Settings", href: "/references/system-settings", icon: Settings },
 ];
 
