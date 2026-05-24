@@ -13,6 +13,8 @@ export default function KitchenGroupLayout({
 }) {
   const [mounted, setMounted] = useState(false);
   const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
+  const activeBranch = useAuthStore((s) => s.activeBranch);
   const router = useRouter();
 
   useEffect(() => {
@@ -20,10 +22,22 @@ export default function KitchenGroupLayout({
   }, []);
 
   useEffect(() => {
-    if (mounted && !token) router.replace("/login");
-  }, [mounted, token, router]);
+    if (!mounted) return;
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+    if (!activeBranch) {
+      router.replace("/branch");
+      return;
+    }
+    if (user?.roles.includes("cashier")) {
+      router.replace("/pos");
+    }
+  }, [mounted, token, activeBranch, user, router]);
 
-  if (!mounted || !token) return null;
+  const isCashier = user?.roles.includes("cashier");
+  if (!mounted || !token || !activeBranch || isCashier) return null;
 
   return <KitchenLayout>{children}</KitchenLayout>;
 }
