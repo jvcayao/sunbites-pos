@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { CheckCircle2, Printer, UserPlus, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Printer, UserPlus, X } from "lucide-react";
+import { toast } from "sonner";
 import { QRCode } from "react-qr-code";
 
 import { Button } from "@/components/ui/button";
@@ -219,7 +220,8 @@ function FieldError({ error }: { error?: string[] | string }) {
   const msg = Array.isArray(error) ? error[0] : error;
   if (!msg) return null;
   return (
-    <p role="alert" className="mt-1 text-xs text-destructive">
+    <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive">
+      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
       {msg}
     </p>
   );
@@ -403,11 +405,14 @@ export default function EnrollmentPage() {
 
     const result = enrollSchema.safeParse(raw);
     if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors as Record<
-        string,
-        string[]
-      >;
-      setErrors(fieldErrors);
+      const errorMap: Record<string, string[]> = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path.join(".");
+        if (!errorMap[key]) errorMap[key] = [];
+        errorMap[key].push(issue.message);
+      }
+      setErrors(errorMap);
+      toast.error("Please fix the highlighted fields before continuing.");
       return;
     }
 
@@ -1039,7 +1044,6 @@ export default function EnrollmentPage() {
                 </Button>
               )}
 
-              <FieldError error={errors.contacts} />
             </div>
           </SectionCard>
 

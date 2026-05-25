@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,6 +83,7 @@ function EditBranchDialog({ branch, onClose }: EditBranchDialogProps) {
     const result = editBranchSchema.safeParse(values);
     if (!result.success) {
       setErrors(result.error.flatten().fieldErrors);
+      toast.error("Please fix the highlighted fields before continuing.");
       return;
     }
     setErrors({});
@@ -107,7 +110,8 @@ function EditBranchDialog({ branch, onClose }: EditBranchDialogProps) {
               aria-describedby={errors.name ? "branch-name-error" : undefined}
             />
             {errors.name && (
-              <p id="branch-name-error" role="alert" className="text-xs text-destructive">
+              <p id="branch-name-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {errors.name[0]}
               </p>
             )}
@@ -128,7 +132,8 @@ function EditBranchDialog({ branch, onClose }: EditBranchDialogProps) {
               aria-describedby={errors.gcash_number ? "branch-gcash-error" : undefined}
             />
             {errors.gcash_number && (
-              <p id="branch-gcash-error" role="alert" className="text-xs text-destructive">
+              <p id="branch-gcash-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {errors.gcash_number[0]}
               </p>
             )}
@@ -149,7 +154,8 @@ function EditBranchDialog({ branch, onClose }: EditBranchDialogProps) {
               aria-describedby={errors.address ? "branch-address-error" : undefined}
             />
             {errors.address && (
-              <p id="branch-address-error" role="alert" className="text-xs text-destructive">
+              <p id="branch-address-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {errors.address[0]}
               </p>
             )}

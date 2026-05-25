@@ -53,6 +53,43 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return response.json() as Promise<T>;
 }
 
+async function downloadFile(path: string, params?: Record<string, string | number | boolean | undefined>, filename?: string): Promise<void> {
+  const store = useAuthStore.getState();
+
+  const url = new URL(`${BASE_URL}${path}`);
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined) url.searchParams.set(k, String(v));
+    });
+  }
+
+  const headers: Record<string, string> = { Accept: "application/octet-stream" };
+  if (store.token) headers["Authorization"] = `Bearer ${store.token}`;
+  if (store.activeBranch) headers["X-Branch-Id"] = String(store.activeBranch.id);
+
+  const response = await fetch(url.toString(), { headers });
+
+  if (response.status === 401) {
+    useAuthStore.getState().logout();
+    throw { message: "Session expired. Please log in again." } as ApiError;
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: "Export failed." }));
+    throw error as ApiError;
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objectUrl;
+  a.download = filename ?? "export.xlsx";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(objectUrl);
+}
+
 export const apiClient = {
   get: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: "GET" }),
@@ -64,4 +101,5 @@ export const apiClient = {
     request<T>(path, { ...options, method: "PATCH", body: JSON.stringify(body) }),
   delete: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: "DELETE" }),
+  download: downloadFile,
 };

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AlertCircle } from "lucide-react";
 
 import { inventoryApi } from "@/lib/api/inventory";
 import { Badge } from "@/components/ui/badge";
@@ -110,6 +111,7 @@ function StockAdjustmentModal({ item, onClose }: StockAdjustmentModalProps) {
     const result = adjustStockSchema.safeParse(values);
     if (!result.success) {
       setErrors(result.error.flatten().fieldErrors);
+      toast.error("Please fix the highlighted fields before continuing.");
       return;
     }
     setErrors({});
@@ -194,7 +196,7 @@ function StockAdjustmentModal({ item, onClose }: StockAdjustmentModalProps) {
               aria-invalid={!!errors.quantity}
             />
             {errors.quantity && (
-              <p role="alert" className="text-xs text-destructive">
+              <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {errors.quantity[0]}
               </p>
             )}
@@ -211,7 +213,7 @@ function StockAdjustmentModal({ item, onClose }: StockAdjustmentModalProps) {
               aria-invalid={!!errors.reason}
             />
             {errors.reason && (
-              <p role="alert" className="text-xs text-destructive">
+              <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {errors.reason[0]}
               </p>
             )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AlertCircle } from "lucide-react";
 
 import {
   Dialog,
@@ -74,7 +75,8 @@ export function VoidModal({ order, onConfirm, onCancel, isPending }: Props) {
             rows={3}
           />
           {error && (
-            <p id="void-reason-error" role="alert" className="text-xs text-destructive">
+            <p id="void-reason-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               {error}
             </p>
           )}
