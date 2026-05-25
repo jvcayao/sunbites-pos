@@ -151,7 +151,7 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "flex h-full flex-col border-r border-border bg-sidebar transition-all duration-200",
+          "no-print flex h-full flex-col border-r border-border bg-sidebar transition-all duration-200",
           collapsed ? "w-[60px]" : "w-[220px]"
         )}
       >
@@ -220,7 +220,7 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
+        <header className="no-print flex h-16 items-center justify-between border-b border-border bg-card px-6">
           <h1 className="text-lg font-semibold">{pageTitle}</h1>
 
           <div className="flex items-center gap-3">

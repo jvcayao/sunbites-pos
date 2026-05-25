@@ -136,13 +136,21 @@ export default function DailySummaryPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {summary.payment_breakdown.map((row) => (
-                    <tr key={row.method} className="hover:bg-muted/20">
-                      <td className="px-4 py-2.5 capitalize text-foreground">{row.method}</td>
-                      <td className="px-4 py-2.5 text-right text-muted-foreground">{row.count}</td>
-                      <td className="px-4 py-2.5 text-right font-semibold">{formatPeso(row.amount)}</td>
+                  {summary.payment_breakdown.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">
+                        No transactions recorded.
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    summary.payment_breakdown.map((row) => (
+                      <tr key={row.method} className="hover:bg-muted/20">
+                        <td className="px-4 py-2.5 capitalize text-foreground">{row.method}</td>
+                        <td className="px-4 py-2.5 text-right text-muted-foreground">{row.count}</td>
+                        <td className="px-4 py-2.5 text-right font-semibold">{formatPeso(row.amount)}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
                 <tfoot className="bg-muted/20">
                   <tr>

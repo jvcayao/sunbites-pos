@@ -47,4 +47,20 @@
   .no-print {
     display: none !important;
   }
+
+  /* Remove the flex layout constraints so the main content fills the page */
+  body > * {
+    overflow: visible !important;
+  }
+
+  .flex.h-screen {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  main {
+    overflow: visible !important;
+    flex: none !important;
+  }
 }
