@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AlertCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { posMenuItemApi } from "@/lib/api/pos-menu-items";
@@ -187,6 +188,7 @@ export function MenuMgmtTab() {
     const result = menuItemSchema.safeParse(form);
     if (!result.success) {
       setFormErrors(result.error.flatten().fieldErrors);
+      toast.error("Please fix the highlighted fields before continuing.");
       return;
     }
     setFormErrors({});
@@ -205,6 +207,7 @@ export function MenuMgmtTab() {
     const result = menuItemSchema.safeParse(editForm);
     if (!result.success) {
       setEditErrors(result.error.flatten().fieldErrors);
+      toast.error("Please fix the highlighted fields before continuing.");
       return;
     }
     setEditErrors({});
@@ -257,7 +260,7 @@ export function MenuMgmtTab() {
               aria-invalid={!!formErrors.name}
             />
             {formErrors.name && (
-              <p role="alert" className="text-xs text-destructive">
+              <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {formErrors.name[0]}
               </p>
             )}
@@ -274,7 +277,7 @@ export function MenuMgmtTab() {
               aria-invalid={!!formErrors.price}
             />
             {formErrors.price && (
-              <p role="alert" className="text-xs text-destructive">
+              <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {formErrors.price[0]}
               </p>
             )}
@@ -299,7 +302,7 @@ export function MenuMgmtTab() {
               </SelectContent>
             </Select>
             {formErrors.category && (
-              <p role="alert" className="text-xs text-destructive">
+              <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {formErrors.category[0]}
               </p>
             )}
@@ -328,7 +331,7 @@ export function MenuMgmtTab() {
                 aria-invalid={!!editErrors.name}
               />
               {editErrors.name && (
-                <p role="alert" className="text-xs text-destructive">{editErrors.name[0]}</p>
+                <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />{editErrors.name[0]}</p>
               )}
             </div>
             <div className="space-y-1">
@@ -343,7 +346,7 @@ export function MenuMgmtTab() {
                 aria-invalid={!!editErrors.price}
               />
               {editErrors.price && (
-                <p role="alert" className="text-xs text-destructive">{editErrors.price[0]}</p>
+                <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />{editErrors.price[0]}</p>
               )}
             </div>
             <div className="space-y-1">
@@ -362,7 +365,7 @@ export function MenuMgmtTab() {
                 </SelectContent>
               </Select>
               {editErrors.category && (
-                <p role="alert" className="text-xs text-destructive">{editErrors.category[0]}</p>
+                <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />{editErrors.category[0]}</p>
               )}
             </div>
             <div className="flex justify-end gap-2 pt-1">

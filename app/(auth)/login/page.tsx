@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
@@ -96,7 +97,8 @@ export default function LoginPage() {
             className={cn(fieldErrors.email && "border-destructive")}
           />
           {fieldErrors.email && (
-            <p id="email-error" role="alert" className="text-xs text-destructive">
+            <p id="email-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               {fieldErrors.email[0]}
             </p>
           )}
@@ -118,7 +120,8 @@ export default function LoginPage() {
             className={cn(fieldErrors.password && "border-destructive")}
           />
           {fieldErrors.password && (
-            <p id="password-error" role="alert" className="text-xs text-destructive">
+            <p id="password-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               {fieldErrors.password[0]}
             </p>
           )}

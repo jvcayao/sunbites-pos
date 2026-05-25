@@ -22,6 +22,8 @@ import {
   Settings,
   UserRound,
   MessageSquare,
+  Activity,
+  CreditCard,
 } from "lucide-react";
 
 import { AppLogo } from "@/components/app-logo";
@@ -45,9 +47,13 @@ const mainNav: NavItem[] = [
 
 const reportsNav: NavItem[] = [
   { label: "Sales", href: "/reports/sales", icon: BarChart2 },
+  { label: "Students", href: "/reports/students", icon: Users },
   { label: "Wallet", href: "/reports/wallet", icon: Wallet },
   { label: "Inventory", href: "/reports/inventory", icon: Package },
   { label: "Daily Summary", href: "/reports/daily-summary", icon: FileText },
+  { label: "Billing", href: "/reports/billing", icon: ClipboardList },
+  { label: "Activity Log", href: "/reports/activity", icon: Activity },
+  { label: "Credits", href: "/reports/credits", icon: CreditCard },
 ];
 
 const referencesNav: NavItem[] = [
@@ -113,10 +119,18 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
   const activeBranch = useAuthStore((s) => s.activeBranch);
 
   const isAdmin = user?.roles.includes("admin") ?? false;
+  const isManager = user?.roles.includes("manager") ?? false;
 
   const referencesNavFiltered = isAdmin
     ? referencesNav
     : referencesNav.filter((item) => item.href !== "/references/system-settings");
+
+  // Supervisor can only see: Sales, Students, Inventory, Billing
+  const supervisorAllowedReports = ["/reports/sales", "/reports/students", "/reports/inventory", "/reports/billing"];
+  const reportsNavFiltered =
+    isAdmin || isManager
+      ? reportsNav
+      : reportsNav.filter((item) => supervisorAllowedReports.includes(item.href));
 
   const pageTitle = [...mainNav, ...reportsNav, ...referencesNav].find(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
@@ -137,7 +151,7 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "flex h-full flex-col border-r border-border bg-sidebar transition-all duration-200",
+          "no-print flex h-full flex-col border-r border-border bg-sidebar transition-all duration-200",
           collapsed ? "w-[60px]" : "w-[220px]"
         )}
       >
@@ -150,23 +164,6 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
           )}
         </div>
 
-        {/* Branch indicator */}
-        {activeBranch && (
-          <div className="border-b border-border px-3 py-2">
-            {collapsed ? (
-              <div
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary"
-                title={activeBranch.name}
-              >
-                {activeBranch.name.charAt(0).toUpperCase()}
-              </div>
-            ) : (
-              <Badge variant="outline" className="w-full justify-center truncate text-xs">
-                {activeBranch.name}
-              </Badge>
-            )}
-          </div>
-        )}
 
         {/* Nav */}
         <nav className="flex-1 space-y-4 overflow-y-auto p-2 py-4">
@@ -178,7 +175,7 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
           />
           <NavGroup
             label="Reports"
-            items={reportsNav}
+            items={reportsNavFiltered}
             pathname={pathname}
             collapsed={collapsed}
           />
@@ -223,7 +220,7 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
+        <header className="no-print flex h-16 items-center justify-between border-b border-border bg-card px-6">
           <h1 className="text-lg font-semibold">{pageTitle}</h1>
 
           <div className="flex items-center gap-3">

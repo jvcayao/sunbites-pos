@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { Info } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -85,7 +86,12 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 
 function FieldError({ error }: { error?: string[] }) {
   if (!error?.length) return null;
-  return <p className="mt-1 text-xs text-destructive">{error[0]}</p>;
+  return (
+    <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive">
+      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+      {error[0]}
+    </p>
+  );
 }
 
 function FormField({
@@ -167,6 +173,7 @@ export default function CreateUserPage() {
     const result = createUserSchema.safeParse(normalized);
     if (!result.success) {
       setFieldErrors(result.error.flatten().fieldErrors as Record<string, string[]>);
+      toast.error("Please fix the highlighted fields before continuing.");
       return;
     }
     setFieldErrors({});
