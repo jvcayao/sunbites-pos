@@ -426,6 +426,10 @@ export const handlers = [
     HttpResponse.json(paymentsFixture)
   ),
 
+  http.get(`${API}/students/:id/orders`, () =>
+    HttpResponse.json({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } })
+  ),
+
   http.patch(`${API}/students/:studentId/payments/:paymentId`, () =>
     HttpResponse.json({ ...paymentsFixture[1], status: "paid" })
   ),
