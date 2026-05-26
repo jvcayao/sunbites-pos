@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { startTransition, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -463,10 +463,10 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
     const el = document.createElement("div");
     el.id = "qr-print-root";
     document.body.appendChild(el);
-    setPrintRoot(el);
+    startTransition(() => setPrintRoot(el));
     return () => {
       document.body.removeChild(el);
-      setPrintRoot(null);
+      startTransition(() => setPrintRoot(null));
     };
   }, [open]);
 

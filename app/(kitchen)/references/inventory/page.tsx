@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -99,8 +99,10 @@ function EditDialog({ item, onClose }: EditDialogProps) {
 
   useEffect(() => {
     if (item) {
-      setValues({ name: item.name, unit: item.unit, restock_threshold: item.restock_threshold });
-      setErrors({});
+      startTransition(() => {
+        setValues({ name: item.name, unit: item.unit, restock_threshold: item.restock_threshold });
+        setErrors({});
+      });
     }
   }, [item]);
 

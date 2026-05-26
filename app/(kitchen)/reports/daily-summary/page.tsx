@@ -52,7 +52,7 @@ export default function DailySummaryPage() {
           <AlertTriangle className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
           <p className="text-lg font-semibold text-foreground">Access Restricted</p>
           <p className="text-sm text-muted-foreground">
-            You don't have permission to view this report.
+            {"You don't have permission to view this report."}
           </p>
           <Button variant="outline" onClick={() => router.back()}>
             Go Back

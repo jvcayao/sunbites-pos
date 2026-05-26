@@ -393,7 +393,7 @@ export default function DashboardPage() {
       {/* Recent Orders */}
       <div className="rounded-xl border border-border bg-card overflow-x-auto">
         <div className="border-b border-border px-4 py-3">
-          <h2 className="font-semibold text-foreground">Today's Orders</h2>
+          <h2 className="font-semibold text-foreground">{"Today's Orders"}</h2>
           <p className="text-xs text-muted-foreground">10 most recent</p>
         </div>
         <table className="w-full text-sm">

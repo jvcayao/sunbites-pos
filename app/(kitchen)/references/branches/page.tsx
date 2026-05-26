@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -56,12 +56,14 @@ function EditBranchDialog({ branch, onClose }: EditBranchDialogProps) {
 
   useEffect(() => {
     if (branch) {
-      setValues({
-        name: branch.name,
-        gcash_number: branch.gcash_number ?? null,
-        address: branch.address ?? null,
+      startTransition(() => {
+        setValues({
+          name: branch.name,
+          gcash_number: branch.gcash_number ?? null,
+          address: branch.address ?? null,
+        });
+        setErrors({});
       });
-      setErrors({});
     }
   }, [branch]);
 
