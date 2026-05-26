@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -410,72 +411,136 @@ interface BatchQrModalProps {
   students: Student[];
 }
 
+function QrCard({ student, branchName }: { student: Student; branchName: string }) {
+  const gradeSection = [student.grade_level, student.section].filter(Boolean).join(" · ");
+  return (
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border-[3px] border-amber-400 bg-white text-center">
+      {/* Header banner */}
+      <div className="shrink-0 bg-red-700 px-2 py-1">
+        <p className="text-[10px] font-extrabold uppercase leading-none tracking-wide text-white">
+          Sunbites
+        </p>
+        <p className="text-[8px] font-semibold uppercase tracking-widest text-red-200">
+          {branchName}
+        </p>
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col items-center justify-between px-2 py-2">
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400">
+            <span className="text-xs font-extrabold text-white">
+              {student.first_name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <p className="text-[11px] font-bold leading-snug">{student.full_name}</p>
+            {gradeSection && (
+              <p className="text-[9px] text-muted-foreground">{gradeSection}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center gap-1">
+          <QRCode value={student.qr_code} style={{ width: "80%", height: "auto" }} />
+          <p className="text-[7px] font-mono text-muted-foreground">{student.qr_code}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
   const [cols, setCols] = useState<2 | 4>(2);
+  const [printRoot, setPrintRoot] = useState<HTMLDivElement | null>(null);
+  const activeBranch = useAuthStore((s) => s.activeBranch);
+  const branchName = activeBranch?.name ?? "Branch";
+
+  // Mount a dedicated print container directly on <body> so window.print()
+  // only shows the cards — not the dialog chrome.
+  useEffect(() => {
+    if (!open) return;
+    const el = document.createElement("div");
+    el.id = "qr-print-root";
+    document.body.appendChild(el);
+    setPrintRoot(el);
+    return () => {
+      document.body.removeChild(el);
+      setPrintRoot(null);
+    };
+  }, [open]);
+
+  const cardGrid = (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${cols}, 54mm)`,
+        gap: "5mm",
+        padding: "10mm",
+      }}
+    >
+      {students.map((s) => (
+        <div key={s.id} data-qr-card style={{ width: "54mm", height: "86mm" }}>
+          <QrCard student={s} branchName={branchName} />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            Print QR Codes ({students.length} selected)
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Print QR Codes ({students.length} selected)</DialogTitle>
+          </DialogHeader>
 
-        <div className="flex items-center gap-2 no-print">
-          <span className="text-sm text-muted-foreground">Cards per row:</span>
-          {([2, 4] as const).map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => setCols(n)}
-              className={cn(
-                "rounded-lg border px-3 py-1 text-sm",
-                cols === n
-                  ? "border-primary bg-primary/5 text-primary font-semibold"
-                  : "border-border hover:bg-muted/40"
-              )}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Cards per row:</span>
+            {([2, 4] as const).map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setCols(n)}
+                className={cn(
+                  "rounded-lg border px-3 py-1 text-sm",
+                  cols === n
+                    ? "border-primary bg-primary/5 text-primary font-semibold"
+                    : "border-border hover:bg-muted/40"
+                )}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
 
-        <div
-          className={cn(
-            "grid gap-4 mt-2",
-            cols === 2 ? "grid-cols-2" : "grid-cols-4"
-          )}
-        >
-          {students.map((s) => (
-            <div
-              key={s.id}
-              className="flex flex-col items-center gap-2 rounded-lg border border-border p-3 text-center"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                {s.first_name.charAt(0).toUpperCase()}
+          {/* Screen preview — fixed ID card size */}
+          <div
+            className={cn(
+              "grid gap-3 mt-2 justify-items-center",
+              cols === 2 ? "grid-cols-2" : "grid-cols-4"
+            )}
+          >
+            {students.map((s) => (
+              <div key={s.id} className="w-[130px] h-[206px]">
+                <QrCard student={s} branchName={branchName} />
               </div>
-              <p className="text-sm font-semibold leading-tight">{s.full_name}</p>
-              <p className="text-xs text-muted-foreground">{s.grade_level}</p>
-              <QRCode value={s.qr_code} size={80} />
-              <p className="text-[10px] font-mono text-muted-foreground">
-                {s.qr_code}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <DialogFooter className="no-print">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={() => window.print()}>
-            <Printer className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Print All
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={() => window.print()}>
+              <Printer className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Print All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Print portal — rendered outside the dialog, at actual ID card mm dimensions */}
+      {printRoot && createPortal(cardGrid, printRoot)}
+    </>
   );
 }
 

@@ -44,11 +44,28 @@
 }
 
 @media print {
+  /* When printing QR cards, hide everything except the dedicated print root */
+  body:has(#qr-print-root) > *:not(#qr-print-root) {
+    display: none !important;
+  }
+
+  #qr-print-root {
+    display: block !important;
+  }
+
+  /* ID card sizing for print — exact CR80 portrait dimensions */
+  #qr-print-root [data-qr-card] {
+    width: 54mm !important;
+    height: 86mm !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* General report / non-QR print */
   .no-print {
     display: none !important;
   }
 
-  /* Remove the flex layout constraints so the main content fills the page */
   body > * {
     overflow: visible !important;
   }
