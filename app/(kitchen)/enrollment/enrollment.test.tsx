@@ -32,6 +32,7 @@ jest.mock("@/lib/store/auth", () => {
 // SelectTrigger via a ref callback, then SelectContent renders the actual
 // native <select> with options as <option> children.
 jest.mock("@/components/ui/select", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require("react");
 
   type TriggerMeta = { id?: string; ariaLabel?: string; ariaLabelledBy?: string };

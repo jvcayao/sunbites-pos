@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -117,8 +117,10 @@ function FeedbackDetailSheet({
 
   useEffect(() => {
     if (feedback) {
-      setReply(feedback.admin_reply ?? "");
-      setReplyError("");
+      startTransition(() => {
+        setReply(feedback.admin_reply ?? "");
+        setReplyError("");
+      });
     }
   }, [feedback]);
 

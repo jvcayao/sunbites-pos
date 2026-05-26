@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -52,9 +52,11 @@ function EditDaysDialog({ row, year, dailyMealRate, onClose }: EditDaysDialogPro
   // Sync days input when a new row is selected (dialog re-opens for a different month)
   useEffect(() => {
     if (row) {
-      setDays(row.days);
-      setAmountOverride("");
-      setError(null);
+      startTransition(() => {
+        setDays(row.days);
+        setAmountOverride("");
+        setError(null);
+      });
     }
   }, [row]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -54,9 +54,11 @@ function EditConfigDialog({ config, onClose }: EditConfigDialogProps) {
 
   useEffect(() => {
     if (config) {
-      setValue(config.value);
-      setError(null);
-      setSavedIndicator(false);
+      startTransition(() => {
+        setValue(config.value);
+        setError(null);
+        setSavedIndicator(false);
+      });
     }
   }, [config]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -69,25 +69,27 @@ export default function MealPlannerPage() {
   });
 
   useEffect(() => {
-    if (data?.grid?.length) {
-      setRows(
-        DAYS.map((day) => {
-          const found = data.grid.find((r) => r.day === day);
-          return (
-            found ?? {
-              day,
-              day_label: day.charAt(0).toUpperCase() + day.slice(1),
-              ulam: "",
-              vegetables: "",
-              fruit: "",
-              soup: "",
-            }
-          );
-        })
-      );
-    } else if (!isLoading) {
-      setRows(DEFAULT_ROWS);
-    }
+    startTransition(() => {
+      if (data?.grid?.length) {
+        setRows(
+          DAYS.map((day) => {
+            const found = data.grid.find((r) => r.day === day);
+            return (
+              found ?? {
+                day,
+                day_label: day.charAt(0).toUpperCase() + day.slice(1),
+                ulam: "",
+                vegetables: "",
+                fruit: "",
+                soup: "",
+              }
+            );
+          })
+        );
+      } else if (!isLoading) {
+        setRows(DEFAULT_ROWS);
+      }
+    });
   }, [data, isLoading]);
 
   const saveMutation = useMutation({

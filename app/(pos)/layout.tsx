@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuthStore } from "@/lib/store/auth";
@@ -16,7 +16,7 @@ export default function PosGroupLayout({
   const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
+    startTransition(() => setMounted(true));
   }, []);
 
   useEffect(() => {

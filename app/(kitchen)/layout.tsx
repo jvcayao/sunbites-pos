@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { KitchenLayout } from "@/components/layouts/kitchen-layout";
@@ -18,7 +18,7 @@ export default function KitchenGroupLayout({
   const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
+    startTransition(() => setMounted(true));
   }, []);
 
   useEffect(() => {

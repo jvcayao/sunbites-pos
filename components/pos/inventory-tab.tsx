@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -88,8 +88,10 @@ function StockAdjustmentModal({ item, onClose }: StockAdjustmentModalProps) {
 
   useEffect(() => {
     if (item) {
-      setValues({ direction: "add", type: "restock", quantity: "", reason: "" });
-      setErrors({});
+      startTransition(() => {
+        setValues({ direction: "add", type: "restock", quantity: "", reason: "" });
+        setErrors({});
+      });
     }
   }, [item]);
 

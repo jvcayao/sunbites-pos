@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -879,9 +879,11 @@ function EditAmountDialog({
 
   useEffect(() => {
     if (open) {
-      setAmount(payment.amount);
-      setError(null);
-      setSavedIndicator(false);
+      startTransition(() => {
+        setAmount(payment.amount);
+        setError(null);
+        setSavedIndicator(false);
+      });
     }
   }, [open, payment.amount]);
 

@@ -50,6 +50,7 @@
     "msw": "^2.6.0",
     "prettier": "^3.8.3",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5",
     "undici": "^5.29.0"
   }
