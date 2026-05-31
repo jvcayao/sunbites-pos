@@ -100,7 +100,7 @@ describe("StudentDetailPage", () => {
     await user.click(orderTab);
 
     expect(
-      await screen.findByText(/order history will be available/i)
+      await screen.findByText(/no orders yet/i)
     ).toBeInTheDocument();
   });
 
