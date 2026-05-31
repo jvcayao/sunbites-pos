@@ -10,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { reportApi } from "@/lib/api/reports";
 import { useAuthStore } from "@/lib/store/auth";
 
-import type { DailySummaryData } from "@/lib/api/reports";
 
 // ---------------------------------------------------------------------------
 // Helpers

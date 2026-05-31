@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -113,10 +113,19 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
     onError: (err: ApiError) => toast.error(err.message ?? "Failed to remove ingredient."),
   });
 
+  const mappedIds = new Set((ingredients ?? []).map((i: InventoryIngredient) => i.inventory_item_id));
+  const unmappedItems = inventoryItems.filter((inv) => !mappedIds.has(inv.id));
+
+  // Derive the display item from state. If the selected ID is no longer in unmappedItems
+  // (item was just linked), treat the selection as empty — avoids both the stale-value
+  // display bug and any setState-in-effect lint violation.
+  const selectedInvItem = unmappedItems.find((inv) => String(inv.id) === selectedItemId);
+  const effectiveSelectedItemId = selectedInvItem ? selectedItemId : "";
+
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setAddError(null);
-    if (!selectedItemId) {
+    if (!effectiveSelectedItemId) {
       setAddError("Select an inventory item.");
       return;
     }
@@ -125,21 +134,8 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
       setAddError("Quantity must be greater than 0.");
       return;
     }
-    attachMutation.mutate({ inventoryItemId: Number(selectedItemId), quantity: qty });
+    attachMutation.mutate({ inventoryItemId: Number(effectiveSelectedItemId), quantity: qty });
   }
-
-  const mappedIds = new Set((ingredients ?? []).map((i: InventoryIngredient) => i.inventory_item_id));
-  const unmappedItems = inventoryItems.filter((inv) => !mappedIds.has(inv.id));
-
-  // Derive display text directly — avoids Radix SelectValue losing the label on re-render
-  // when SelectContent is unmounted (closed dropdown). If the selected item is no longer
-  // in unmappedItems (it was just linked), reset to empty so the placeholder shows.
-  const selectedInvItem = unmappedItems.find((inv) => String(inv.id) === selectedItemId);
-  useEffect(() => {
-    if (selectedItemId && !selectedInvItem) {
-      setSelectedItemId("");
-    }
-  }, [selectedInvItem, selectedItemId]);
 
   return (
     <div className="mt-3 rounded-lg border border-border bg-background p-3 text-sm">
@@ -184,7 +180,7 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
       {/* Add ingredient form */}
       <form onSubmit={handleAdd} className="mt-2 flex flex-wrap items-end gap-2">
         <div className="flex-1 min-w-[120px]">
-          <Select value={selectedItemId} onValueChange={(v) => setSelectedItemId(v ?? "")}>
+          <Select value={effectiveSelectedItemId} onValueChange={(v) => setSelectedItemId(v ?? "")}>
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Select inventory item">
                 {selectedInvItem

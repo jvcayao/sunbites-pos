@@ -10,11 +10,8 @@ import {
   Wallet,
   AlertTriangle,
   TrendingUp,
-  Link as LinkIcon,
 } from "lucide-react";
 import Link from "next/link";
-
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,

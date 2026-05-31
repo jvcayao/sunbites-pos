@@ -19,7 +19,6 @@ import { reportApi } from "@/lib/api/reports";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
-import type { CreditRow, CreditSummary } from "@/lib/api/reports";
 
 // ---------------------------------------------------------------------------
 // Helpers
