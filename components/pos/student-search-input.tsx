@@ -5,6 +5,13 @@ import { useMutation } from "@tanstack/react-query";
 
 import { cn } from "@/lib/utils";
 import { posStudentApi } from "@/lib/api/pos-students";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import type { ApiError } from "@/types/auth";
 import type { PosStudent, PosStudentSearchResult } from "@/types/order";
@@ -135,6 +142,63 @@ function SearchResultsDropdown({ results, onSelect }: SearchResultsDropdownProps
   );
 }
 
+interface ChangeStudentDialogProps {
+  currentStudent: PosStudent;
+  newStudent: PosStudent;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function ChangeStudentDialog({ currentStudent, newStudent, onConfirm, onCancel }: ChangeStudentDialogProps) {
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle>Switch Student?</DialogTitle></DialogHeader>
+        <div className="space-y-3 py-2 text-sm">
+          <p className="text-muted-foreground">A new QR code was scanned.</p>
+          <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Current</p>
+              <p className="font-medium">{currentStudent.full_name}</p>
+              <p className="text-xs text-muted-foreground">{currentStudent.grade_level}</p>
+            </div>
+            <div className="border-t border-border pt-2">
+              <p className="text-xs text-muted-foreground">New</p>
+              <p className="font-medium">{newStudent.full_name}</p>
+              <p className="text-xs text-muted-foreground">{newStudent.grade_level}</p>
+              <span className="mt-1 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                Enrolled
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-1">
+          <Button variant="outline" onClick={onCancel}>No, Keep Current</Button>
+          <Button onClick={onConfirm}>Yes, Switch</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface StudentNotFoundDialogProps { open: boolean; onClose: () => void; }
+
+function StudentNotFoundDialog({ open, onClose }: StudentNotFoundDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader><DialogTitle>Student Not Found</DialogTitle></DialogHeader>
+        <p className="py-2 text-sm text-muted-foreground">
+          No student was found matching this QR code. Please try scanning again or search by name.
+        </p>
+        <div className="flex justify-end pt-1">
+          <Button onClick={onClose}>Close</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 interface Props {
   onStudentSelected: (student: PosStudent | null) => void;
   onWalkIn: () => void;
@@ -152,11 +216,20 @@ export function StudentSearchInput({
   const [searchResults, setSearchResults] = useState<PosStudentSearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingQrStudent, setPendingQrStudent] = useState<PosStudent | null>(null);
+  const [showNotFoundDialog, setShowNotFoundDialog] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const lastKeyTimeRef = useRef<number>(0);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const scanBufferRef = useRef<string>("");
+  const globalScanLastKeyRef = useRef<number>(0);
+  const selectedStudentRef = useRef<PosStudent | null>(selectedStudent);
+
+  useEffect(() => {
+    selectedStudentRef.current = selectedStudent;
+  }, [selectedStudent]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -199,6 +272,79 @@ export function StudentSearchInput({
       setError(err.message ?? "Failed to fetch student data.");
     },
   });
+
+  const globalQrLookupMutation = useMutation({
+    mutationFn: posStudentApi.lookup,
+    onSuccess: (result) => {
+      setInputValue("");
+      setShowDropdown(false);
+      setSearchResults([]);
+      if (!result.student) { setShowNotFoundDialog(true); return; }
+      const incoming = result.student;
+      if (incoming.enrollment_status !== "enrolled") {
+        setError(incoming.full_name + " is not enrolled and cannot make purchases.");
+        return;
+      }
+      if (selectedStudentRef.current) {
+        setPendingQrStudent(incoming);
+      } else {
+        onStudentSelected(incoming);
+        setTimeout(() => inputRef.current?.focus(), 50);
+      }
+    },
+    onError: () => { setShowNotFoundDialog(true); },
+  });
+
+  const globalQrLookupRef = useRef(globalQrLookupMutation);
+  useEffect(() => { globalQrLookupRef.current = globalQrLookupMutation; });
+
+  useEffect(() => {
+    const SCAN_THRESHOLD_MS = 100;
+
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      const now = performance.now();
+      const elapsed = now - globalScanLastKeyRef.current;
+      globalScanLastKeyRef.current = now;
+
+      if (e.key.length === 1 && elapsed < SCAN_THRESHOLD_MS) {
+        scanBufferRef.current += e.key;
+        // Always suppress fast keystrokes from the DOM — scanner chars must NEVER
+        // appear in the visible input regardless of which element has focus.
+        e.preventDefault();
+        return;
+      }
+
+      if (e.key === "Enter") {
+        const buffer = scanBufferRef.current;
+        scanBufferRef.current = "";
+
+        if (buffer.length === 0) {
+          // Empty buffer = plain manual Enter key — let it propagate normally.
+          return;
+        }
+
+        // Buffer has content from a scanner sequence. Always consume this Enter.
+        e.preventDefault();
+        setInputValue("");
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+        if (QR_PATTERN.test(buffer)) {
+          globalQrLookupRef.current.mutate({ type: "qr", value: buffer });
+        } else {
+          // Scanner fired but the QR code is not a student QR — show Not Found dialog.
+          setShowNotFoundDialog(true);
+        }
+        return;
+      }
+
+      if (e.key.length === 1 && elapsed >= SCAN_THRESHOLD_MS) {
+        scanBufferRef.current = "";
+      }
+    }
+
+    document.addEventListener("keydown", handleGlobalKeyDown);
+    return () => document.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   function handleSelectFromDropdown(student: PosStudentSearchResult) {
     setShowDropdown(false);
@@ -259,93 +405,104 @@ export function StudentSearchInput({
   const isPending =
     lookupMutation.isPending || fullStudentMutation.isPending;
 
-  if (isWalkIn) {
-    return (
-      <div className="rounded-xl border border-border bg-amber-50 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🚶</span>
-            <div>
-              <p className="font-semibold text-foreground">Walk-in Customer</p>
-              <p className="text-sm text-muted-foreground">No student account attached</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => onStudentSelected(null)}
-            className="rounded px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            Switch to Student
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (selectedStudent) {
-    return (
-      <SelectedStudentCard
-        student={selectedStudent}
-        onClear={() => onStudentSelected(null)}
-      />
-    );
-  }
-
   return (
-    <div ref={containerRef} className="relative">
-      <div className="relative">
-        <input
-          ref={inputRef}
-          id="pos-qr-input"
-          type="text"
-          autoComplete="off"
-          placeholder="Scan QR code or type student name / number…"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
-          disabled={isPending}
-          className={cn(
-            "w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition-colors",
-            "placeholder:text-muted-foreground",
-            "focus:border-ring focus:ring-3 focus:ring-ring/30",
-            error ? "border-destructive" : "border-input",
-            isPending && "cursor-wait opacity-70"
-          )}
-        />
-        {isPending && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    <>
+      {isWalkIn ? (
+        <div className="rounded-xl border border-border bg-amber-50 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🚶</span>
+              <div>
+                <p className="font-semibold text-foreground">Walk-in Customer</p>
+                <p className="text-sm text-muted-foreground">No student account attached</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onStudentSelected(null)}
+              className="rounded px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              Switch to Student
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      ) : selectedStudent ? (
+        <SelectedStudentCard student={selectedStudent} onClear={() => onStudentSelected(null)} />
+      ) : (
+        <div ref={containerRef} className="relative">
+          <div className="relative">
+            <input
+              ref={inputRef}
+              id="pos-qr-input"
+              type="text"
+              autoComplete="off"
+              placeholder="Scan QR code or type student name / number…"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
+              disabled={isPending}
+              className={cn(
+                "w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition-colors",
+                "placeholder:text-muted-foreground",
+                "focus:border-ring focus:ring-3 focus:ring-ring/30",
+                error ? "border-destructive" : "border-input",
+                isPending && "cursor-wait opacity-70"
+              )}
+            />
+            {isPending && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            )}
+          </div>
 
-      {error && (
-        <p role="alert" className="mt-1.5 text-xs text-destructive">
-          {error}
-        </p>
+          {error && (
+            <p role="alert" className="mt-1.5 text-xs text-destructive">
+              {error}
+            </p>
+          )}
+
+          {showDropdown && (
+            <SearchResultsDropdown
+              results={searchResults}
+              onSelect={handleSelectFromDropdown}
+            />
+          )}
+
+          <div className="mt-2 flex items-center gap-3">
+            <p className="text-xs text-muted-foreground">
+              Press <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs">Enter</kbd> to search
+            </p>
+            <span className="text-xs text-muted-foreground">—</span>
+            <button
+              type="button"
+              onClick={onWalkIn}
+              className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+            >
+              Walk-in customer
+            </button>
+          </div>
+        </div>
       )}
 
-      {showDropdown && (
-        <SearchResultsDropdown
-          results={searchResults}
-          onSelect={handleSelectFromDropdown}
+      {pendingQrStudent && selectedStudent && (
+        <ChangeStudentDialog
+          currentStudent={selectedStudent}
+          newStudent={pendingQrStudent}
+          onConfirm={() => {
+            onStudentSelected(pendingQrStudent);
+            setPendingQrStudent(null);
+            setTimeout(() => inputRef.current?.focus(), 50);
+          }}
+          onCancel={() => setPendingQrStudent(null)}
         />
       )}
 
-      <div className="mt-2 flex items-center gap-3">
-        <p className="text-xs text-muted-foreground">
-          Press <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs">Enter</kbd> to search
-        </p>
-        <span className="text-xs text-muted-foreground">—</span>
-        <button
-          type="button"
-          onClick={onWalkIn}
-          className="text-xs font-medium text-primary underline-offset-2 hover:underline"
-        >
-          Walk-in customer
-        </button>
-      </div>
-    </div>
+      <StudentNotFoundDialog
+        open={showNotFoundDialog}
+        onClose={() => { setShowNotFoundDialog(false); setTimeout(() => inputRef.current?.focus(), 50); }}
+      />
+    </>
   );
 }

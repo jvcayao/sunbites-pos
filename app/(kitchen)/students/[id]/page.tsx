@@ -2,7 +2,7 @@
 
 import { startTransition, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { ChevronLeft, Mail, MoreHorizontal, Pencil, Printer, RefreshCw, Trash2, UserPlus } from "lucide-react";
@@ -60,18 +60,7 @@ import type {
 // Constants
 // ---------------------------------------------------------------------------
 
-const SCHOOL_MONTHS: { value: SchoolMonth; label: string }[] = [
-  { value: "june", label: "June" },
-  { value: "july", label: "July" },
-  { value: "august", label: "August" },
-  { value: "september", label: "September" },
-  { value: "october", label: "October" },
-  { value: "november", label: "November" },
-  { value: "december", label: "December" },
-  { value: "january", label: "January" },
-  { value: "february", label: "February" },
-  { value: "march", label: "March" },
-];
+
 
 const ENROLLMENT_STATUS_CONFIG: Record<
   EnrollmentStatus,
@@ -1625,11 +1614,12 @@ function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
                       <Button
                         type="button"
                         size="sm"
-                        variant="outline"
+                        variant={isPaid ? "outline" : "default"}
+                        className={isPaid ? "text-muted-foreground" : ""}
                         onClick={() => toggleMutation.mutate(payment.id)}
                         disabled={toggleMutation.isPending}
                       >
-                        Toggle
+                        {isPaid ? "Mark Unpaid" : "Mark as Paid"}
                       </Button>
                       {!isPaid && (
                         <Button

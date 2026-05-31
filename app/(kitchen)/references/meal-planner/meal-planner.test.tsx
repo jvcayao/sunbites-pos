@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw";
 
 import { server } from "@/__tests__/mocks/server";
-import { mealPlannerFixture } from "@/__tests__/mocks/handlers";
+
 import { render, screen, waitFor } from "@/__tests__/test-utils";
 import userEvent from "@testing-library/user-event";
 

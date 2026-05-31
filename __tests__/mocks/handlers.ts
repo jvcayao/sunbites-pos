@@ -18,13 +18,13 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 // ---------------------------------------------------------------------------
 
 export const posMenuItemsFixture: PosMenuItem[] = [
-  { id: 1, name: "Subscription Meal Tray", price: "135.00", category: "meal", is_available: true, sort_order: 0 },
-  { id: 2, name: "Snack A (Bread/Pastry)", price: "15.00", category: "snack", is_available: true, sort_order: 1 },
+  { id: 1, name: "Subscription Meal Tray", price: "135.00", category: "meal", is_available: true, sort_order: 0, inventory_status: "OK", has_inventory_mapping: true },
+  { id: 2, name: "Snack A (Bread/Pastry)", price: "15.00", category: "snack", is_available: true, sort_order: 1, inventory_status: null, has_inventory_mapping: false },
 ];
 
 export const inventoryItemsFixture: InventoryItem[] = [
-  { id: 1, name: "Rice", quantity: "50.00", unit: "kg", restock_threshold: "20.00", status: "OK" },
-  { id: 2, name: "Chicken", quantity: "8.00", unit: "kg", restock_threshold: "10.00", status: "LOW" },
+  { id: 1, name: "Rice", quantity: "50.00", unit: "kg", restock_threshold: "20.00", overstock_threshold: null, cost_per_unit: null, is_archived: false, has_inventory_mapping: true, inventory_status: "OK", status: "OK" },
+  { id: 2, name: "Chicken", quantity: "8.00", unit: "kg", restock_threshold: "10.00", overstock_threshold: null, cost_per_unit: null, is_archived: false, has_inventory_mapping: false, inventory_status: "LOW", status: "LOW" },
 ];
 
 export const mealPlannerFixture = {
@@ -356,7 +356,7 @@ export const handlers = [
   http.get(`${API}/references/inventory`, () => HttpResponse.json(inventoryItemsFixture)),
 
   http.post(`${API}/references/inventory`, () =>
-    HttpResponse.json({ id: 99, name: "New Item", quantity: "10.00", unit: "pcs", restock_threshold: "5.00", status: "OK" }, { status: 201 })
+    HttpResponse.json({ id: 99, name: "New Item", quantity: "10.00", unit: "pcs", restock_threshold: "5.00", overstock_threshold: null, cost_per_unit: null, is_archived: false, has_inventory_mapping: false, inventory_status: "OK", status: "OK" }, { status: 201 })
   ),
 
   http.put(`${API}/references/inventory/:id`, () =>

@@ -11,7 +11,6 @@ import { reportApi, exportReport } from "@/lib/api/reports";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
-import type { WalletReportRow, WalletSummary } from "@/lib/api/reports";
 
 // ---------------------------------------------------------------------------
 // Helpers

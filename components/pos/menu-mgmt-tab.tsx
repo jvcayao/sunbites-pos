@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -8,6 +8,7 @@ import { AlertCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { posMenuItemApi } from "@/lib/api/pos-menu-items";
+import { inventoryApi } from "@/lib/api/inventory";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +28,7 @@ import {
 
 import type { ApiError } from "@/types/auth";
 import type { MenuCategory, PosMenuItem, UpdateMenuItemPayload } from "@/types/pos-menu-item";
+import type { InventoryIngredient, InventoryItem } from "@/types/inventory";
 
 const CATEGORIES: MenuCategory[] = ["meal", "snack", "drink", "extra"];
 
@@ -66,24 +68,202 @@ const menuItemSchema = z.object({
 
 type MenuItemForm = z.infer<typeof menuItemSchema>;
 
+// ---------------------------------------------------------------------------
+// Ingredient mapping panel
+// ---------------------------------------------------------------------------
+
+interface IngredientsPanelProps {
+  menuItem: PosMenuItem;
+  inventoryItems: InventoryItem[];
+}
+
+function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
+  const queryClient = useQueryClient();
+  const [selectedItemId, setSelectedItemId] = useState("");
+  const [qtyUsed, setQtyUsed] = useState("1");
+  const [addError, setAddError] = useState<string | null>(null);
+
+  const { data: ingredients, isLoading } = useQuery({
+    queryKey: ["menu-item-ingredients", menuItem.id],
+    queryFn: () => inventoryApi.listIngredients(menuItem.id),
+  });
+
+  const attachMutation = useMutation({
+    mutationFn: ({ inventoryItemId, quantity }: { inventoryItemId: number; quantity: number }) =>
+      inventoryApi.attachIngredient(menuItem.id, { inventory_item_id: inventoryItemId, quantity_used: quantity }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["menu-item-ingredients", menuItem.id] });
+      queryClient.invalidateQueries({ queryKey: ["pos-menu-items"] });
+      setSelectedItemId("");
+      setQtyUsed("1");
+      setAddError(null);
+      toast.success("Stock link added.");
+    },
+    onError: (err: ApiError) => setAddError(err.message ?? "Failed to add ingredient."),
+  });
+
+  const detachMutation = useMutation({
+    mutationFn: (inventoryItemId: number) =>
+      inventoryApi.detachIngredient(menuItem.id, inventoryItemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["menu-item-ingredients", menuItem.id] });
+      queryClient.invalidateQueries({ queryKey: ["pos-menu-items"] });
+      toast.success("Stock link removed.");
+    },
+    onError: (err: ApiError) => toast.error(err.message ?? "Failed to remove ingredient."),
+  });
+
+  const mappedIds = new Set((ingredients ?? []).map((i: InventoryIngredient) => i.inventory_item_id));
+  const unmappedItems = inventoryItems.filter((inv) => !mappedIds.has(inv.id));
+
+  // Derive the display item from state. If the selected ID is no longer in unmappedItems
+  // (item was just linked), treat the selection as empty — avoids both the stale-value
+  // display bug and any setState-in-effect lint violation.
+  const selectedInvItem = unmappedItems.find((inv) => String(inv.id) === selectedItemId);
+  const effectiveSelectedItemId = selectedInvItem ? selectedItemId : "";
+
+  function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    setAddError(null);
+    if (!effectiveSelectedItemId) {
+      setAddError("Select an inventory item.");
+      return;
+    }
+    const qty = parseFloat(qtyUsed);
+    if (isNaN(qty) || qty <= 0) {
+      setAddError("Quantity must be greater than 0.");
+      return;
+    }
+    attachMutation.mutate({ inventoryItemId: Number(effectiveSelectedItemId), quantity: qty });
+  }
+
+  return (
+    <div className="mt-3 rounded-lg border border-border bg-background p-3 text-sm">
+      <p className="mb-2 font-semibold text-foreground">Linked Stock</p>
+
+      {isLoading ? (
+        <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+      ) : !ingredients?.length ? (
+        <p className="text-muted-foreground text-xs">No stock linked yet.</p>
+      ) : (
+        <table className="w-full mb-2">
+          <thead>
+            <tr className="text-left text-xs text-muted-foreground">
+              <th className="pb-1 font-medium">Inventory Item</th>
+              <th className="pb-1 font-medium">Qty Deducted</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {ingredients.map((ing: InventoryIngredient) => (
+              <tr key={ing.inventory_item_id} className="border-t border-border/50">
+                <td className="py-1">{ing.name}</td>
+                <td className="py-1 text-muted-foreground">
+                  {ing.quantity_used} {ing.unit}
+                </td>
+                <td className="py-1 text-right">
+                  <button
+                    type="button"
+                    className="text-xs text-destructive hover:underline disabled:opacity-50"
+                    disabled={detachMutation.isPending && detachMutation.variables === ing.inventory_item_id}
+                    onClick={() => detachMutation.mutate(ing.inventory_item_id)}
+                  >
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {/* Add ingredient form */}
+      <form onSubmit={handleAdd} className="mt-2 flex flex-wrap items-end gap-2">
+        <div className="flex-1 min-w-[120px]">
+          <Select value={effectiveSelectedItemId} onValueChange={(v) => setSelectedItemId(v ?? "")}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Select inventory item">
+                {selectedInvItem
+                  ? `${selectedInvItem.name} (${selectedInvItem.unit})`
+                  : undefined}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {unmappedItems.map((inv) => (
+                <SelectItem key={inv.id} value={String(inv.id)} className="text-xs">
+                  {inv.name} ({inv.unit})
+                </SelectItem>
+              ))}
+              {unmappedItems.length === 0 && (
+                <div className="px-3 py-2 text-xs text-muted-foreground">All items linked</div>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-16">
+          <Input
+            type="number"
+            min="0.01"
+            step="0.01"
+            className="h-8 text-xs"
+            value={qtyUsed}
+            onChange={(e) => setQtyUsed(e.target.value)}
+            aria-label="Quantity used per sale"
+          />
+        </div>
+        <Button type="submit" size="sm" className="h-8" disabled={attachMutation.isPending}>
+          {attachMutation.isPending ? "Linking…" : "Add Link"}
+        </Button>
+      </form>
+      {addError && (
+        <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          {addError}
+        </p>
+      )}
+
+      <p className="mt-3 flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2 py-1.5 text-xs text-amber-700">
+        <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+        All menu items must have at least one stock item linked before they can be sold at checkout.
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Menu Item Card
+// ---------------------------------------------------------------------------
+
 interface MenuItemCardProps {
   item: PosMenuItem;
+  inventoryItems: InventoryItem[];
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
   isToggling: boolean;
 }
 
-function MenuItemCard({ item, onToggle, onEdit, onDelete, isToggling }: MenuItemCardProps) {
+function MenuItemCard({ item, inventoryItems, onToggle, onEdit, onDelete, isToggling }: MenuItemCardProps) {
+  const [showIngredients, setShowIngredients] = useState(false);
+
   return (
-    <div className="flex flex-col justify-between rounded-lg border border-border bg-card p-4">
+    <div className={cn("flex flex-col justify-between rounded-lg border border-border bg-card p-4", !item.is_available && "opacity-50")}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-medium text-foreground">{item.name}</p>
-          <p className="text-sm text-muted-foreground">₱{parseFloat(item.price).toFixed(2)}</p>
+          <p className="text-xl font-extrabold text-primary">₱{parseFloat(item.price).toFixed(2)}</p>
         </div>
         <CategoryBadge category={item.category} />
       </div>
+
+      {/* Not-linked warning badge */}
+      {!item.has_inventory_mapping && (
+        <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-orange-300 bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
+          <AlertCircle className="h-3 w-3 shrink-0" />
+          Not linked
+        </span>
+      )}
+
       <div className="mt-3 flex items-center justify-between">
         <button
           type="button"
@@ -108,6 +288,14 @@ function MenuItemCard({ item, onToggle, onEdit, onDelete, isToggling }: MenuItem
           {item.is_available ? "Available" : "Unavailable"}
         </span>
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowIngredients((p) => !p)}
+            className="text-xs"
+          >
+            Link Stock
+          </Button>
           <Button variant="ghost" size="sm" onClick={onEdit}>
             Edit
           </Button>
@@ -121,9 +309,17 @@ function MenuItemCard({ item, onToggle, onEdit, onDelete, isToggling }: MenuItem
           </Button>
         </div>
       </div>
+
+      {showIngredients && (
+        <IngredientsPanel menuItem={item} inventoryItems={inventoryItems} />
+      )}
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// MenuMgmtTab
+// ---------------------------------------------------------------------------
 
 export function MenuMgmtTab() {
   const queryClient = useQueryClient();
@@ -141,6 +337,13 @@ export function MenuMgmtTab() {
     queryKey: ["pos-menu-items"],
     queryFn: posMenuItemApi.list,
   });
+
+  const { data: inventoryItems } = useQuery({
+    queryKey: ["references-inventory"],
+    queryFn: inventoryApi.list,
+  });
+
+  const activeInventoryItems = inventoryItems?.filter((i) => !i.is_archived) ?? [];
 
   const addMutation = useMutation({
     mutationFn: posMenuItemApi.create,
@@ -220,34 +423,6 @@ export function MenuMgmtTab() {
 
   return (
     <div className="space-y-6">
-      {isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((k) => (
-            <div
-              key={k}
-              className="h-24 animate-pulse rounded-lg border border-border bg-muted"
-            />
-          ))}
-        </div>
-      ) : !items?.length ? (
-        <p className="text-sm text-muted-foreground">No menu items yet.</p>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
-            <MenuItemCard
-              key={item.id}
-              item={item}
-              onToggle={() => toggleMutation.mutate(item.id)}
-              onEdit={() => openEdit(item)}
-              onDelete={() => setDeletingId(item.id)}
-              isToggling={
-                toggleMutation.isPending && toggleMutation.variables === item.id
-              }
-            />
-          ))}
-        </div>
-      )}
-
       <div className="rounded-xl border border-border bg-card p-4">
         <h3 className="mb-3 text-sm font-semibold text-foreground">Add New Item</h3>
         <form onSubmit={handleAdd} noValidate className="flex flex-wrap gap-3">
@@ -260,7 +435,8 @@ export function MenuMgmtTab() {
               aria-invalid={!!formErrors.name}
             />
             {formErrors.name && (
-              <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {formErrors.name[0]}
               </p>
             )}
@@ -277,7 +453,8 @@ export function MenuMgmtTab() {
               aria-invalid={!!formErrors.price}
             />
             {formErrors.price && (
-              <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {formErrors.price[0]}
               </p>
             )}
@@ -302,7 +479,8 @@ export function MenuMgmtTab() {
               </SelectContent>
             </Select>
             {formErrors.category && (
-              <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {formErrors.category[0]}
               </p>
             )}
@@ -314,6 +492,35 @@ export function MenuMgmtTab() {
           </div>
         </form>
       </div>
+
+      {isLoading ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((k) => (
+            <div
+              key={k}
+              className="h-24 animate-pulse rounded-lg border border-border bg-muted"
+            />
+          ))}
+        </div>
+      ) : !items?.length ? (
+        <p className="text-sm text-muted-foreground">No menu items yet.</p>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => (
+            <MenuItemCard
+              key={item.id}
+              item={item}
+              inventoryItems={activeInventoryItems}
+              onToggle={() => toggleMutation.mutate(item.id)}
+              onEdit={() => openEdit(item)}
+              onDelete={() => setDeletingId(item.id)}
+              isToggling={
+                toggleMutation.isPending && toggleMutation.variables === item.id
+              }
+            />
+          ))}
+        </div>
+      )}
 
       {/* Edit dialog */}
       <Dialog open={editingItem !== null} onOpenChange={(open) => { if (!open) setEditingItem(null); }}>
@@ -331,7 +538,10 @@ export function MenuMgmtTab() {
                 aria-invalid={!!editErrors.name}
               />
               {editErrors.name && (
-                <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />{editErrors.name[0]}</p>
+                <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  {editErrors.name[0]}
+                </p>
               )}
             </div>
             <div className="space-y-1">
@@ -346,7 +556,10 @@ export function MenuMgmtTab() {
                 aria-invalid={!!editErrors.price}
               />
               {editErrors.price && (
-                <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />{editErrors.price[0]}</p>
+                <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  {editErrors.price[0]}
+                </p>
               )}
             </div>
             <div className="space-y-1">
@@ -365,7 +578,10 @@ export function MenuMgmtTab() {
                 </SelectContent>
               </Select>
               {editErrors.category && (
-                <p role="alert" className="flex items-center gap-1 text-xs text-destructive"><AlertCircle className="h-3.5 w-3.5 shrink-0" />{editErrors.category[0]}</p>
+                <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  {editErrors.category[0]}
+                </p>
               )}
             </div>
             <div className="flex justify-end gap-2 pt-1">

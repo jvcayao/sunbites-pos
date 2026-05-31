@@ -122,14 +122,48 @@ export interface WalletSummary {
   students_below_100: number;
 }
 
+export type InventoryReportStatus = "out" | "low" | "ok" | "over";
+
 export interface InventoryReportRow {
   id: number;
   name: string;
   unit: string;
   quantity: number;
   restock_threshold: number;
-  status: "out" | "low" | "ok";
+  overstock_threshold: number | null;
+  cost_per_unit: number | null;
+  status: InventoryReportStatus;
   updated_at: string;
+}
+
+export interface InventoryReportLog {
+  id: number;
+  item_name_snapshot: string;
+  type: string;
+  type_label: string;
+  quantity_change: string;
+  stock_after: string;
+  reason: string;
+  adjusted_by: string | null;
+  created_at: string;
+  order_id: number | null;
+}
+
+export interface InventoryDiscrepancyRow {
+  inventory_item_id: number;
+  item_name: string;
+  adjustment_count: number;
+  net_change: string;
+  last_adjusted_at: string;
+}
+
+export interface InventoryReportFilters {
+  from?: string;
+  to?: string;
+  type?: string;
+  item_id?: number;
+  status?: string;
+  page?: number;
 }
 
 export interface ActivityLogRow {
@@ -239,11 +273,13 @@ export const reportApi = {
       params: params as Record<string, string | number | boolean | undefined>,
     }),
 
-  inventory: () =>
+  inventory: (params?: Record<string, string | number | boolean | undefined>) =>
     apiClient.get<{
       data: InventoryReportRow[];
-      summary: { out_of_stock: number; below_threshold: number };
-    }>("/reports/inventory"),
+      summary: { out_of_stock: number; below_threshold: number; over_stock: number };
+      logs?: { data: InventoryReportLog[]; meta: PaginatedMeta };
+      discrepancy?: InventoryDiscrepancyRow[];
+    }>("/reports/inventory", { params }),
 
   dailySummary: (date?: string) =>
     apiClient.get<DailySummaryData>("/reports/daily-summary", {

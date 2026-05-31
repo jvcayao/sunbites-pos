@@ -2,9 +2,14 @@ import { apiClient } from "./client";
 
 import type {
   AdjustStockPayload,
+  AttachIngredientPayload,
   CreateInventoryItemPayload,
+  InventoryHistoryFilters,
+  InventoryHistoryLog,
+  InventoryIngredient,
   InventoryItem,
   InventoryLog,
+  PaginatedResponse,
   UpdateInventoryItemPayload,
 } from "@/types/inventory";
 
@@ -27,4 +32,26 @@ export const inventoryApi = {
 
   logs: (id: number) =>
     apiClient.get<InventoryLog[]>(`/references/inventory/${id}/logs`),
+
+  history: (filters?: InventoryHistoryFilters) =>
+    apiClient.get<PaginatedResponse<InventoryHistoryLog>>("/references/inventory/history", {
+      params: filters as Record<string, string | number | boolean | undefined>,
+    }),
+
+  archive: (id: number) =>
+    apiClient.patch<{ message: string }>(`/references/inventory/${id}/archive`),
+
+  unarchive: (id: number) =>
+    apiClient.patch<{ message: string }>(`/references/inventory/${id}/unarchive`),
+
+  listIngredients: (menuItemId: number) =>
+    apiClient.get<InventoryIngredient[]>(`/references/menu-items/${menuItemId}/ingredients`),
+
+  attachIngredient: (menuItemId: number, payload: AttachIngredientPayload) =>
+    apiClient.post<InventoryIngredient[]>(`/references/menu-items/${menuItemId}/ingredients`, payload),
+
+  detachIngredient: (menuItemId: number, inventoryItemId: number) =>
+    apiClient.delete<{ message: string }>(
+      `/references/menu-items/${menuItemId}/ingredients/${inventoryItemId}`
+    ),
 };

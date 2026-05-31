@@ -7,6 +7,8 @@ export interface PosMenuItem {
   category: MenuCategory;
   is_available: boolean;
   sort_order: number;
+  inventory_status: "OK" | "LOW" | "OUT" | "OVER" | null;
+  has_inventory_mapping: boolean;
 }
 
 export interface CreateMenuItemPayload {
