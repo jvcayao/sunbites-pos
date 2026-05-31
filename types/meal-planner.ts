@@ -12,6 +12,8 @@ export type SchoolMonthKey =
 
 export type DayOfWeekKey = "monday" | "tuesday" | "wednesday" | "thursday" | "friday";
 
+export type CategoryKey = "ulam" | "vegetables" | "fruit" | "soup" | "snacks";
+
 export interface MealRow {
   day: DayOfWeekKey;
   day_label: string;
@@ -19,10 +21,12 @@ export interface MealRow {
   vegetables: string;
   fruit: string;
   soup: string;
+  snacks: string;
 }
 
 export interface MealPlannerResponse {
-  grid: MealRow[];
+  days: MealRow[];
+  visible_to_parents: boolean;
 }
 
 export interface SaveMealPlanPayload {
@@ -34,5 +38,10 @@ export interface SaveMealPlanPayload {
     vegetables: string;
     fruit: string;
     soup: string;
+    snacks: string;
   }>;
+}
+
+export interface UpdateWeekVisibilityResponse {
+  visible_to_parents: boolean;
 }
