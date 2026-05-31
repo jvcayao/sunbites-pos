@@ -17,7 +17,6 @@ import { reportApi, exportReport } from "@/lib/api/reports";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
-import type { BillingPayment, BillingSummary } from "@/lib/api/reports";
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 
 import { AppLogo } from "@/components/app-logo";
-import { Badge } from "@/components/ui/badge";
+
 import { cn } from "@/lib/utils";
 import { authApi } from "@/lib/api/auth";
 import { useAuthStore } from "@/lib/store/auth";

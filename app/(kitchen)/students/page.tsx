@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import { studentApi } from "@/lib/api/students";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
