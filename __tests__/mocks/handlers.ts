@@ -28,12 +28,13 @@ export const inventoryItemsFixture: InventoryItem[] = [
 ];
 
 export const mealPlannerFixture = {
-  grid: [
-    { day: "monday", day_label: "Monday", ulam: "Chicken Adobo", vegetables: "Chopsuey", fruit: "Mango", soup: "Sinigang" },
-    { day: "tuesday", day_label: "Tuesday", ulam: "Sinigang na Baboy", vegetables: "Pinakbet", fruit: "Banana", soup: "Miso" },
-    { day: "wednesday", day_label: "Wednesday", ulam: "Tinola", vegetables: "Laing", fruit: "Apple", soup: "Broth" },
-    { day: "thursday", day_label: "Thursday", ulam: "Kaldereta", vegetables: "Gulay", fruit: "Orange", soup: "Clear" },
-    { day: "friday", day_label: "Friday", ulam: "Inasal", vegetables: "Ampalaya", fruit: "Watermelon", soup: "Corn" },
+  visible_to_parents: true,
+  days: [
+    { day: "monday", day_label: "Monday", ulam: "Chicken Adobo", vegetables: "Chopsuey", fruit: "Mango", soup: "Sinigang", snacks: "Graham Crackers" },
+    { day: "tuesday", day_label: "Tuesday", ulam: "Sinigang na Baboy", vegetables: "Pinakbet", fruit: "Banana", soup: "Miso", snacks: "Bread Roll" },
+    { day: "wednesday", day_label: "Wednesday", ulam: "Tinola", vegetables: "Laing", fruit: "Apple", soup: "Broth", snacks: "Biscuit" },
+    { day: "thursday", day_label: "Thursday", ulam: "Kaldereta", vegetables: "Gulay", fruit: "Orange", soup: "Clear", snacks: "Banana Cue" },
+    { day: "friday", day_label: "Friday", ulam: "Inasal", vegetables: "Ampalaya", fruit: "Watermelon", soup: "Corn", snacks: "Puto" },
   ],
 };
 
@@ -335,6 +336,10 @@ export const handlers = [
 
   http.post(`${API}/references/meal-planner/reset`, () =>
     HttpResponse.json({ message: "Week reset to default pattern." })
+  ),
+
+  http.patch(`${API}/references/meal-planner/week-visibility`, () =>
+    HttpResponse.json({ visible_to_parents: false })
   ),
 
   // POS Inventory
