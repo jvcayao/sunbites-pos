@@ -167,4 +167,45 @@ describe("MealPlannerPage", () => {
 
     expect(await screen.findByText(/Failed to load meal plan/i)).toBeInTheDocument();
   });
+
+  it("renders Snacks column in the meal grid", async () => {
+    render(<MealPlannerPage />);
+
+    expect(await screen.findByDisplayValue("Chicken Adobo")).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Snacks" })).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Graham Crackers")).toBeInTheDocument();
+  });
+
+  it("shows week visibility badge as Visible to Parents by default (admin)", async () => {
+    render(<MealPlannerPage />);
+
+    await screen.findByDisplayValue("Chicken Adobo");
+
+    expect(screen.getByRole("button", { name: /Visible to Parents/i })).toBeInTheDocument();
+  });
+
+  it("admin can click visibility badge to open WeekVisibilityDialog", async () => {
+    const user = userEvent.setup();
+    render(<MealPlannerPage />);
+
+    await screen.findByDisplayValue("Chicken Adobo");
+
+    await user.click(screen.getByRole("button", { name: /Visible to Parents/i }));
+
+    expect(await screen.findByText(/Hide .* from Parents\?/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Yes, Hide It/i })).toBeInTheDocument();
+  });
+
+  it("supervisor sees read-only visibility badge (not a button)", async () => {
+    mockUseAuthStore.mockImplementation((selector) =>
+      (selector as (state: AuthState) => unknown)({ user: supervisorUser, activeBranch: null } as AuthState)
+    );
+
+    render(<MealPlannerPage />);
+
+    await screen.findByText("Chicken Adobo");
+
+    expect(screen.getByText(/Visible to Parents/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Visible to Parents/i })).not.toBeInTheDocument();
+  });
 });
