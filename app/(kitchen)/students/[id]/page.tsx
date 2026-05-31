@@ -1625,11 +1625,12 @@ function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
                       <Button
                         type="button"
                         size="sm"
-                        variant="outline"
+                        variant={isPaid ? "outline" : "default"}
+                        className={isPaid ? "text-muted-foreground" : ""}
                         onClick={() => toggleMutation.mutate(payment.id)}
                         disabled={toggleMutation.isPending}
                       >
-                        Toggle
+                        {isPaid ? "Mark Unpaid" : "Mark as Paid"}
                       </Button>
                       {!isPaid && (
                         <Button

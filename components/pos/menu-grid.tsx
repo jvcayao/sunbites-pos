@@ -87,6 +87,9 @@ export function MenuGrid({ className }: Props) {
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       {/* Search */}
+      <label htmlFor="pos-item-search" className="sr-only">
+        Search menu items
+      </label>
       <input
         id="pos-item-search"
         type="text"
@@ -102,6 +105,7 @@ export function MenuGrid({ className }: Props) {
           <button
             key={cat.value}
             type="button"
+            aria-pressed={activeCategory === cat.value}
             onClick={() => setActiveCategory(cat.value)}
             className={cn(
               "rounded-full px-3.5 py-1 text-sm font-medium transition-colors",
@@ -131,25 +135,47 @@ export function MenuGrid({ className }: Props) {
           {filteredItems.map((item) => {
             const qty = getCartQty(item.id);
             const inCart = qty > 0;
+
+            const isOut = item.inventory_status === "OUT";
+            const isLow = item.inventory_status === "LOW";
+            const isUnmapped = !item.has_inventory_mapping;
+
+            // OUT items and unmapped items cannot be added to cart
+            const isDisabled = isOut || isUnmapped;
+
             return (
               <button
                 key={item.id}
                 type="button"
-                onClick={() =>
-                  addItem({ id: item.id, name: item.name, price: parseFloat(item.price) })
-                }
+                disabled={isDisabled}
+                onClick={() => {
+                  if (!isDisabled) {
+                    addItem({ id: item.id, name: item.name, price: parseFloat(item.price) });
+                  }
+                }}
                 className={cn(
                   "relative rounded-xl border p-4 text-left transition-all",
-                  inCart
+                  isDisabled
+                    ? "opacity-40 cursor-not-allowed border-border bg-card"
+                    : inCart
                     ? "border-primary bg-primary/10"
                     : "border-border bg-card hover:border-primary/40 hover:bg-muted/50"
                 )}
+                aria-disabled={isDisabled}
               >
-                {inCart && (
+                {inCart && !isDisabled && (
                   <span className="absolute right-2 top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">
                     {qty}
                   </span>
                 )}
+
+                {/* OUT badge */}
+                {isOut && (
+                  <span className="absolute right-2 top-2 rounded-full border border-red-300 bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
+                    Out of Stock
+                  </span>
+                )}
+
                 <p className="mb-1 text-sm font-bold leading-tight text-foreground">
                   {item.name}
                 </p>
@@ -164,6 +190,20 @@ export function MenuGrid({ className }: Props) {
                 >
                   {item.category}
                 </span>
+
+                {/* LOW stock badge */}
+                {isLow && !isOut && (
+                  <span className="mt-1.5 flex items-center rounded-full border border-yellow-300 bg-yellow-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                    Low Stock
+                  </span>
+                )}
+
+                {/* Unmapped badge */}
+                {isUnmapped && (
+                  <span className="mt-1.5 flex items-center rounded-full border border-orange-300 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
+                    Not linked
+                  </span>
+                )}
               </button>
             );
           })}

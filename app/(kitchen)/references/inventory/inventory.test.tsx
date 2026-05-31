@@ -44,11 +44,20 @@ beforeEach(() => {
   );
 });
 
+// Register history handler for tests (returns empty list)
+beforeEach(() => {
+  server.use(
+    http.get(`${API}/references/inventory/history`, () =>
+      HttpResponse.json({ data: [], meta: { current_page: 1, last_page: 1, total: 0, per_page: 25 } })
+    )
+  );
+});
+
 describe("ReferencesInventoryPage", () => {
   it("renders the Inventory heading", () => {
     render(<ReferencesInventoryPage />);
 
-    expect(screen.getByText("Inventory")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Inventory" })).toBeInTheDocument();
   });
 
   it("renders inventory table with items", async () => {
@@ -63,8 +72,9 @@ describe("ReferencesInventoryPage", () => {
 
     await screen.findByText("Rice");
 
-    expect(screen.getByText("OK")).toBeInTheDocument();
-    expect(screen.getByText("LOW")).toBeInTheDocument();
+    // Status badges now show "OK ✓" and "LOW ⚠"
+    expect(screen.getByText("OK ✓")).toBeInTheDocument();
+    expect(screen.getByText("LOW ⚠")).toBeInTheDocument();
   });
 
   it("add item form validates missing fields", async () => {
@@ -84,10 +94,10 @@ describe("ReferencesInventoryPage", () => {
 
     await screen.findByText("Rice");
 
-    await user.type(screen.getByLabelText("Item Name"), "Salt");
-    await user.type(screen.getByLabelText("Initial Qty"), "5");
-    await user.type(screen.getByLabelText("Unit"), "kg");
-    await user.type(screen.getByLabelText("Threshold"), "2");
+    await user.type(screen.getByLabelText("Name *"), "Salt");
+    await user.type(screen.getByLabelText("Initial Qty *"), "5");
+    await user.type(screen.getByLabelText("Unit *"), "kg");
+    await user.type(screen.getByLabelText("Low Alert Qty *"), "2");
 
     await user.click(screen.getByRole("button", { name: /\+ Add/i }));
 
@@ -104,19 +114,26 @@ describe("ReferencesInventoryPage", () => {
 
     await user.click(screen.getAllByRole("button", { name: /Edit/i })[0]);
 
-    expect(await screen.findByRole("heading", { name: /Edit Item/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /Edit: Rice/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue("Rice")).toBeInTheDocument();
   });
 
-  it("opens logs dialog with log history", async () => {
+  it("opens history dialog with log history", async () => {
+    server.use(
+      http.get(`${API}/references/inventory/:id/logs`, () =>
+        HttpResponse.json(inventoryLogsFixture)
+      )
+    );
+
     const user = userEvent.setup();
     render(<ReferencesInventoryPage />);
 
     await screen.findByText("Rice");
 
-    await user.click(screen.getAllByRole("button", { name: /Logs/i })[0]);
+    // Index 0 is the "History" tab button; per-item History buttons start at index 1
+    await user.click(screen.getAllByRole("button", { name: /History/i })[1]);
 
-    expect(await screen.findByText(/Adjustment Logs/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Stock History/i)).toBeInTheDocument();
     expect(await screen.findByText("Initial stock")).toBeInTheDocument();
   });
 
