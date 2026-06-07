@@ -207,7 +207,7 @@ async function fillAndSubmitForm(user: ReturnType<typeof userEvent.setup>) {
 
   const checkboxes = screen.getAllByRole("checkbox");
   for (const cb of checkboxes) await user.click(cb);
-  await user.type(screen.getByLabelText(/digital signature/i), "Ana Santos");
+  await user.type(screen.getByLabelText(/your signature/i), "Ana Santos");
 
   await user.click(screen.getByRole("button", { name: /submit enrollment/i }));
 }

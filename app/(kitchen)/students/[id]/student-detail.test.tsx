@@ -50,12 +50,12 @@ beforeEach(() => {
 describe("StudentDetailPage", () => {
   it("renders student name in header", async () => {
     render(<StudentDetailPage params={{ id: "1" }} />);
-    expect(await screen.findByText("Maria Santos")).toBeInTheDocument();
+    expect((await screen.findAllByText("Maria Santos")).length).toBeGreaterThan(0);
   });
 
   it("shows tabs: Profile, Wallet, Order History, Payment, Logs", async () => {
     render(<StudentDetailPage params={{ id: "1" }} />);
-    await screen.findByText("Maria Santos");
+    await screen.findAllByText("Maria Santos");
 
     expect(screen.getByRole("tab", { name: /profile/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /wallet/i })).toBeInTheDocument();
@@ -70,8 +70,8 @@ describe("StudentDetailPage", () => {
 
   it("shows QR code ID in profile tab", async () => {
     render(<StudentDetailPage params={{ id: "1" }} />);
-    await screen.findByText("Maria Santos");
-    expect(screen.getByText(/SB-K8mP3xNzQr4w/i)).toBeInTheDocument();
+    await screen.findAllByText("Maria Santos");
+    expect(screen.getAllByText(/SB-K8mP3xNzQr4w/i).length).toBeGreaterThan(0);
   });
 
   it("shows wallet balance", async () => {
@@ -83,7 +83,7 @@ describe("StudentDetailPage", () => {
   it("shows payment months when switching to Payment tab", async () => {
     const user = userEvent.setup();
     render(<StudentDetailPage params={{ id: "1" }} />);
-    await screen.findByText("Maria Santos");
+    await screen.findAllByText("Maria Santos");
 
     const paymentTab = screen.getByRole("tab", { name: /payment/i });
     await user.click(paymentTab);
@@ -94,7 +94,7 @@ describe("StudentDetailPage", () => {
   it("shows order history placeholder", async () => {
     const user = userEvent.setup();
     render(<StudentDetailPage params={{ id: "1" }} />);
-    await screen.findByText("Maria Santos");
+    await screen.findAllByText("Maria Santos");
 
     const orderTab = screen.getByRole("tab", { name: /order history/i });
     await user.click(orderTab);
@@ -106,7 +106,7 @@ describe("StudentDetailPage", () => {
 
   it("shows a Back to Students button", async () => {
     render(<StudentDetailPage params={{ id: "1" }} />);
-    await screen.findByText("Maria Santos");
+    await screen.findAllByText("Maria Santos");
 
     expect(
       screen.getByRole("button", { name: /students/i })
@@ -115,22 +115,22 @@ describe("StudentDetailPage", () => {
 
   it("shows student grade level", async () => {
     render(<StudentDetailPage params={{ id: "1" }} />);
-    await screen.findByText("Maria Santos");
+    await screen.findAllByText("Maria Santos");
 
     expect(screen.getAllByText(/grade 3/i).length).toBeGreaterThan(0);
   });
 
   it("shows enrolled status badge", async () => {
     render(<StudentDetailPage params={{ id: "1" }} />);
-    await screen.findByText("Maria Santos");
+    await screen.findAllByText("Maria Santos");
 
-    expect(screen.getByText(/enrolled/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/enrolled/i).length).toBeGreaterThan(0);
   });
 
   it("shows wallet tab with balance and top-up button", async () => {
     const user = userEvent.setup();
     render(<StudentDetailPage params={{ id: "1" }} />);
-    await screen.findByText("Maria Santos");
+    await screen.findAllByText("Maria Santos");
 
     const walletTab = screen.getByRole("tab", { name: /wallet/i });
     await user.click(walletTab);
@@ -144,7 +144,7 @@ describe("StudentDetailPage", () => {
   it("shows empty logs message when no activity logs", async () => {
     const user = userEvent.setup();
     render(<StudentDetailPage params={{ id: "1" }} />);
-    await screen.findByText("Maria Santos");
+    await screen.findAllByText("Maria Santos");
 
     const logsTab = screen.getByRole("tab", { name: /logs/i });
     await user.click(logsTab);

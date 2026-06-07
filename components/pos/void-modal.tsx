@@ -63,6 +63,12 @@ export function VoidModal({ order, onConfirm, onCancel, isPending }: Props) {
           </div>
         </div>
 
+        {order?.payment_method === "subscription" && (
+          <p className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+            Daily allowance will be restored for this student.
+          </p>
+        )}
+
         <div className="space-y-1.5">
           <Label htmlFor="void-reason">Reason for Void</Label>
           <Textarea

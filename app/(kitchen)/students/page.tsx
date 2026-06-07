@@ -411,47 +411,143 @@ interface BatchQrModalProps {
   students: Student[];
 }
 
-function QrCard({ student, branchName }: { student: Student; branchName: string }) {
-  const gradeSection = [student.grade_level, student.section].filter(Boolean).join(" · ");
+function getSchoolYear(enrollmentDate: string): string {
+  const [year, month] = enrollmentDate.split("-").map(Number);
+  return month >= 6 ? `${year}–${year + 1}` : `${year - 1}–${year}`;
+}
+
+function PrintCard({ student }: { student: Student }) {
+  const [photoSrc, setPhotoSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!student.photo_url) return;
+    let objectUrl: string | null = null;
+    const { token, activeBranch } = useAuthStore.getState();
+    const headers: Record<string, string> = { Accept: "image/*" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (activeBranch) headers["X-Branch-Id"] = String(activeBranch.id);
+    fetch(student.photo_url, { headers })
+      .then((res) => res.blob())
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setPhotoSrc(objectUrl);
+      })
+      .catch(() => {});
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [student.photo_url]);
+
+  const parts = student.enrollment_date?.split("-") ?? [];
+  const enrolledFormatted =
+    parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : null;
+
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border-[3px] border-amber-400 bg-white text-center">
-      {/* Header banner */}
-      <div className="shrink-0 bg-red-700 px-2 py-1">
-        <p className="text-[10px] font-extrabold uppercase leading-none tracking-wide text-white">
-          Sunbites
+    <div style={{ width: "320px", border: "2px solid oklch(0.577 0.245 27.325)", borderRadius: "16px", overflow: "hidden", backgroundColor: "white", fontFamily: "sans-serif" }}>
+      <div style={{ backgroundColor: "oklch(0.577 0.245 27.325)", padding: "14px", textAlign: "center", color: "white" }}>
+        <div style={{ fontWeight: 800, fontSize: "17px", letterSpacing: "1px" }}>🍽 SUNBITES KITCHEN</div>
+        <div style={{ fontSize: "12px", marginTop: "2px", opacity: 0.9 }}>Student Canteen ID</div>
+      </div>
+      <div style={{ padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+        {photoSrc ? (
+          <img src={photoSrc} alt={student.full_name} style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "12px", border: "2px solid oklch(0.577 0.245 27.325)" }} />
+        ) : (
+          <div style={{ width: "100px", height: "100px", borderRadius: "12px", border: "2px solid oklch(0.577 0.245 27.325)", backgroundColor: "#fff3f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", fontWeight: 800, color: "oklch(0.577 0.245 27.325)" }}>
+            {student.first_name.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <p style={{ fontWeight: 700, fontSize: "19px", textAlign: "center", margin: "6px 0 0", color: "#111" }}>{student.full_name}</p>
+        <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "14px", margin: 0, fontWeight: 600 }}>{student.grade_level}</p>
+        <p style={{ color: "#555", fontSize: "12px", margin: 0 }}>🍽 {student.student_type_label}</p>
+        <div style={{ border: "1px solid #e0e0e0", borderRadius: "10px", padding: "12px", marginTop: "6px" }}>
+          <QRCode value={student.qr_code} size={150} />
+        </div>
+        <p style={{ fontFamily: "monospace", fontSize: "11px", color: "#888", margin: "4px 0 0" }}>{student.qr_code}</p>
+        {enrolledFormatted && (
+          <p style={{ fontSize: "12px", color: "#444", margin: "6px 0 2px" }}>Enrolled: {enrolledFormatted}</p>
+        )}
+      </div>
+      <div style={{ backgroundColor: "#fff3f0", borderTop: "1px solid #fdd8cc", padding: "10px 14px", textAlign: "center" }}>
+        <p style={{ fontSize: "11px", color: "#666", margin: 0 }}>
+          Scan QR to view wallet balance{student.enrollment_date ? ` • Valid S.Y. ${getSchoolYear(student.enrollment_date)}` : ""}
         </p>
-        <p className="text-[8px] font-semibold uppercase tracking-widest text-red-200">
-          {branchName}
-        </p>
+      </div>
+    </div>
+  );
+}
+
+function QrCard({ student }: { student: Student; branchName: string }) {
+  const [photoSrc, setPhotoSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!student.photo_url) return;
+    let objectUrl: string | null = null;
+    const { token, activeBranch } = useAuthStore.getState();
+    const headers: Record<string, string> = { Accept: "image/*" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (activeBranch) headers["X-Branch-Id"] = String(activeBranch.id);
+    fetch(student.photo_url, { headers })
+      .then((res) => res.blob())
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setPhotoSrc(objectUrl);
+      })
+      .catch(() => {});
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [student.photo_url]);
+
+  const parts = student.enrollment_date?.split("-") ?? [];
+  const enrolledFormatted =
+    parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", overflow: "hidden", borderRadius: "8px", border: "2px solid oklch(0.577 0.245 27.325)", backgroundColor: "white", fontFamily: "sans-serif", textAlign: "center" }}>
+      {/* Header */}
+      <div style={{ backgroundColor: "oklch(0.577 0.245 27.325)", padding: "5px 6px", flexShrink: 0 }}>
+        <p style={{ color: "white", fontWeight: 800, fontSize: "9px", letterSpacing: "0.5px", margin: 0, textTransform: "uppercase" }}>🍽 Sunbites Kitchen</p>
+        <p style={{ color: "rgba(255,255,255,0.85)", fontSize: "7px", margin: "1px 0 0", fontWeight: 500 }}>Student Canteen ID</p>
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col items-center justify-between px-2 py-2">
-        <div className="flex flex-col items-center gap-1">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-400">
-            <span className="text-xs font-extrabold text-white">
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", padding: "5px 6px 4px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
+          {photoSrc ? (
+            <img src={photoSrc} alt={student.full_name} style={{ width: "44px", height: "44px", borderRadius: "6px", border: "2px solid oklch(0.577 0.245 27.325)", objectFit: "cover", flexShrink: 0 }} />
+          ) : (
+            <div style={{ width: "44px", height: "44px", borderRadius: "6px", border: "2px solid oklch(0.577 0.245 27.325)", backgroundColor: "#fff3f0", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "16px", color: "oklch(0.577 0.245 27.325)", flexShrink: 0 }}>
               {student.first_name.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div>
-            <p className="text-[11px] font-bold leading-snug">{student.full_name}</p>
-            {gradeSection && (
-              <p className="text-[9px] text-muted-foreground">{gradeSection}</p>
-            )}
-          </div>
+            </div>
+          )}
+          <p style={{ fontWeight: 700, fontSize: "10px", margin: 0, lineHeight: 1.2 }}>{student.full_name}</p>
+          <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "8px", margin: 0, fontWeight: 700 }}>{student.grade_level}</p>
+          <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>🍽 {student.student_type_label}</p>
         </div>
 
-        <div className="flex flex-col items-center gap-1">
-          <QRCode value={student.qr_code} style={{ width: "80%", height: "auto" }} />
-          <p className="text-[7px] font-mono text-muted-foreground">{student.qr_code}</p>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+          <div style={{ border: "1px solid #e0e0e0", borderRadius: "5px", padding: "3px" }}>
+            <QRCode value={student.qr_code} style={{ width: "58px", height: "58px", display: "block" }} />
+          </div>
+          <p style={{ fontFamily: "monospace", fontSize: "6px", color: "#888", margin: 0 }}>{student.qr_code}</p>
+          {enrolledFormatted && (
+            <p style={{ fontSize: "6.5px", color: "#444", margin: 0 }}>Enrolled: {enrolledFormatted}</p>
+          )}
         </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ backgroundColor: "#fff3f0", borderTop: "1px solid #fdd8cc", padding: "3px 4px", flexShrink: 0 }}>
+        <p style={{ fontSize: "5.5px", color: "#666", margin: 0 }}>
+          Scan QR to view wallet balance{student.enrollment_date ? ` • Valid S.Y. ${getSchoolYear(student.enrollment_date)}` : ""}
+        </p>
       </div>
     </div>
   );
 }
 
 function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
-  const [cols, setCols] = useState<2 | 4>(2);
+  const [cols, setCols] = useState<1 | 2>(2);
   const [printRoot, setPrintRoot] = useState<HTMLDivElement | null>(null);
   const activeBranch = useAuthStore((s) => s.activeBranch);
   const branchName = activeBranch?.name ?? "Branch";
@@ -471,20 +567,21 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
   }, [open]);
 
   const cardGrid = (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${cols}, 54mm)`,
-        gap: "5mm",
-        padding: "10mm",
-      }}
-    >
-      {students.map((s) => (
-        <div key={s.id} data-qr-card style={{ width: "54mm", height: "86mm" }}>
-          <QrCard student={s} branchName={branchName} />
-        </div>
-      ))}
-    </div>
+    <>
+      <style>{`
+        @media screen { #qr-print-root { display: none !important; } }
+        @media print {
+          body * { visibility: hidden; }
+          #qr-print-root { visibility: visible; position: absolute; top: 0; left: 0; width: 100%; background: white; }
+          #qr-print-root * { visibility: visible; }
+        }
+      `}</style>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 320px)`, gap: "24px", padding: "32px", justifyContent: "center" }}>
+        {students.map((s) => (
+          <PrintCard key={s.id} student={s} />
+        ))}
+      </div>
+    </>
   );
 
   return (
@@ -497,7 +594,7 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
 
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Cards per row:</span>
-            {([2, 4] as const).map((n) => (
+            {([1, 2] as const).map((n) => (
               <button
                 key={n}
                 type="button"
@@ -514,11 +611,11 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
             ))}
           </div>
 
-          {/* Screen preview — fixed ID card size */}
+          {/* Screen preview — portrait card aspect ratio */}
           <div
             className={cn(
               "grid gap-3 mt-2 justify-items-center",
-              cols === 2 ? "grid-cols-2" : "grid-cols-4"
+              cols === 1 ? "grid-cols-1" : "grid-cols-2"
             )}
           >
             {students.map((s) => (
@@ -586,7 +683,7 @@ function MonthBadges({ studentId, payments, canToggle }: MonthBadgesProps) {
               !canToggle && "cursor-default"
             )}
           >
-            {month.short} {isPaid ? "✓" : "✗"}
+            {month.short} &apos;{String(payment.year).slice(-2)} {isPaid ? "✓" : "✗"}
           </button>
         );
       })}
@@ -622,6 +719,26 @@ function StudentCard({
   const statusConfig = ENROLLMENT_STATUS_CONFIG[student.enrollment_status];
   const creditOwed = parseFloat(student.credit_balance) > 0;
 
+  const [photoSrc, setPhotoSrc] = useState<string | null>(null);
+  useEffect(() => {
+    if (!student.photo_url) return;
+    let objectUrl: string | null = null;
+    const { token, activeBranch } = useAuthStore.getState();
+    const headers: Record<string, string> = { Accept: "image/*" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (activeBranch) headers["X-Branch-Id"] = String(activeBranch.id);
+    fetch(student.photo_url, { headers })
+      .then((res) => res.blob())
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setPhotoSrc(objectUrl);
+      })
+      .catch(() => {});
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [student.photo_url]);
+
   return (
     <div
       className={cn(
@@ -640,9 +757,13 @@ function StudentCard({
 
       {/* Header */}
       <div className="flex items-start gap-3 pl-7">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-          {student.first_name.charAt(0).toUpperCase()}
-        </div>
+        {photoSrc ? (
+          <img src={photoSrc} alt={student.full_name} className="h-10 w-10 shrink-0 rounded-full object-cover border border-primary/20" />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+            {student.first_name.charAt(0).toUpperCase()}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-semibold text-foreground truncate">
@@ -812,6 +933,7 @@ export default function StudentsPage() {
   const [gradeFilter, setGradeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showBatchModal, setShowBatchModal] = useState(false);
@@ -831,6 +953,7 @@ export default function StudentsPage() {
         gradeFilter,
         statusFilter,
         monthFilter,
+        yearFilter,
         paymentStatusFilter,
       },
     ],
@@ -843,6 +966,10 @@ export default function StudentsPage() {
         month:
           activeTab === "subscription" && monthFilter
             ? (monthFilter as SchoolMonth)
+            : undefined,
+        year:
+          activeTab === "subscription" && yearFilter
+            ? Number(yearFilter)
             : undefined,
         payment_status:
           activeTab === "subscription" && paymentStatusFilter
@@ -968,6 +1095,22 @@ export default function StudentsPage() {
                 {SCHOOL_MONTHS.map((m) => (
                   <SelectItem key={m.value} value={m.value}>
                     {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={yearFilter}
+              onValueChange={(v) => setYearFilter(v === "all" ? "" : (v ?? ""))}
+            >
+              <SelectTrigger className="w-full sm:w-32" aria-label="Filter by year">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    {y}
                   </SelectItem>
                 ))}
               </SelectContent>
