@@ -18,8 +18,8 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 // ---------------------------------------------------------------------------
 
 export const posMenuItemsFixture: PosMenuItem[] = [
-  { id: 1, name: "Subscription Meal Tray", price: "135.00", category: "meal", is_available: true, sort_order: 0, inventory_status: "OK", has_inventory_mapping: true },
-  { id: 2, name: "Snack A (Bread/Pastry)", price: "15.00", category: "snack", is_available: true, sort_order: 1, inventory_status: null, has_inventory_mapping: false },
+  { id: 1, name: "Subscription Meal Tray", price: "135.00", category: "meal", is_available: true, sort_order: 0, inventory_status: "OK", has_inventory_mapping: true, is_subscription_item: true },
+  { id: 2, name: "Snack A (Bread/Pastry)", price: "15.00", category: "snack", is_available: true, sort_order: 1, inventory_status: null, has_inventory_mapping: false, is_subscription_item: false },
 ];
 
 export const inventoryItemsFixture: InventoryItem[] = [
@@ -122,6 +122,7 @@ export const studentFixture: Student = {
   section: "Section Mabini",
   birthday: "2015-03-14",
   has_photo: false,
+  photo_url: null,
   allergies: null,
   notes: null,
   qr_code: "SB-K8mP3xNzQr4w",
@@ -187,6 +188,7 @@ export const enrolledStudentFixture: EnrolledStudentResponse = {
   student_type: "subscription",
   enrollment_date: "2025-06-01",
   qr_code: "SB-TestQrCode123",
+  subscription_period: "June 2025 – March 2026",
 };
 
 export const paymentsFixture: MonthlyPayment[] = [

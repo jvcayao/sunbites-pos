@@ -131,10 +131,26 @@ export function CartPanel({ onOrderComplete, className }: Props) {
   const tendered = parseFloat(amountTendered) || 0;
   const change = tendered - total;
 
+  const subscriptionLimitError = (() => {
+    if (paymentMethod !== "subscription" || !student?.subscription_daily_status) return null;
+    const usageByCategory = items.reduce<Record<string, number>>((acc, item) => {
+      acc[item.category] = (acc[item.category] ?? 0) + item.quantity;
+      return acc;
+    }, {});
+    for (const [cat, qty] of Object.entries(usageByCategory)) {
+      const status = student.subscription_daily_status[cat as keyof typeof student.subscription_daily_status];
+      if (status && qty > status.remaining) {
+        return `Daily ${cat} limit reached. Only ${status.remaining} remaining today.`;
+      }
+    }
+    return null;
+  })();
+
   const isCheckoutValid = (() => {
     if (items.length === 0) return false;
     if (paymentMethod === "cash" && tendered < total) return false;
     if (paymentMethod === "subscription" && (!student || student.student_type !== "subscription")) return false;
+    if (subscriptionLimitError) return false;
     return true;
   })();
 
@@ -250,8 +266,8 @@ export function CartPanel({ onOrderComplete, className }: Props) {
         />
       </div>
 
-      {/* Discount block — admin/manager only */}
-      {canApplyDiscount && (
+      {/* Discount block — admin/manager only; hidden for subscription payments */}
+      {canApplyDiscount && paymentMethod !== "subscription" && (
         <div className="border-t border-border px-4 py-3 space-y-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase">Discount</p>
           <div className="flex gap-2">
@@ -423,7 +439,22 @@ export function CartPanel({ onOrderComplete, className }: Props) {
           </div>
         )}
 
-        {paymentMethod === "subscription" && (
+        {paymentMethod === "subscription" && student?.subscription_daily_status && (
+          <div className="rounded-lg border border-border bg-muted/40 p-2.5 space-y-1.5">
+            <p className="text-xs font-semibold text-muted-foreground uppercase">Daily Usage</p>
+            <div className="grid grid-cols-2 gap-1">
+              {Object.entries(student.subscription_daily_status).map(([cat, s]) => (
+                <div key={cat} className="flex items-center justify-between text-xs">
+                  <span className="capitalize text-muted-foreground">{cat}</span>
+                  <span className={cn("font-medium", s.used >= s.limit && s.limit > 0 ? "text-destructive" : "text-foreground")}>
+                    {s.used}/{s.limit}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {paymentMethod === "subscription" && !student?.subscription_daily_status && (
           <div className="rounded-lg border border-border bg-muted/40 p-2.5 text-sm text-muted-foreground">
             Covered by monthly subscription
           </div>
@@ -431,7 +462,12 @@ export function CartPanel({ onOrderComplete, className }: Props) {
       </div>
 
       {/* Checkout button */}
-      <div className="px-4 pb-4 pt-3">
+      <div className="px-4 pb-4 pt-3 space-y-2">
+        {subscriptionLimitError && (
+          <p role="alert" className="text-xs text-destructive text-center">
+            {subscriptionLimitError}
+          </p>
+        )}
         <Button
           data-pos-checkout
           className="w-full"

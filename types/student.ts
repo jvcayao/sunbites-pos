@@ -45,6 +45,7 @@ export interface Student {
   section: string | null;
   birthday: string;
   has_photo: boolean;
+  photo_url: string | null;
   allergies: string | null;
   notes: string | null;
   qr_code: string;
@@ -105,6 +106,7 @@ export interface EnrolledStudentResponse {
   student_type: StudentType;
   enrollment_date: string;
   qr_code: string;
+  subscription_period: string | null;
 }
 
 export interface StudentContactInput {

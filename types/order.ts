@@ -1,6 +1,12 @@
 export type OrderPaymentMethod = "cash" | "gcash" | "wallet" | "subscription";
 export type OrderStatus = "completed" | "voided";
 
+export interface SubscriptionCategoryStatus {
+  used: number;
+  limit: number;
+  remaining: number;
+}
+
 export interface PosStudent {
   id: number;
   full_name: string;
@@ -18,6 +24,12 @@ export interface PosStudent {
   total_spent: string;
   credit_balance: string;
   wallet_balance: number;
+  subscription_daily_status: {
+    meal: SubscriptionCategoryStatus;
+    snack: SubscriptionCategoryStatus;
+    drink: SubscriptionCategoryStatus;
+    extra: SubscriptionCategoryStatus;
+  } | null;
 }
 
 export interface PosStudentSearchResult {

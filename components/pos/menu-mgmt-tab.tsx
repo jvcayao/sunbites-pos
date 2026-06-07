@@ -328,10 +328,12 @@ export function MenuMgmtTab() {
     price: "",
   });
   const [formErrors, setFormErrors] = useState<Partial<Record<string, string[]>>>({});
+  const [addSubscriptionItem, setAddSubscriptionItem] = useState<boolean | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<PosMenuItem | null>(null);
   const [editForm, setEditForm] = useState<Partial<MenuItemForm>>({});
   const [editErrors, setEditErrors] = useState<Partial<Record<string, string[]>>>({});
+  const [editSubscriptionItem, setEditSubscriptionItem] = useState<boolean | null>(null);
 
   const { data: items, isLoading, isError } = useQuery({
     queryKey: ["pos-menu-items"],
@@ -350,6 +352,7 @@ export function MenuMgmtTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pos-menu-items"] });
       setForm({ name: "", price: "" });
+      setAddSubscriptionItem(null);
       toast.success("Menu item added.");
     },
     onError: (err: ApiError) => toast.error(err.message ?? "Failed to add item."),
@@ -395,12 +398,13 @@ export function MenuMgmtTab() {
       return;
     }
     setFormErrors({});
-    addMutation.mutate(result.data);
+    addMutation.mutate({ ...result.data, is_subscription_item: addSubscriptionItem });
   }
 
   function openEdit(item: PosMenuItem) {
     setEditingItem(item);
     setEditForm({ name: item.name, price: item.price, category: item.category });
+    setEditSubscriptionItem(item.is_subscription_item);
     setEditErrors({});
   }
 
@@ -414,7 +418,7 @@ export function MenuMgmtTab() {
       return;
     }
     setEditErrors({});
-    updateMutation.mutate({ id: editingItem.id, payload: result.data });
+    updateMutation.mutate({ id: editingItem.id, payload: { ...result.data, is_subscription_item: editSubscriptionItem } });
   }
 
   if (isError) {
@@ -484,6 +488,24 @@ export function MenuMgmtTab() {
                 {formErrors.category[0]}
               </p>
             )}
+          </div>
+          <div className="w-44 space-y-1">
+            <Label htmlFor="new-subscription-item">Subscription Eligible</Label>
+            <Select
+              value={addSubscriptionItem === true ? "true" : addSubscriptionItem === false ? "false" : "unset"}
+              onValueChange={(v) =>
+                setAddSubscriptionItem(v === "true" ? true : v === "false" ? false : null)
+              }
+            >
+              <SelectTrigger id="new-subscription-item">
+                <SelectValue placeholder="Select…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unset">Not configured</SelectItem>
+                <SelectItem value="true">Yes — subscription covered</SelectItem>
+                <SelectItem value="false">No — regular only</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-end">
             <Button type="submit" disabled={addMutation.isPending}>
@@ -583,6 +605,24 @@ export function MenuMgmtTab() {
                   {editErrors.category[0]}
                 </p>
               )}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="edit-subscription-item">Subscription Eligible</Label>
+              <Select
+                value={editSubscriptionItem === true ? "true" : editSubscriptionItem === false ? "false" : "unset"}
+                onValueChange={(v) =>
+                  setEditSubscriptionItem(v === "true" ? true : v === "false" ? false : null)
+                }
+              >
+                <SelectTrigger id="edit-subscription-item">
+                  <SelectValue placeholder="Select…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unset">Not configured</SelectItem>
+                  <SelectItem value="true">Yes — subscription covered</SelectItem>
+                  <SelectItem value="false">No — regular only</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => setEditingItem(null)}>

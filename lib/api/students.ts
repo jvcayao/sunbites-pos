@@ -1,5 +1,7 @@
 import { apiClient } from "./client";
+import { useAuthStore } from "@/lib/store/auth";
 
+import type { ApiError } from "@/types/auth";
 import type {
   BranchMonthlyAmountConfig,
   EnrolledStudentResponse,
@@ -25,6 +27,7 @@ interface StudentListParams {
   type?: string;
   month?: SchoolMonth;
   payment_status?: string;
+  year?: number;
   page?: number;
 }
 
@@ -135,4 +138,33 @@ export const studentApi = {
 
   deleteBranchMonthlyAmount: (id: number) =>
     apiClient.delete<{ message: string }>(`/branch-monthly-amounts/${id}`),
+
+  uploadPhoto: async (id: number, file: File): Promise<Student> => {
+    const BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
+    const { token, activeBranch } = useAuthStore.getState();
+    const formData = new FormData();
+    formData.append("photo", file);
+
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (activeBranch) headers["X-Branch-Id"] = String(activeBranch.id);
+
+    const response = await fetch(`${BASE_URL}/students/${id}/photo`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      throw { message: "Session expired. Please log in again." } as ApiError;
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: "Photo upload failed." }));
+      throw error as ApiError;
+    }
+
+    return response.json();
+  },
 };

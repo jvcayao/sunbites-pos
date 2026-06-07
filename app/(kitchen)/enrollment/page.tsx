@@ -88,9 +88,13 @@ function countSubscriptionMonths(
   const startIdx = SCHOOL_MONTH_ORDER[startMonth];
   const endIdx = SCHOOL_MONTH_ORDER[endMonth];
 
-  // Normalise to an absolute index: year * 10 + month-order
-  const startAbs = startYear * 10 + startIdx;
-  const endAbs = endYear * 10 + endIdx;
+  // Jan–Mar (indices 7–9) belong to the previous calendar year's school year,
+  // so normalise to school year before computing the absolute position.
+  const startSchoolYear = startIdx >= 7 ? startYear - 1 : startYear;
+  const endSchoolYear = endIdx >= 7 ? endYear - 1 : endYear;
+
+  const startAbs = startSchoolYear * 10 + startIdx;
+  const endAbs = endSchoolYear * 10 + endIdx;
 
   if (endAbs < startAbs) return 0;
   return endAbs - startAbs + 1;
@@ -474,6 +478,12 @@ export default function EnrollmentPage() {
               <p className="text-muted-foreground text-xs">Enrollment Date</p>
               <p className="font-semibold">{enrolledResult.enrollment_date}</p>
             </div>
+            {enrolledResult.subscription_period && (
+              <div>
+                <p className="text-muted-foreground text-xs">Subscription Period</p>
+                <p className="font-semibold">{enrolledResult.subscription_period}</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1060,8 +1070,11 @@ export default function EnrollmentPage() {
                   aria-invalid={!!errors.permission_meals?.length}
                 />
                 <span className="text-sm text-foreground">
-                  I give permission for my child to receive meals provided by
-                  Sunbites.
+                  <span className="font-medium">I agree</span> — The monthly
+                  subscription fee based on the school days will remain payable
+                  in full regardless of student absences, late arrivals, and in
+                  the event of class suspensions, weather-related announcements,
+                  or other circumstances beyond the control of Sunbites Kitchen.
                 </span>
               </label>
               <FieldError error={errors.permission_meals} />
@@ -1076,15 +1089,19 @@ export default function EnrollmentPage() {
                   aria-invalid={!!errors.permission_dietary?.length}
                 />
                 <span className="text-sm text-foreground">
-                  I acknowledge that Sunbites will be informed of my child&apos;s
-                  dietary restrictions and allergies.
+                  <span className="font-medium">I agree</span> — Sunbites
+                  Kitchen will continue to make every reasonable effort to
+                  provide nutritious and quality meals throughout the
+                  subscription period. By checking this box and submitting this
+                  registration form, I confirm that I have read, understood, and
+                  agree to the terms of the Monthly Meal Subscription Program.
                 </span>
               </label>
               <FieldError error={errors.permission_dietary} />
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 pt-2">
                 <FormField
-                  label="Digital Signature (Type Full Name)"
+                  label="Put your full name as your signature"
                   htmlFor="digital-signature"
                   required
                   error={errors.signature}

@@ -48,6 +48,7 @@ export function MenuGrid({ className }: Props) {
 
   const cartItems = useCartStore((s) => s.items);
   const addItem = useCartStore((s) => s.addItem);
+  const paymentMethod = useCartStore((s) => s.paymentMethod);
 
   function handleSearchChange(value: string) {
     setSearch(value);
@@ -139,9 +140,11 @@ export function MenuGrid({ className }: Props) {
             const isOut = item.inventory_status === "OUT";
             const isLow = item.inventory_status === "LOW";
             const isUnmapped = !item.has_inventory_mapping;
+            const isUnconfigured = item.is_subscription_item === null;
+            const isSubscriptionBlocked =
+              paymentMethod === "subscription" && item.is_subscription_item !== true;
 
-            // OUT items and unmapped items cannot be added to cart
-            const isDisabled = isOut || isUnmapped;
+            const isDisabled = isOut || isUnmapped || isUnconfigured || isSubscriptionBlocked;
 
             return (
               <button
@@ -150,7 +153,7 @@ export function MenuGrid({ className }: Props) {
                 disabled={isDisabled}
                 onClick={() => {
                   if (!isDisabled) {
-                    addItem({ id: item.id, name: item.name, price: parseFloat(item.price) });
+                    addItem({ id: item.id, name: item.name, price: parseFloat(item.price), category: item.category });
                   }
                 }}
                 className={cn(
@@ -202,6 +205,20 @@ export function MenuGrid({ className }: Props) {
                 {isUnmapped && (
                   <span className="mt-1.5 flex items-center rounded-full border border-orange-300 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
                     Not linked
+                  </span>
+                )}
+
+                {/* Not Set Up badge — shown when is_subscription_item is null */}
+                {isUnconfigured && (
+                  <span className="mt-1.5 flex items-center rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
+                    Not Set Up
+                  </span>
+                )}
+
+                {/* Subscription badge — shown when is_subscription_item is true */}
+                {item.is_subscription_item === true && (
+                  <span className="mt-1.5 flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                    SUB
                   </span>
                 )}
               </button>

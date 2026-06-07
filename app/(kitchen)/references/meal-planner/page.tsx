@@ -32,16 +32,16 @@ import type {
 // ---------------------------------------------------------------------------
 
 const MONTHS: Array<{ key: SchoolMonthKey; label: string }> = [
-  { key: "june", label: "Jun" },
-  { key: "july", label: "Jul" },
-  { key: "august", label: "Aug" },
-  { key: "september", label: "Sep" },
-  { key: "october", label: "Oct" },
-  { key: "november", label: "Nov" },
-  { key: "december", label: "Dec" },
-  { key: "january", label: "Jan" },
-  { key: "february", label: "Feb" },
-  { key: "march", label: "Mar" },
+  { key: "June", label: "Jun" },
+  { key: "July", label: "Jul" },
+  { key: "August", label: "Aug" },
+  { key: "September", label: "Sep" },
+  { key: "October", label: "Oct" },
+  { key: "November", label: "Nov" },
+  { key: "December", label: "Dec" },
+  { key: "January", label: "Jan" },
+  { key: "February", label: "Feb" },
+  { key: "March", label: "Mar" },
 ];
 
 const DAYS: DayOfWeekKey[] = ["monday", "tuesday", "wednesday", "thursday", "friday"];

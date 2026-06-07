@@ -3,6 +3,7 @@
 import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,12 +17,103 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { studentApi } from "@/lib/api/students";
+import { subscriptionConfigApi } from "@/lib/api/pos-subscription-config";
 import { systemConfigApi } from "@/lib/api/system-configurations";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
 import type { ApiError } from "@/types/auth";
 import type { BranchMonthlyAmountConfig } from "@/types/student";
+import type { BranchSubscriptionConfig } from "@/lib/api/pos-subscription-config";
+
+// ---------------------------------------------------------------------------
+// Daily Limits Card
+// ---------------------------------------------------------------------------
+
+const CATEGORY_LABELS: Record<keyof BranchSubscriptionConfig, string> = {
+  meal_daily_limit: "Meal",
+  snack_daily_limit: "Snack",
+  drink_daily_limit: "Drink",
+  extra_daily_limit: "Extra",
+};
+
+function DailyLimitsCard() {
+  const queryClient = useQueryClient();
+  const [overrides, setOverrides] = useState<Partial<BranchSubscriptionConfig>>({});
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["pos-subscription-config"],
+    queryFn: subscriptionConfigApi.show,
+  });
+
+  const limits: BranchSubscriptionConfig | null = data ? { ...data, ...overrides } : null;
+
+  const saveMutation = useMutation({
+    mutationFn: (updated: BranchSubscriptionConfig) => subscriptionConfigApi.update(updated),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["pos-subscription-config"], updated);
+      setOverrides({});
+      toast.success("Daily limits saved.");
+    },
+    onError: (err: ApiError) => toast.error(err.message ?? "Failed to save limits."),
+  });
+
+  function handleChange(field: keyof BranchSubscriptionConfig, raw: string) {
+    const value = Math.min(10, Math.max(0, parseInt(raw, 10) || 0));
+    setOverrides((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function handleSave() {
+    if (!limits) return;
+    saveMutation.mutate(limits);
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-5">
+      <h2 className="mb-1 text-base font-semibold text-foreground">Daily Category Limits</h2>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Maximum items a subscription student can order per category per day.
+      </p>
+
+      {isError && (
+        <p className="text-sm text-destructive">Failed to load limits.</p>
+      )}
+
+      {isLoading && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((k) => (
+            <Skeleton key={k} className="h-16 rounded-lg" />
+          ))}
+        </div>
+      )}
+
+      {limits && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {(Object.keys(CATEGORY_LABELS) as (keyof BranchSubscriptionConfig)[]).map((field) => (
+              <div key={field} className="space-y-1.5">
+                <Label htmlFor={`limit-${field}`}>{CATEGORY_LABELS[field]}</Label>
+                <Input
+                  id={`limit-${field}`}
+                  type="number"
+                  min={0}
+                  max={10}
+                  value={limits[field]}
+                  onChange={(e) => handleChange(field, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? "Saving…" : "Save Limits"}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -329,6 +421,8 @@ export default function SubscriptionConfigPage() {
           Daily meal rate: ₱{dailyMealRate}. Amount = days × rate.
         </p>
       </div>
+
+      <DailyLimitsCard />
 
       {/* Year selector */}
       <div className="flex items-center gap-3">

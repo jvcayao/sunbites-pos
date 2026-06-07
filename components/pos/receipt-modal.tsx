@@ -131,6 +131,9 @@ export function ReceiptModal({ order, onNewOrder }: Props) {
               <span>₱{Number(order.student.wallet_balance).toFixed(2)}</span>
             </div>
           )}
+          {order.payment_method === "subscription" && (
+            <p className="text-xs text-muted-foreground">Covered by monthly subscription</p>
+          )}
         </div>
 
         {/* Credit / points */}
