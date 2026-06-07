@@ -148,7 +148,7 @@ export default function MealPlannerPage() {
   const canEdit =
     user?.roles.includes("admin") || user?.roles.includes("manager");
 
-  const [activeMonth, setActiveMonth] = useState<SchoolMonthKey>("june");
+  const [activeMonth, setActiveMonth] = useState<SchoolMonthKey>("June");
   const [activeWeek, setActiveWeek] = useState(1);
   const [rows, setRows] = useState<MealRow[]>(DEFAULT_ROWS);
   const [visibleToParents, setVisibleToParents] = useState<boolean>(true);

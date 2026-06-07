@@ -10,14 +10,17 @@ import type {
 export const mealPlannerApi = {
   show: (month: SchoolMonthKey, week: number) =>
     apiClient.get<MealPlannerResponse>("/references/meal-planner", {
-      params: { month, week },
+      params: { month: month.toLowerCase(), week },
     }),
 
   update: (payload: SaveMealPlanPayload) =>
     apiClient.patch<{ message: string }>("/references/meal-planner", payload),
 
   reset: (month: SchoolMonthKey, week: number) =>
-    apiClient.post<{ message: string }>("/references/meal-planner/reset", { month, week }),
+    apiClient.post<{ message: string }>("/references/meal-planner/reset", {
+      month: month.toLowerCase(),
+      week,
+    }),
 
   updateWeekVisibility: (
     month: SchoolMonthKey,
@@ -26,6 +29,6 @@ export const mealPlannerApi = {
   ): Promise<UpdateWeekVisibilityResponse> =>
     apiClient.patch<UpdateWeekVisibilityResponse>(
       "/references/meal-planner/week-visibility",
-      { month, week, visible_to_parents: visibleToParents },
+      { month: month.toLowerCase(), week, visible_to_parents: visibleToParents },
     ),
 };
