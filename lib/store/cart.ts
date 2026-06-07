@@ -1,12 +1,14 @@
 import { create } from "zustand";
 
 import type { OrderPaymentMethod, PosStudent } from "@/types/order";
+import type { MenuCategory } from "@/types/pos-menu-item";
 
 export interface CartItem {
   id: number; // pos_menu_item_id
   name: string;
   price: number;
   quantity: number;
+  category: MenuCategory;
 }
 
 interface CartStore {

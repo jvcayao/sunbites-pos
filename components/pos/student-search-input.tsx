@@ -85,6 +85,41 @@ function SelectedStudentCard({ student, onClear }: SelectedStudentCardProps) {
           </p>
         </div>
       </div>
+
+      {student.student_type === "subscription" && student.subscription_daily_status && (
+        <>
+          {Object.values(student.subscription_daily_status).some((s) => s.used >= s.limit && s.limit > 0) && (
+            <div className="mt-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+              ⚠{" "}
+              {student.first_name} has reached their daily{" "}
+              {Object.entries(student.subscription_daily_status)
+                .filter(([, s]) => s.used >= s.limit && s.limit > 0)
+                .map(([cat]) => cat)
+                .join(" and ")}{" "}
+              limit. Subscription payment is blocked for those categories.
+            </div>
+          )}
+          <div className="mt-2 border-t border-border pt-2">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Daily Subscription
+            </p>
+            <div className="grid grid-cols-2 gap-1">
+              {Object.entries(student.subscription_daily_status).map(([cat, s]) => (
+                <span
+                  key={cat}
+                  className={cn(
+                    "text-xs font-medium capitalize",
+                    s.used >= s.limit && s.limit > 0 ? "text-red-600" : "text-green-700"
+                  )}
+                >
+                  {cat} {s.used}/{s.limit}{" "}
+                  {s.used >= s.limit && s.limit > 0 ? "✗" : "✓"}
+                </span>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

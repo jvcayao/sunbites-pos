@@ -1,11 +1,11 @@
 "use client";
 
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { ChevronLeft, Mail, MoreHorizontal, Pencil, Printer, RefreshCw, Trash2, UserPlus } from "lucide-react";
+import { Camera, ChevronLeft, Mail, MoreHorizontal, Pencil, Printer, RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { QRCode } from "react-qr-code";
 import { toast } from "sonner";
 
@@ -1790,6 +1790,167 @@ function OrderHistoryTab({ studentId }: { studentId: number }) {
   );
 }
 
+function getSchoolYear(enrollmentDate: string): string {
+  const [year, month] = enrollmentDate.split("-").map(Number);
+  return Number(month) >= 6 ? `${year}–${year + 1}` : `${year - 1}–${year}`;
+}
+
+function CameraModal({
+  open,
+  onClose,
+  onCapture,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onCapture: (file: File) => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
+  const [captured, setCaptured] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+
+    const startStream = async () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: selectedDeviceId ? { deviceId: { exact: selectedDeviceId } } : true,
+        });
+        if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+        streamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
+        setError(null);
+        if (!selectedDeviceId) {
+          const all = await navigator.mediaDevices.enumerateDevices();
+          if (!cancelled) setDevices(all.filter((d) => d.kind === "videoinput"));
+        }
+      } catch {
+        if (!cancelled) setError("Camera access denied. Allow camera permissions in your browser.");
+      }
+    };
+
+    startStream();
+
+    return () => {
+      cancelled = true;
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      setCaptured(null);
+      setError(null);
+    };
+  }, [open, selectedDeviceId]);
+
+  const handleCapture = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    const v = videoRef.current;
+    const c = canvasRef.current;
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
+    c.getContext("2d")?.drawImage(v, 0, 0);
+    setCaptured(c.toDataURL("image/jpeg", 0.92));
+  };
+
+  const handleConfirm = () => {
+    canvasRef.current?.toBlob(
+      (blob) => {
+        if (!blob) return;
+        onCapture(new File([blob], "photo.jpg", { type: "image/jpeg" }));
+        onClose();
+      },
+      "image/jpeg",
+      0.92,
+    );
+  };
+
+  const handleClose = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCaptured(null);
+    setSelectedDeviceId("");
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Take Photo</DialogTitle>
+          <DialogDescription>
+            Use your camera to take a student ID photo.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          {devices.length > 1 && !captured && (
+            <Select value={selectedDeviceId} onValueChange={(v) => v && setSelectedDeviceId(v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select camera" />
+              </SelectTrigger>
+              <SelectContent>
+                {devices.map((d, i) => (
+                  <SelectItem key={d.deviceId} value={d.deviceId}>
+                    {d.label || `Camera ${i + 1}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {error ? (
+            <p className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive text-center">
+              {error}
+            </p>
+          ) : (
+            <div className="relative overflow-hidden rounded-xl bg-black aspect-[4/3] w-full">
+              {!captured ? (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <img src={captured} alt="Captured" className="h-full w-full object-cover" />
+              )}
+            </div>
+          )}
+
+          <canvas ref={canvasRef} className="hidden" />
+        </div>
+
+        <DialogFooter>
+          {!captured ? (
+            <>
+              <Button variant="outline" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button onClick={handleCapture} disabled={!!error}>
+                <Camera className="mr-2 h-4 w-4" />
+                Capture
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setCaptured(null)}>
+                Retake
+              </Button>
+              <Button onClick={handleConfirm}>Use Photo</Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const routerParams = useParams<{ id: string }>();
   const rawId = routerParams?.id ?? params.id;
@@ -1818,6 +1979,10 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editErrors, setEditErrors] = useState<Record<string, string[]>>({});
+  const [photoObjectUrl, setPhotoObjectUrl] = useState<string | null>(null);
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["student", studentId],
@@ -1856,6 +2021,39 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     },
   });
 
+  const uploadPhotoMutation = useMutation({
+    mutationFn: (file: File) => studentApi.uploadPhoto(studentId!, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student", studentId] });
+      toast.success("Photo updated.");
+    },
+    onError: () => {
+      toast.error("Failed to upload photo.");
+    },
+  });
+
+  useEffect(() => {
+    if (!student?.photo_url) return;
+
+    let objectUrl: string | null = null;
+    const { token, activeBranch } = useAuthStore.getState();
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (activeBranch) headers["X-Branch-Id"] = String(activeBranch.id);
+
+    fetch(student.photo_url, { headers })
+      .then((r) => r.blob())
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setPhotoObjectUrl(objectUrl);
+      })
+      .catch(() => {});
+
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [student?.photo_url]);
+
   if (studentId === null) {
     return (
       <div className="p-6">
@@ -1892,7 +2090,72 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
   return (
     <div className="p-6 space-y-6">
-      <style>{`@media print { .no-print { display: none !important; } }`}</style>
+      <style>{`
+        .print-only { display: none; }
+        @media print {
+          .no-print { display: none !important; }
+          body { visibility: hidden; }
+          .print-only {
+            display: flex !important;
+            visibility: visible;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; min-height: 100vh;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 32px;
+            background: white;
+            z-index: 9999;
+          }
+          .print-only * { visibility: visible; }
+        }
+      `}</style>
+
+      {/* Print-only canteen ID card */}
+      <div className="print-only">
+        <div style={{ width: "320px", border: "2px solid oklch(0.577 0.245 27.325)", borderRadius: "16px", overflow: "hidden", backgroundColor: "white", fontFamily: "sans-serif" }}>
+          <div style={{ backgroundColor: "oklch(0.577 0.245 27.325)", padding: "14px", textAlign: "center", color: "white" }}>
+            <div style={{ fontWeight: 800, fontSize: "17px", letterSpacing: "1px" }}>🍽 SUNBITES KITCHEN</div>
+            <div style={{ fontSize: "12px", marginTop: "2px", opacity: 0.9 }}>Student Canteen ID</div>
+          </div>
+          <div style={{ padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+            {photoObjectUrl ? (
+              <img
+                src={photoObjectUrl}
+                alt={student.full_name}
+                style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "12px", border: "2px solid oklch(0.577 0.245 27.325)" }}
+              />
+            ) : (
+              <div style={{ width: "100px", height: "100px", borderRadius: "12px", border: "2px solid oklch(0.577 0.245 27.325)", backgroundColor: "#fff3f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", fontWeight: 800, color: "oklch(0.577 0.245 27.325)" }}>
+                {student.first_name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <p style={{ fontWeight: 700, fontSize: "19px", textAlign: "center", margin: "6px 0 0", color: "#111" }}>{student.full_name}</p>
+            <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "14px", margin: 0, fontWeight: 600 }}>{student.grade_level}</p>
+            <p style={{ color: "#555", fontSize: "12px", margin: 0 }}>🍽 {student.student_type_label}</p>
+            <div style={{ border: "1px solid #e0e0e0", borderRadius: "10px", padding: "12px", marginTop: "6px" }}>
+              <QRCode value={displayQr || "placeholder"} size={150} />
+            </div>
+            <p style={{ fontFamily: "monospace", fontSize: "11px", color: "#888", margin: "4px 0 0" }}>{displayQr}</p>
+            <p style={{ fontSize: "12px", color: "#444", margin: "6px 0 2px" }}>
+              {student.enrollment_date
+                ? `Enrolled: ${(() => { const p = student.enrollment_date.split("-"); return `${p[1]}/${p[2]}/${p[0]}`; })()}`
+                : null}
+            </p>
+          </div>
+          <div style={{ backgroundColor: "#fff3f0", borderTop: "1px solid #fdd8cc", padding: "10px 14px", textAlign: "center" }}>
+            <p style={{ fontSize: "11px", color: "#666", margin: 0 }}>
+              Scan QR to view wallet balance • Valid S.Y. {student.enrollment_date ? getSchoolYear(student.enrollment_date) : ""}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <CameraModal
+        open={cameraModalOpen}
+        onClose={() => setCameraModalOpen(false)}
+        onCapture={(file) => uploadPhotoMutation.mutate(file)}
+      />
 
       {/* Back + actions */}
       <div className="flex items-center justify-between no-print">
@@ -1944,8 +2207,55 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       <div className="rounded-xl border border-border bg-card p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xl font-bold text-primary">
-              {student.first_name.charAt(0).toUpperCase()}
+            <div className="relative shrink-0">
+              {photoObjectUrl ? (
+                <img
+                  src={photoObjectUrl}
+                  alt={student.full_name}
+                  className="h-24 w-24 rounded-full object-cover border-2 border-border"
+                />
+              ) : (
+                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-3xl font-bold text-primary">
+                  {student.first_name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              {uploadPhotoMutation.isPending ? (
+                <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setCameraModalOpen(true)}
+                    className="no-print absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+                    aria-label="Take photo with camera"
+                    title="Camera"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="no-print absolute bottom-0 left-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-muted text-muted-foreground shadow-sm hover:bg-muted/80 transition-colors"
+                    aria-label="Upload photo from file"
+                    title="Upload file"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                </>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/*"
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadPhotoMutation.mutate(file);
+                  e.target.value = "";
+                }}
+              />
             </div>
             <div className="space-y-1">
               <h1 className="text-xl font-bold text-foreground">
