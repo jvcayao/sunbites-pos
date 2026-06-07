@@ -1,14 +1,14 @@
 export type SchoolMonthKey =
-  | "june"
-  | "july"
-  | "august"
-  | "september"
-  | "october"
-  | "november"
-  | "december"
-  | "january"
-  | "february"
-  | "march";
+  | "June"
+  | "July"
+  | "August"
+  | "September"
+  | "October"
+  | "November"
+  | "December"
+  | "January"
+  | "February"
+  | "March";
 
 export type DayOfWeekKey = "monday" | "tuesday" | "wednesday" | "thursday" | "friday";
 
