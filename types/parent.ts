@@ -14,7 +14,7 @@ export interface Parent {
 
 export interface ParentDetail extends Omit<Parent, "students"> {
   address: string | null;
-  profile_photo_path: string | null;
+  profile_photo_url: string | null;
   created_at: string;
   students: {
     id: number;
