@@ -1,25 +1,33 @@
 import type { SchoolMonth } from "./student";
 
-export interface ReminderStudent {
+export interface UnpaidPeriodStudent {
   id: number;
   full_name: string;
   student_number: string | null;
-  amount: number | null;
+  amount: number;
+}
+
+export interface UnpaidPeriod {
+  school_month: string;
+  year: number;
+  was_sent: boolean;
+  last_sent_at: string | null;
+  send_count: number;
+  total_amount: number;
+  students: UnpaidPeriodStudent[];
 }
 
 export interface EligibleParent {
   id: number;
   full_name: string;
   email: string;
-  was_sent: boolean;
-  sent_at: string | null;
-  subscription_students: ReminderStudent[];
+  total_send_count: number;
+  has_overdue: boolean;
+  unpaid_periods: UnpaidPeriod[];
 }
 
 export interface ReminderBellCount {
   count: number;
-  school_month: SchoolMonth | null;
-  school_year: number | null;
 }
 
 export interface ReminderSendResult {
@@ -54,8 +62,13 @@ export interface ReminderParentDetail {
   students: ReminderStudentDetail[];
 }
 
+export type ReminderStatus = "all" | "unsent" | "partial" | "sent" | "overdue";
+
 export interface EligibleParentsParams {
   search?: string;
+  status?: ReminderStatus;
+  school_month?: string;
+  school_year?: number;
   per_page?: number;
   page?: number;
 }

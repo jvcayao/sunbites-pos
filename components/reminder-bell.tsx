@@ -5,15 +5,18 @@ import { Bell } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { reminderApi } from "@/lib/api/reminders";
+import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
 export function ReminderBell({ className }: { className?: string }) {
   const router = useRouter();
+  const activeBranch = useAuthStore((s) => s.activeBranch);
 
   const { data } = useQuery({
-    queryKey: ["reminder-bell-count"],
+    queryKey: ["reminder-bell-count", activeBranch?.id],
     queryFn: () => reminderApi.bellCount(),
     refetchInterval: 60_000,
+    enabled: !!activeBranch,
   });
 
   const count = data?.count ?? 0;

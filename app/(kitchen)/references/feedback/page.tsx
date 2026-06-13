@@ -2,7 +2,7 @@
 
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -65,12 +65,21 @@ const CATEGORY_CONFIG: Record<
 
 function FeedbackSkeleton() {
   return (
-    <div className="space-y-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="rounded-lg border border-border p-4">
-          <Skeleton className="h-4 w-24 mb-2" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-3 w-32 mt-2" />
+    <div className="flex flex-col gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-border border-l-4 border-l-muted bg-card p-4">
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-24 rounded-full" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-2/3" />
+              <Skeleton className="h-3 w-1/3" />
+            </div>
+          </div>
         </div>
       ))}
     </div>
@@ -78,7 +87,7 @@ function FeedbackSkeleton() {
 }
 
 function CategoryBadge({ category }: { category: FeedbackCategory }) {
-  const config = CATEGORY_CONFIG[category];
+  const config = CATEGORY_CONFIG[category] ?? CATEGORY_CONFIG.Other;
   return (
     <span
       className={cn(
@@ -138,7 +147,7 @@ function FeedbackDetailSheet({
     <Sheet open={feedback !== null} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         {feedback && (
-          <>
+          <div className="px-2 pb-6">
             <SheetHeader>
               <div className="flex items-center gap-2 flex-wrap">
                 <CategoryBadge category={feedback.category} />
@@ -149,7 +158,7 @@ function FeedbackDetailSheet({
                 )}
               </div>
               <SheetTitle className="text-left mt-2">
-                {CATEGORY_CONFIG[feedback.category].label} Feedback
+                {(CATEGORY_CONFIG[feedback.category] ?? CATEGORY_CONFIG.Other).label} Feedback
               </SheetTitle>
               <SheetDescription className="text-left">
                 {feedback.student
@@ -190,16 +199,17 @@ function FeedbackDetailSheet({
 
               {/* Mark as Read */}
               {!feedback.is_read && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onMarkRead(feedback.id)}
-                  disabled={isMarkingRead}
-                  className="w-full"
-                >
-                  {isMarkingRead ? "Marking…" : "Mark as Read"}
-                </Button>
+                <div className="flex justify-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onMarkRead(feedback.id)}
+                    disabled={isMarkingRead}
+                  >
+                    {isMarkingRead ? "Marking…" : "Mark as Read"}
+                  </Button>
+                </div>
               )}
 
               {/* Reply form */}
@@ -221,12 +231,14 @@ function FeedbackDetailSheet({
                     <p role="alert" className="text-xs text-destructive">{replyError}</p>
                   )}
                 </div>
-                <Button type="submit" disabled={isReplying} className="w-full">
-                  {isReplying ? "Sending…" : "Send Reply"}
-                </Button>
+                <div className="flex justify-center">
+                  <Button type="submit" disabled={isReplying}>
+                    {isReplying ? "Sending…" : "Send Reply"}
+                  </Button>
+                </div>
               </form>
             </div>
-          </>
+          </div>
         )}
       </SheetContent>
     </Sheet>
@@ -344,49 +356,52 @@ export default function FeedbackPage() {
           No feedback found.
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-3">
           {data.data.map((item) => (
             <button
               key={item.id}
               type="button"
               className={cn(
-                "w-full text-left rounded-lg border bg-card p-4 transition-colors hover:bg-muted/30",
-                !item.is_read
-                  ? "border-l-4 border-l-primary border-border"
-                  : "border-border"
+                "w-full text-left rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/30 border-l-4 border-l-destructive",
+                !item.is_read && "bg-primary/5"
               )}
               onClick={() => setSelectedFeedback(item)}
             >
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <CategoryBadge category={item.category} />
-                  {!item.is_read && (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/30">
-                      Unread
-                    </span>
-                  )}
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                  <MessageSquare className="h-4 w-4 text-destructive" aria-hidden="true" />
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CategoryBadge category={item.category} />
+                    {!item.is_read && (
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/30">
+                        Unread
+                      </span>
+                    )}
+                    {item.admin_reply && (
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/30">
+                        Replied
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                    {item.message}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {item.student
+                      ? `${item.student.full_name} (${item.student.student_number})`
+                      : "Anonymous"}
+                    {" · "}
+                    {new Date(item.created_at).toLocaleDateString("en-PH", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground shrink-0">
-                  {new Date(item.created_at).toLocaleDateString("en-PH", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </p>
               </div>
-
-              <p className={cn("mt-2 text-sm line-clamp-2", !item.is_read && "font-semibold text-foreground")}>
-                {item.message}
-              </p>
-
-              <p className="mt-1 text-xs text-muted-foreground">
-                {item.student
-                  ? `${item.student.full_name} (${item.student.student_number})`
-                  : "Anonymous"}
-                {item.admin_reply && (
-                  <span className="ml-2 text-primary">· Replied</span>
-                )}
-              </p>
             </button>
           ))}
         </div>

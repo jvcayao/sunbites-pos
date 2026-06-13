@@ -51,7 +51,12 @@ export interface PreRegistrationDetail {
 
 export interface PreRegistrationListParams {
   status?: "pending" | "approved" | "rejected" | "expired";
+  enrollment_type?: "subscription" | "non_subscription";
+  search?: string;
+  date_from?: string;
+  date_to?: string;
   page?: number;
+  per_page?: number;
 }
 
 export interface PaginatedPreRegistrations {

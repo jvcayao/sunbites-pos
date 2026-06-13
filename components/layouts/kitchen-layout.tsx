@@ -266,7 +266,6 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
           <h1 className="text-lg font-semibold">{pageTitle}</h1>
 
           <div className="flex items-center gap-3">
-            <NotificationBell />
             {activeBranch && (() => {
               const canSwitch = isAdmin || (user?.branches?.length ?? 0) > 1;
               return canSwitch ? (
@@ -282,6 +281,7 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
                 </span>
               );
             })()}
+            <NotificationBell />
             {user && (
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">

@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
+import { Bell, CheckCheck, ExternalLink, Trash2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, CheckCheck, MoreHorizontal, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -19,20 +18,25 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { NotificationItem } from "@/components/notification-item";
 import { staffNotificationApi } from "@/lib/api/staff-notifications";
-import { relativeTime } from "@/lib/relative-time";
 import { cn } from "@/lib/utils";
 
 import type { StaffNotification } from "@/types/staff-notification";
 
+type Tab = "all" | "unread";
+
 // ---------------------------------------------------------------------------
-// Date grouping
+// Helpers
 // ---------------------------------------------------------------------------
 
 function groupByDate(
@@ -41,7 +45,6 @@ function groupByDate(
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfYesterday = new Date(startOfToday.getTime() - 86_400_000);
-
   return [
     { label: "Today", items: items.filter((n) => new Date(n.created_at) >= startOfToday) },
     {
@@ -52,153 +55,157 @@ function groupByDate(
           new Date(n.created_at) < startOfToday
       ),
     },
-    {
-      label: "Earlier",
-      items: items.filter((n) => new Date(n.created_at) < startOfYesterday),
-    },
+    { label: "Earlier", items: items.filter((n) => new Date(n.created_at) < startOfYesterday) },
   ].filter((g) => g.items.length > 0);
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Skeleton
 // ---------------------------------------------------------------------------
 
-function getNotificationTitle(notification: StaffNotification): string {
-  if (notification.type === "App\\Notifications\\AnnouncementNotification") {
-    return notification.data.title ?? "Announcement";
-  }
-  return "New Pre-Registration";
-}
-
-function getNotificationPreview(notification: StaffNotification): string {
-  if (notification.type === "App\\Notifications\\AnnouncementNotification") {
-    const { message } = notification.data;
-    return message.length > 120 ? message.slice(0, 120) + "…" : message;
-  }
-  const { student_name, enrollment_type, branch_name } = notification.data;
-  return `${student_name} — ${enrollment_type} at ${branch_name}`;
-}
-
-function getNotificationHref(notification: StaffNotification): string {
-  if (notification.type === "App\\Notifications\\AnnouncementNotification") {
-    return `/announcements/${notification.data.announcement_id}`;
-  }
-  return `/pre-registrations/${notification.data.pre_registration_id}`;
-}
-
-// ---------------------------------------------------------------------------
-// NotificationRow
-// ---------------------------------------------------------------------------
-
-interface NotificationRowProps {
-  notification: StaffNotification;
-  onMarkRead: (id: string) => void;
-  onDelete: (id: string) => void;
-  isMarkingRead: boolean;
-  isDeleting: boolean;
-}
-
-function NotificationRow({
-  notification,
-  onMarkRead,
-  onDelete,
-  isMarkingRead,
-  isDeleting,
-}: NotificationRowProps) {
-  const router = useRouter();
-  const isUnread = notification.read_at === null;
-  const title = getNotificationTitle(notification);
-  const preview = getNotificationPreview(notification);
-  const href = getNotificationHref(notification);
-
-  function handleRowClick() {
-    if (isUnread) onMarkRead(notification.id);
-    router.push(href);
-  }
-
+function NotificationSkeleton() {
   return (
-    <div
-      role="article"
-      aria-label={title}
-      className={cn(
-        "group relative flex cursor-pointer items-start gap-2 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/30",
-        isUnread && "bg-primary/5",
-        (isMarkingRead || isDeleting) && "pointer-events-none opacity-60"
-      )}
-      onClick={handleRowClick}
-    >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-          isUnread ? "bg-primary" : "bg-transparent"
-        )}
-      />
-
-      <div className="min-w-0 flex-1 space-y-0.5">
-        <div className="flex items-baseline justify-between gap-2">
-          <p
-            className={cn(
-              "text-sm leading-snug",
-              isUnread ? "font-semibold text-foreground" : "text-muted-foreground"
-            )}
-          >
-            {title}
-          </p>
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {relativeTime(notification.created_at)}
-          </span>
+    <div className="flex flex-col gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-border border-l-4 border-l-muted bg-card p-4">
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-1/4" />
+            </div>
+          </div>
         </div>
-        <p className="line-clamp-2 text-xs text-muted-foreground">{preview}</p>
-      </div>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-              aria-label={`More options for: ${title}`}
-            />
-          }
-          onClick={(e: React.MouseEvent) => e.stopPropagation()}
-        >
-          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" side="bottom">
-          {isUnread && (
-            <DropdownMenuItem
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                onMarkRead(notification.id);
-              }}
-            >
-              Mark as read
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation();
-              onDelete(notification.id);
-            }}
-          >
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      ))}
     </div>
   );
 }
 
-function NotificationSkeleton() {
+// ---------------------------------------------------------------------------
+// Detail Sheet
+// ---------------------------------------------------------------------------
+
+interface DetailSheetProps {
+  notification: StaffNotification | null;
+  onClose: () => void;
+  onDelete: (id: string) => void;
+  isDeleting: boolean;
+}
+
+function NotificationDetailSheet({
+  notification,
+  onClose,
+  onDelete,
+  isDeleting,
+}: DetailSheetProps) {
+  const router = useRouter();
+
+  const isAnnouncement =
+    notification?.type === "App\\Notifications\\AnnouncementNotification";
+
+  function handleNavigate() {
+    if (!notification) return;
+    onClose();
+    if (notification.type === "App\\Notifications\\AnnouncementNotification") {
+      router.push(`/announcements/${notification.data.announcement_id}`);
+    } else {
+      router.push(`/pre-registrations/${notification.data.pre_registration_id}`);
+    }
+  }
+
   return (
-    <div className="space-y-3" aria-busy="true" aria-label="Loading notifications">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="h-14 animate-pulse rounded-md bg-muted" />
-      ))}
-    </div>
+    <Sheet open={notification !== null} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+        {notification && (
+          <div className="px-2 pb-6 space-y-6">
+            <SheetHeader>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  className={cn(
+                    "text-[11px] font-bold px-2.5 py-0.5 rounded-full border",
+                    isAnnouncement
+                      ? "bg-amber-100 text-amber-700 border-amber-300"
+                      : "bg-blue-100 text-blue-700 border-blue-300"
+                  )}
+                >
+                  {isAnnouncement ? "Announcement" : "Pre-Registration"}
+                </span>
+                {notification.read_at === null && (
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/30">
+                    Unread
+                  </span>
+                )}
+              </div>
+              <SheetTitle className="text-left">
+                {isAnnouncement
+                  ? (notification.data.title ?? "Announcement")
+                  : "New Pre-Registration"}
+              </SheetTitle>
+              <SheetDescription className="text-left">
+                {new Date(notification.created_at).toLocaleDateString("en-PH", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </SheetDescription>
+            </SheetHeader>
+
+            {/* Content */}
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              {isAnnouncement ? (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Message
+                  </p>
+                  <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                    {notification.data.message}
+                  </p>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    From: {notification.data.sender_name}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Student
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {notification.data.student_name}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground capitalize">
+                    {notification.data.enrollment_type} · {notification.data.branch_name}
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(notification.id)}
+                disabled={isDeleting}
+                className="text-destructive border-destructive/40 hover:bg-destructive/10"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                {isDeleting ? "Deleting…" : "Delete"}
+              </Button>
+              <Button size="sm" onClick={handleNavigate}>
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                {isAnnouncement ? "View Announcement" : "View Pre-Registration"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -206,23 +213,25 @@ function NotificationSkeleton() {
 // Page
 // ---------------------------------------------------------------------------
 
-export default function StaffNotificationsPage() {
-  const queryClient = useQueryClient();
+export default function NotificationsPage() {
+  const [activeTab, setActiveTab] = useState<Tab>("all");
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
+  const [selectedNotification, setSelectedNotification] =
+    useState<StaffNotification | null>(null);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["staff-notifications"],
-    queryFn: () => staffNotificationApi.list(),
+    queryFn: () => staffNotificationApi.list({ per_page: 50 }),
   });
 
-  const { data: unreadData } = useQuery({
+  const { data: countData } = useQuery({
     queryKey: ["staff-unread-count"],
     queryFn: () => staffNotificationApi.unreadCount(),
   });
 
+  const unreadCount = countData?.count ?? 0;
   const notifications = data?.data ?? [];
-  const unreadCount = unreadData?.count ?? 0;
 
   function invalidateAll() {
     queryClient.invalidateQueries({ queryKey: ["staff-notifications"] });
@@ -231,7 +240,42 @@ export default function StaffNotificationsPage() {
 
   const markReadMutation = useMutation({
     mutationFn: (id: string) => staffNotificationApi.markRead(id),
-    onSuccess: invalidateAll,
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["staff-notifications"] });
+      const prev = queryClient.getQueryData(["staff-notifications"]);
+      queryClient.setQueryData(["staff-notifications"], (old: any) => ({
+        ...old,
+        data: old?.data?.map((n: any) =>
+          n.id === id ? { ...n, read_at: new Date().toISOString() } : n
+        ),
+      }));
+      return { prev };
+    },
+    onError: (_err: unknown, _id: string, ctx: any) => {
+      if (ctx?.prev) queryClient.setQueryData(["staff-notifications"], ctx.prev);
+    },
+    onSettled: () => invalidateAll(),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => staffNotificationApi.destroy(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["staff-notifications"] });
+      const prev = queryClient.getQueryData(["staff-notifications"]);
+      queryClient.setQueryData(["staff-notifications"], (old: any) => ({
+        ...old,
+        data: old?.data?.filter((n: any) => n.id !== id),
+      }));
+      return { prev };
+    },
+    onError: (_err: unknown, _id: string, ctx: any) => {
+      if (ctx?.prev) queryClient.setQueryData(["staff-notifications"], ctx.prev);
+      toast.error("Failed to delete notification.");
+    },
+    onSettled: () => {
+      invalidateAll();
+      setSelectedNotification(null);
+    },
   });
 
   const markAllReadMutation = useMutation({
@@ -242,16 +286,9 @@ export default function StaffNotificationsPage() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => staffNotificationApi.destroy(id),
-    onSuccess: invalidateAll,
-  });
-
   const clearAllMutation = useMutation({
-    mutationFn: async () => {
-      await staffNotificationApi.markAllRead();
-      await Promise.all(notifications.map((n) => staffNotificationApi.destroy(n.id)));
-    },
+    mutationFn: () =>
+      Promise.all(notifications.map((n) => staffNotificationApi.destroy(n.id))),
     onSuccess: () => {
       invalidateAll();
       setClearDialogOpen(false);
@@ -259,11 +296,19 @@ export default function StaffNotificationsPage() {
     },
   });
 
+  function handleOpen(notification: StaffNotification) {
+    setSelectedNotification(notification);
+    if (notification.read_at === null) {
+      markReadMutation.mutate(notification.id);
+    }
+  }
+
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">Notifications</h1>
+      <div className="p-6 space-y-4">
+        <div>
+          <p className="text-xs text-muted-foreground">Activity</p>
+          <h1 className="text-xl font-bold text-foreground">Notifications</h1>
         </div>
         <NotificationSkeleton />
       </div>
@@ -278,10 +323,13 @@ export default function StaffNotificationsPage() {
   const groups = groupByDate(displayed);
 
   return (
-    <div className="space-y-4">
+    <div className="p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Notifications</h1>
+        <div>
+          <p className="text-xs text-muted-foreground">Activity</p>
+          <h1 className="text-xl font-bold text-foreground">Notifications</h1>
+        </div>
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <Button
@@ -295,7 +343,6 @@ export default function StaffNotificationsPage() {
               <span>Mark all read</span>
             </Button>
           )}
-
           {notifications.length > 0 && (
             <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
               <AlertDialogTrigger
@@ -314,15 +361,16 @@ export default function StaffNotificationsPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Clear all notifications?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete all your notifications. This action cannot be undone.
+                    This will permanently delete all your notifications. This action cannot be
+                    undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
-                    variant="destructive"
                     onClick={() => clearAllMutation.mutate()}
                     disabled={clearAllMutation.isPending}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
                     {clearAllMutation.isPending ? "Clearing…" : "Clear all"}
                   </AlertDialogAction>
@@ -378,26 +426,44 @@ export default function StaffNotificationsPage() {
 
       {/* Grouped list */}
       {groups.map((group) => (
-        <div key={group.label}>
-          <p className="mb-1 px-2 text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
-            {group.label}
-          </p>
-          <div>
+        <div key={group.label} className="space-y-3">
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
+              {group.label}
+            </p>
+            <Separator className="flex-1" />
+          </div>
+          <div className="flex flex-col gap-3">
             {group.items.map((n) => (
-              <NotificationRow
+              <NotificationItem
                 key={n.id}
                 notification={n}
+                variant="card"
+                onCardClick={() => handleOpen(n)}
                 onMarkRead={(id) => markReadMutation.mutate(id)}
                 onDelete={(id) => deleteMutation.mutate(id)}
                 isMarkingRead={
                   markReadMutation.isPending && markReadMutation.variables === n.id
                 }
-                isDeleting={deleteMutation.isPending && deleteMutation.variables === n.id}
+                isDeleting={
+                  deleteMutation.isPending && deleteMutation.variables === n.id
+                }
               />
             ))}
           </div>
         </div>
       ))}
+
+      {/* Detail sheet */}
+      <NotificationDetailSheet
+        notification={selectedNotification}
+        onClose={() => setSelectedNotification(null)}
+        onDelete={(id) => deleteMutation.mutate(id)}
+        isDeleting={
+          deleteMutation.isPending &&
+          deleteMutation.variables === selectedNotification?.id
+        }
+      />
     </div>
   );
 }

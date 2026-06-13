@@ -19,19 +19,19 @@ interface PaginatedEligibleParents {
 }
 
 export const reminderApi = {
-  bellCount: () => apiClient.get<ReminderBellCount>("/api/v1/reminders/bell-count"),
+  bellCount: () => apiClient.get<ReminderBellCount>("/reminders/bell-count"),
 
   eligibleParents: (params?: EligibleParentsParams) =>
-    apiClient.get<PaginatedEligibleParents>("/api/v1/reminders/eligible-parents", {
+    apiClient.get<PaginatedEligibleParents>("/reminders/eligible-parents", {
       params: params as Record<string, string | number | boolean | undefined>,
     }),
 
   send: (parentIds: number[], force?: boolean) =>
-    apiClient.post<ReminderSendResult>("/api/v1/reminders/send", {
+    apiClient.post<ReminderSendResult>("/reminders/send", {
       parent_ids: parentIds,
       ...(force ? { force: true } : {}),
     }),
 
   parentDetail: (id: number) =>
-    apiClient.get<ReminderParentDetail>(`/api/v1/reminders/parents/${id}`),
+    apiClient.get<ReminderParentDetail>(`/reminders/parents/${id}`),
 };

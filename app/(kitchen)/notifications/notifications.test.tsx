@@ -1,9 +1,10 @@
 import { http, HttpResponse } from "msw";
 
 import { render, screen, waitFor } from "@/__tests__/test-utils";
+import userEvent from "@testing-library/user-event";
 import { server } from "@/__tests__/mocks/server";
 
-import StaffNotificationsPage from "./page";
+import NotificationsPage from "./page";
 
 const API = "http://localhost:8000";
 
@@ -11,6 +12,14 @@ const mockPush = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+}));
+
+const mockAuthState = { user: { id: 1, name: "Admin" }, token: null, activeBranch: null };
+jest.mock("@/lib/store/auth", () => ({
+  useAuthStore: Object.assign(
+    (sel: (s: any) => any) => sel(mockAuthState),
+    { getState: () => mockAuthState }
+  ),
 }));
 
 // ---------------------------------------------------------------------------
@@ -47,12 +56,12 @@ const preRegFixture = {
 
 const emptyListResponse = {
   data: [],
-  meta: { current_page: 1, last_page: 1, per_page: 20, total: 0 },
+  meta: { current_page: 1, last_page: 1, per_page: 50, total: 0 },
 };
 
 const listWithBothResponse = {
   data: [announcementFixture, preRegFixture],
-  meta: { current_page: 1, last_page: 1, per_page: 20, total: 2 },
+  meta: { current_page: 1, last_page: 1, per_page: 50, total: 2 },
 };
 
 // ---------------------------------------------------------------------------
@@ -79,9 +88,9 @@ beforeEach(() => {
   useDefaultHandlers();
 });
 
-describe("StaffNotificationsPage", () => {
+describe("NotificationsPage (POS)", () => {
   it("renders an announcement notification with its title and message preview", async () => {
-    render(<StaffNotificationsPage />);
+    render(<NotificationsPage />);
 
     expect(
       await screen.findByText("Canteen closure Friday")
@@ -93,51 +102,57 @@ describe("StaffNotificationsPage", () => {
   });
 
   it("renders a pre-registration notification with 'New Pre-Registration' title and formatted preview", async () => {
-    render(<StaffNotificationsPage />);
+    render(<NotificationsPage />);
 
     expect(
       await screen.findByText("New Pre-Registration")
     ).toBeInTheDocument();
 
     expect(
-      screen.getByText("Jose Reyes — subscription at Iloilo Branch")
+      screen.getByText("Jose Reyes — subscription · Iloilo Branch")
     ).toBeInTheDocument();
   });
 
-  it("clicking an announcement card navigates to /announcements/{id}", async () => {
+  it("clicking an announcement opens the sheet and the view button navigates", async () => {
     server.use(
       http.patch(`${API}/staff/notifications/notif-a1/read`, () =>
         HttpResponse.json({ message: "Marked as read." })
       )
     );
 
-    render(<StaffNotificationsPage />);
+    render(<NotificationsPage />);
 
-    const card = await screen.findByRole("article", {
-      name: "Canteen closure Friday",
+    const item = await screen.findByRole("button", {
+      name: /canteen closure friday/i,
     });
 
-    card.click();
+    await userEvent.click(item);
+
+    const viewBtn = await screen.findByRole("button", { name: /view announcement/i });
+    await userEvent.click(viewBtn);
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/announcements/3");
     });
   });
 
-  it("clicking a pre-registration card navigates to /pre-registrations/{id}", async () => {
+  it("clicking a pre-registration opens the sheet and the view button navigates", async () => {
     server.use(
       http.patch(`${API}/staff/notifications/notif-p1/read`, () =>
         HttpResponse.json({ message: "Marked as read." })
       )
     );
 
-    render(<StaffNotificationsPage />);
+    render(<NotificationsPage />);
 
-    const card = await screen.findByRole("article", {
-      name: "New Pre-Registration",
+    const item = await screen.findByRole("button", {
+      name: /new pre-registration/i,
     });
 
-    card.click();
+    await userEvent.click(item);
+
+    const viewBtn = await screen.findByRole("button", { name: /view pre-registration/i });
+    await userEvent.click(viewBtn);
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/pre-registrations/12");
@@ -154,7 +169,7 @@ describe("StaffNotificationsPage", () => {
       )
     );
 
-    render(<StaffNotificationsPage />);
+    render(<NotificationsPage />);
 
     expect(
       await screen.findByText("You're all caught up")
@@ -162,7 +177,7 @@ describe("StaffNotificationsPage", () => {
   });
 
   it("shows the 'Today' date group header for today's notifications", async () => {
-    render(<StaffNotificationsPage />);
+    render(<NotificationsPage />);
 
     expect(await screen.findByText("Today")).toBeInTheDocument();
   });
@@ -175,7 +190,7 @@ describe("StaffNotificationsPage", () => {
             announcementFixture,
             { ...preRegFixture, id: "notif-read", read_at: new Date().toISOString() },
           ],
-          meta: { current_page: 1, last_page: 1, per_page: 20, total: 2 },
+          meta: { current_page: 1, last_page: 1, per_page: 50, total: 2 },
         })
       ),
       http.get(`${API}/staff/notifications/unread-count`, () =>
@@ -183,17 +198,33 @@ describe("StaffNotificationsPage", () => {
       )
     );
 
-    render(<StaffNotificationsPage />);
+    render(<NotificationsPage />);
 
     await screen.findByText("Canteen closure Friday");
 
-    const unreadTab = screen.getByRole("tab", { name: /unread/i });
-    unreadTab.click();
+    await userEvent.click(screen.getByRole("tab", { name: /unread/i }));
 
     await waitFor(() => {
-      const articles = screen.getAllByRole("article");
-      expect(articles).toHaveLength(1);
-      expect(screen.getByRole("article")).toHaveAccessibleName("Canteen closure Friday");
+      expect(screen.getByText("Canteen closure Friday")).toBeInTheDocument();
+      expect(screen.queryByText("New Pre-Registration")).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows mark-all-read button when unread count > 0", async () => {
+    render(<NotificationsPage />);
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Mark all notifications as read" })
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("shows clear-all button when notifications exist", async () => {
+    render(<NotificationsPage />);
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Clear all notifications" })
+      ).toBeInTheDocument();
     });
   });
 });

@@ -26,13 +26,18 @@ import type { SystemConfiguration } from "@/types/system-configuration";
 // Helpers
 // ---------------------------------------------------------------------------
 
+const CURRENCY_KEYS = new Set(["credit_limit", "daily_meal_rate", "loyalty_point_threshold"]);
+
 function formatValue(config: SystemConfiguration): string {
   if (config.type === "decimal" || config.type === "integer") {
     const num = Number(config.value);
-    return `₱${num.toLocaleString("en-PH", {
-      minimumFractionDigits: config.type === "decimal" ? 2 : 0,
-      maximumFractionDigits: config.type === "decimal" ? 2 : 0,
-    })}`;
+    if (CURRENCY_KEYS.has(config.key)) {
+      return `₱${num.toLocaleString("en-PH", {
+        minimumFractionDigits: config.type === "decimal" ? 2 : 0,
+        maximumFractionDigits: config.type === "decimal" ? 2 : 0,
+      })}`;
+    }
+    return num.toLocaleString("en-PH");
   }
   return config.value;
 }

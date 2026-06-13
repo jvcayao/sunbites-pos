@@ -2,12 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { announcementApi } from "@/lib/api/announcements";
 import { parentApi } from "@/lib/api/parents";
 import { userApi } from "@/lib/api/users";
@@ -15,6 +19,72 @@ import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
 type RecipientType = "parents" | "staff";
+
+// ---------------------------------------------------------------------------
+// Sub-components — identical pattern to enrollment form
+// ---------------------------------------------------------------------------
+
+function SectionCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+      <h2 className="text-xs font-extrabold uppercase tracking-wider text-primary border-b border-border pb-2">
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+function FieldError({ error }: { error?: string }) {
+  if (!error) return null;
+  return (
+    <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive">
+      <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      {error}
+    </p>
+  );
+}
+
+function FormField({
+  label,
+  htmlFor,
+  required,
+  hint,
+  error,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  required?: boolean;
+  hint?: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={htmlFor}>
+        {label}
+        {required && <span className="ml-0.5 text-destructive">*</span>}
+        {!required && (
+          <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+        )}
+      </Label>
+      {children}
+      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <FieldError error={error} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
 export default function CreateAnnouncementPage() {
   const router = useRouter();
@@ -26,6 +96,7 @@ export default function CreateAnnouncementPage() {
   const [recipientType, setRecipientType] = useState<RecipientType>("parents");
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { data: parentsData, isLoading: parentsLoading } = useQuery({
     queryKey: ["parents-list"],
@@ -93,7 +164,9 @@ export default function CreateAnnouncementPage() {
         recipient_ids: Array.from(selectedIds),
       }),
     onSuccess: () => {
-      toast.success(`Announcement sent to ${selectedIds.size} recipient${selectedIds.size !== 1 ? "s" : ""}.`);
+      toast.success(
+        `Announcement sent to ${selectedIds.size} recipient${selectedIds.size !== 1 ? "s" : ""}.`
+      );
       queryClient.invalidateQueries({ queryKey: ["announcements"] });
       router.push("/announcements");
     },
@@ -102,142 +175,194 @@ export default function CreateAnnouncementPage() {
     },
   });
 
-  const allFiltered = filteredRecipients.every((r) => selectedIds.has(r.id));
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const next: Record<string, string> = {};
+    if (!message.trim()) next.message = "Message is required.";
+    if (selectedIds.size === 0) next.recipients = "Select at least one recipient.";
+    if (Object.keys(next).length) {
+      setErrors(next);
+      toast.error("Please fix the highlighted fields before continuing.");
+      return;
+    }
+    setErrors({});
+    createMutation.mutate();
+  }
+
+  const allFiltered =
+    filteredRecipients.length > 0 &&
+    filteredRecipients.every((r) => selectedIds.has(r.id));
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <h1 className="text-xl font-bold">New Announcement</h1>
+    <div className="p-6 max-w-2xl mx-auto space-y-6">
+      {/* Back link */}
+      <Link
+        href="/announcements"
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Back to Announcements
+      </Link>
 
-      {/* Title */}
-      <div className="space-y-1.5">
-        <label htmlFor="title" className="text-sm font-medium">
-          Title <span className="text-muted-foreground">(optional)</span>
-        </label>
-        <Input
-          id="title"
-          placeholder="e.g. Canteen notice"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={255}
-        />
+      {/* Page header */}
+      <div>
+        <p className="text-xs text-muted-foreground">Communications</p>
+        <h1 className="text-xl font-bold text-foreground">New Announcement</h1>
       </div>
 
-      {/* Message */}
-      <div className="space-y-1.5">
-        <label htmlFor="message" className="text-sm font-medium">
-          Message <span className="text-destructive">*</span>
-        </label>
-        <div className="relative">
-          <textarea
-            id="message"
-            rows={4}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none pb-6"
-            placeholder="Write your announcement..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            maxLength={1000}
-          />
-          <span className="pointer-events-none absolute bottom-2 right-3 text-[11px] text-muted-foreground">
-            {message.length}/1000
-          </span>
-        </div>
-      </div>
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
+        {/* Message Content */}
+        <SectionCard title="Message Content">
+          <FormField label="Title" htmlFor="title">
+            <Input
+              id="title"
+              placeholder="e.g. Canteen closure notice"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={255}
+            />
+          </FormField>
 
-      {/* Recipient type toggle */}
-      <div className="space-y-1.5">
-        <p className="text-sm font-medium">Send to</p>
-        <div className="inline-flex rounded-lg border border-border p-1 gap-1">
-          {(["parents", "staff"] as const).map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => switchType(type)}
-              className={cn(
-                "rounded-md px-4 py-1.5 text-sm font-medium capitalize transition-colors",
-                recipientType === type
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-muted"
-              )}
-              aria-pressed={recipientType === type}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Recipient list */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">Recipients</p>
-          {filteredRecipients.length > 0 && (
-            <button
-              type="button"
-              onClick={toggleAll}
-              className="text-xs text-primary hover:underline"
-            >
-              {allFiltered ? "Deselect all" : `Select all (${filteredRecipients.length})`}
-            </button>
-          )}
-        </div>
-
-        <Input
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search recipients"
-        />
-
-        <div className="max-h-72 overflow-y-auto rounded-md border border-border">
-          {isLoading ? (
-            <div className="space-y-2 p-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-8 w-full" />
-              ))}
+          <FormField
+            label="Message"
+            htmlFor="message"
+            required
+            error={errors.message}
+          >
+            <div className="relative">
+              <Textarea
+                id="message"
+                rows={5}
+                placeholder="Write your announcement…"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                maxLength={1000}
+                aria-invalid={!!errors.message}
+                className={cn("resize-none pb-6", errors.message && "border-destructive")}
+              />
+              <span className="pointer-events-none absolute bottom-2 right-3 text-[11px] text-muted-foreground">
+                {message.length}/1000
+              </span>
             </div>
-          ) : filteredRecipients.length === 0 ? (
-            <p className="p-4 text-center text-sm text-muted-foreground">No recipients found.</p>
-          ) : (
-            filteredRecipients.map((r) => (
-              <label
-                key={r.id}
+          </FormField>
+        </SectionCard>
+
+        {/* Send To */}
+        <SectionCard title="Send To">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {(["parents", "staff"] as const).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => switchType(type)}
+                aria-pressed={recipientType === type}
                 className={cn(
-                  "flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-muted/50",
-                  selectedIds.has(r.id) && "bg-primary/5"
+                  "rounded-lg border p-4 text-left transition-colors",
+                  recipientType === type
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-muted/40"
                 )}
               >
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(r.id)}
-                  onChange={() => toggleOne(r.id)}
-                  className="h-4 w-4 accent-primary"
-                  aria-label={r.name}
-                />
-                {r.name}
-              </label>
-            ))
-          )}
-        </div>
-      </div>
+                <p
+                  className={cn(
+                    "text-sm font-semibold capitalize",
+                    recipientType === type ? "text-primary" : "text-foreground"
+                  )}
+                >
+                  {type}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {type === "parents"
+                    ? "Send to enrolled parents on the portal"
+                    : "Send to staff members in this branch"}
+                </p>
+              </button>
+            ))}
+          </div>
+        </SectionCard>
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-2">
-        <Button variant="outline" onClick={() => router.back()}>
-          Cancel
-        </Button>
-        <Button
-          onClick={() => createMutation.mutate()}
-          disabled={
-            createMutation.isPending ||
-            message.trim().length === 0 ||
-            selectedIds.size === 0
-          }
-        >
-          {createMutation.isPending
-            ? "Sending…"
-            : `Send (${selectedIds.size})`}
-        </Button>
-      </div>
+        {/* Recipients */}
+        <SectionCard title="Recipients">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {selectedIds.size > 0
+                ? `${selectedIds.size} selected`
+                : "None selected"}
+            </p>
+            {filteredRecipients.length > 0 && (
+              <button
+                type="button"
+                onClick={toggleAll}
+                className="text-xs text-primary hover:underline"
+              >
+                {allFiltered
+                  ? "Deselect all"
+                  : `Select all (${filteredRecipients.length})`}
+              </button>
+            )}
+          </div>
+
+          <Input
+            placeholder="Search recipients…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search recipients"
+          />
+
+          <div
+            className={cn(
+              "max-h-72 overflow-y-auto rounded-lg border border-border",
+              errors.recipients && "border-destructive"
+            )}
+          >
+            {isLoading ? (
+              <div className="space-y-2 p-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-full" />
+                ))}
+              </div>
+            ) : filteredRecipients.length === 0 ? (
+              <p className="p-4 text-center text-sm text-muted-foreground">
+                No recipients found.
+              </p>
+            ) : (
+              filteredRecipients.map((r) => (
+                <label
+                  key={r.id}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-muted/50",
+                    selectedIds.has(r.id) && "bg-primary/5"
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(r.id)}
+                    onChange={() => toggleOne(r.id)}
+                    className="h-4 w-4 accent-primary"
+                    aria-label={r.name}
+                  />
+                  {r.name}
+                </label>
+              ))
+            )}
+          </div>
+
+          <FieldError error={errors.recipients} />
+        </SectionCard>
+
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-3">
+          <Button type="button" variant="outline" onClick={() => router.back()}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={createMutation.isPending || message.trim().length === 0 || selectedIds.size === 0}
+          >
+            {createMutation.isPending ? "Sending…" : `Send (${selectedIds.size})`}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
