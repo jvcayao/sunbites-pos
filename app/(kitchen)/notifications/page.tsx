@@ -31,6 +31,38 @@ import { cn } from "@/lib/utils";
 
 import type { StaffNotification } from "@/types/staff-notification";
 
+// ---------------------------------------------------------------------------
+// Date grouping
+// ---------------------------------------------------------------------------
+
+function groupByDate(
+  items: StaffNotification[]
+): { label: string; items: StaffNotification[] }[] {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfYesterday = new Date(startOfToday.getTime() - 86_400_000);
+
+  return [
+    { label: "Today", items: items.filter((n) => new Date(n.created_at) >= startOfToday) },
+    {
+      label: "Yesterday",
+      items: items.filter(
+        (n) =>
+          new Date(n.created_at) >= startOfYesterday &&
+          new Date(n.created_at) < startOfToday
+      ),
+    },
+    {
+      label: "Earlier",
+      items: items.filter((n) => new Date(n.created_at) < startOfYesterday),
+    },
+  ].filter((g) => g.items.length > 0);
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function getNotificationTitle(notification: StaffNotification): string {
   if (notification.type === "App\\Notifications\\AnnouncementNotification") {
     return notification.data.title ?? "Announcement";
@@ -54,7 +86,11 @@ function getNotificationHref(notification: StaffNotification): string {
   return `/pre-registrations/${notification.data.pre_registration_id}`;
 }
 
-interface NotificationCardProps {
+// ---------------------------------------------------------------------------
+// NotificationRow
+// ---------------------------------------------------------------------------
+
+interface NotificationRowProps {
   notification: StaffNotification;
   onMarkRead: (id: string) => void;
   onDelete: (id: string) => void;
@@ -62,23 +98,21 @@ interface NotificationCardProps {
   isDeleting: boolean;
 }
 
-function NotificationCard({
+function NotificationRow({
   notification,
   onMarkRead,
   onDelete,
   isMarkingRead,
   isDeleting,
-}: NotificationCardProps) {
+}: NotificationRowProps) {
   const router = useRouter();
   const isUnread = notification.read_at === null;
   const title = getNotificationTitle(notification);
   const preview = getNotificationPreview(notification);
   const href = getNotificationHref(notification);
 
-  function handleCardClick() {
-    if (isUnread) {
-      onMarkRead(notification.id);
-    }
+  function handleRowClick() {
+    if (isUnread) onMarkRead(notification.id);
     router.push(href);
   }
 
@@ -87,25 +121,35 @@ function NotificationCard({
       role="article"
       aria-label={title}
       className={cn(
-        "flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border p-4 transition-colors hover:bg-muted/30",
-        isUnread && "border-primary/30 bg-primary/5",
+        "group relative flex cursor-pointer items-start gap-2 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/30",
+        isUnread && "bg-primary/5",
         (isMarkingRead || isDeleting) && "pointer-events-none opacity-60"
       )}
-      onClick={handleCardClick}
+      onClick={handleRowClick}
     >
-      <div className="flex min-w-0 items-start gap-3">
-        <span
-          aria-hidden="true"
-          className={cn(
-            "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-            isUnread ? "bg-primary" : "bg-transparent"
-          )}
-        />
-        <div className="min-w-0 space-y-1">
-          <p className={cn("text-sm", isUnread ? "font-semibold" : "font-medium")}>{title}</p>
-          <p className="line-clamp-2 text-sm text-muted-foreground">{preview}</p>
-          <p className="text-xs text-muted-foreground">{relativeTime(notification.created_at)}</p>
+      <span
+        aria-hidden="true"
+        className={cn(
+          "mt-1.5 h-2 w-2 shrink-0 rounded-full",
+          isUnread ? "bg-primary" : "bg-transparent"
+        )}
+      />
+
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <div className="flex items-baseline justify-between gap-2">
+          <p
+            className={cn(
+              "text-sm leading-snug",
+              isUnread ? "font-semibold text-foreground" : "text-muted-foreground"
+            )}
+          >
+            {title}
+          </p>
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {relativeTime(notification.created_at)}
+          </span>
         </div>
+        <p className="line-clamp-2 text-xs text-muted-foreground">{preview}</p>
       </div>
 
       <DropdownMenu>
@@ -114,7 +158,7 @@ function NotificationCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 shrink-0 text-muted-foreground"
+              className="h-7 w-7 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
               aria-label={`More options for: ${title}`}
             />
           }
@@ -152,15 +196,20 @@ function NotificationSkeleton() {
   return (
     <div className="space-y-3" aria-busy="true" aria-label="Loading notifications">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="h-24 animate-pulse rounded-lg bg-muted" />
+        <div key={i} className="h-14 animate-pulse rounded-md bg-muted" />
       ))}
     </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function StaffNotificationsPage() {
   const queryClient = useQueryClient();
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
 
   const { data, isLoading } = useQuery({
     queryKey: ["staff-notifications"],
@@ -221,8 +270,16 @@ export default function StaffNotificationsPage() {
     );
   }
 
+  const displayed =
+    activeTab === "unread"
+      ? notifications.filter((n) => n.read_at === null)
+      : notifications;
+
+  const groups = groupByDate(displayed);
+
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Notifications</h1>
         <div className="flex items-center gap-2">
@@ -257,8 +314,7 @@ export default function StaffNotificationsPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Clear all notifications?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete all your notifications. This action cannot be
-                    undone.
+                    This will permanently delete all your notifications. This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -277,27 +333,71 @@ export default function StaffNotificationsPage() {
         </div>
       </div>
 
-      {notifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-border py-16 text-center">
+      {/* Tabs */}
+      <div className="flex border-b border-border" role="tablist">
+        <button
+          role="tab"
+          aria-selected={activeTab === "all"}
+          className={cn(
+            "px-3 py-2 text-sm transition-colors",
+            activeTab === "all"
+              ? "-mb-px border-b-2 border-primary font-semibold text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => setActiveTab("all")}
+        >
+          All
+        </button>
+        <button
+          role="tab"
+          aria-selected={activeTab === "unread"}
+          className={cn(
+            "flex items-center gap-1.5 px-3 py-2 text-sm transition-colors",
+            activeTab === "unread"
+              ? "-mb-px border-b-2 border-primary font-semibold text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => setActiveTab("unread")}
+        >
+          Unread
+          {unreadCount > 0 && (
+            <span className="rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Empty state */}
+      {displayed.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
           <Bell className="mb-3 h-10 w-10 text-muted-foreground" aria-hidden="true" />
           <p className="text-sm font-medium text-muted-foreground">You&apos;re all caught up</p>
         </div>
-      ) : (
-        <div className="space-y-2">
-          {notifications.map((n) => (
-            <NotificationCard
-              key={n.id}
-              notification={n}
-              onMarkRead={(id) => markReadMutation.mutate(id)}
-              onDelete={(id) => deleteMutation.mutate(id)}
-              isMarkingRead={
-                markReadMutation.isPending && markReadMutation.variables === n.id
-              }
-              isDeleting={deleteMutation.isPending && deleteMutation.variables === n.id}
-            />
-          ))}
-        </div>
       )}
+
+      {/* Grouped list */}
+      {groups.map((group) => (
+        <div key={group.label}>
+          <p className="mb-1 px-2 text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
+            {group.label}
+          </p>
+          <div>
+            {group.items.map((n) => (
+              <NotificationRow
+                key={n.id}
+                notification={n}
+                onMarkRead={(id) => markReadMutation.mutate(id)}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                isMarkingRead={
+                  markReadMutation.isPending && markReadMutation.variables === n.id
+                }
+                isDeleting={deleteMutation.isPending && deleteMutation.variables === n.id}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

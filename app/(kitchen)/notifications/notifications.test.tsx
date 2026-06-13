@@ -160,4 +160,40 @@ describe("StaffNotificationsPage", () => {
       await screen.findByText("You're all caught up")
     ).toBeInTheDocument();
   });
+
+  it("shows the 'Today' date group header for today's notifications", async () => {
+    render(<StaffNotificationsPage />);
+
+    expect(await screen.findByText("Today")).toBeInTheDocument();
+  });
+
+  it("Unread tab filters to only unread notifications", async () => {
+    server.use(
+      http.get(`${API}/staff/notifications`, () =>
+        HttpResponse.json({
+          data: [
+            announcementFixture,
+            { ...preRegFixture, id: "notif-read", read_at: new Date().toISOString() },
+          ],
+          meta: { current_page: 1, last_page: 1, per_page: 20, total: 2 },
+        })
+      ),
+      http.get(`${API}/staff/notifications/unread-count`, () =>
+        HttpResponse.json({ count: 1 })
+      )
+    );
+
+    render(<StaffNotificationsPage />);
+
+    await screen.findByText("Canteen closure Friday");
+
+    const unreadTab = screen.getByRole("tab", { name: /unread/i });
+    unreadTab.click();
+
+    await waitFor(() => {
+      const articles = screen.getAllByRole("article");
+      expect(articles).toHaveLength(1);
+      expect(screen.getByRole("article")).toHaveAccessibleName("Canteen closure Friday");
+    });
+  });
 });
