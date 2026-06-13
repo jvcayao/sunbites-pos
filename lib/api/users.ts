@@ -7,6 +7,7 @@ interface UserListParams {
   role?: string;
   status?: string;
   page?: number;
+  per_page?: number;
 }
 
 interface CreateUserPayload {

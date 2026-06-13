@@ -130,8 +130,9 @@ const enrollSchema = z.object({
   branch_id: z.number({ error: "Branch is required" }),
   student_number: z
     .string()
-    .min(1, "Student number is required")
-    .max(50, "Student number is too long"),
+    .max(50, "Student number is too long")
+    .optional()
+    .or(z.literal("")),
   first_name: z
     .string()
     .min(1, "First name is required")
@@ -382,7 +383,7 @@ export default function EnrollmentPage() {
 
     const raw = {
       branch_id: branchId as number,
-      student_number: studentNumber,
+      student_number: studentNumber || null,
       first_name: firstName,
       last_name: lastName,
       grade_level: gradeLevel,
@@ -471,7 +472,7 @@ export default function EnrollmentPage() {
             <div>
               <p className="text-muted-foreground text-xs">Student Number</p>
               <p className="font-semibold font-mono">
-                {enrolledResult.student_number}
+                {enrolledResult.student_number ?? "—"}
               </p>
             </div>
             <div>
@@ -813,9 +814,8 @@ export default function EnrollmentPage() {
               </FormField>
 
               <FormField
-                label="Student Number"
+                label="Student No. (optional)"
                 htmlFor="student-number"
-                required
                 error={errors.student_number}
               >
                 <Input

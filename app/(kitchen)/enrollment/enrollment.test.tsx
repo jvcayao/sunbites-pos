@@ -188,7 +188,7 @@ async function fillAndSubmitForm(user: ReturnType<typeof userEvent.setup>) {
 
   await user.type(screen.getByLabelText(/first name/i), "Maria");
   await user.type(screen.getByLabelText(/last name/i), "Santos");
-  await user.type(screen.getByLabelText(/student number/i), "TEST-001");
+  await user.type(screen.getByLabelText(/student no/i), "TEST-001");
   await user.type(screen.getByLabelText(/birthday/i), "2015-03-14");
 
   const fullNameInputs = screen.getAllByLabelText(/full name/i);

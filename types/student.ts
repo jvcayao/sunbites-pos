@@ -37,7 +37,7 @@ export interface MonthlyPayment {
 export interface Student {
   id: number;
   branch_id: number;
-  student_number: string;
+  student_number: string | null;
   first_name: string;
   last_name: string;
   full_name: string;
@@ -60,6 +60,7 @@ export interface Student {
   wallet_balance?: number;
   contacts?: StudentContact[];
   monthly_payments?: MonthlyPayment[];
+  deleted_at?: string | null;
 }
 
 export interface PaginatedStudents {
@@ -102,7 +103,7 @@ export interface StudentShowResponse {
 export interface EnrolledStudentResponse {
   id: number;
   full_name: string;
-  student_number: string;
+  student_number: string | null;
   student_type: StudentType;
   enrollment_date: string;
   qr_code: string;
@@ -119,7 +120,7 @@ export interface StudentContactInput {
 
 export interface EnrollStudentPayload {
   branch_id: number;
-  student_number: string;
+  student_number?: string | null;
   first_name: string;
   last_name: string;
   grade_level: string;
@@ -166,6 +167,7 @@ export interface SchoolMonthDefault {
 export interface UpdateStudentPayload {
   first_name: string;
   last_name: string;
+  student_number?: string | null;
   grade_level: string;
   section?: string;
   birthday: string;

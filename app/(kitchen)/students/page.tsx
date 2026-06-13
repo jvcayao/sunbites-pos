@@ -40,6 +40,7 @@ import type {
   Student,
   WalletPaymentMethod,
 } from "@/types/student";
+import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -692,6 +693,66 @@ function MonthBadges({ studentId, payments, canToggle }: MonthBadgesProps) {
 }
 
 // ---------------------------------------------------------------------------
+// DeletedStudentCard
+// ---------------------------------------------------------------------------
+
+function DeletedStudentCard({ student }: { student: Student }) {
+  const queryClient = useQueryClient();
+
+  const restoreMutation = useMutation({
+    mutationFn: () => studentApi.restore(student.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast.success("Student restored.");
+    },
+  });
+
+  const removedDate = student.deleted_at
+    ? new Date(student.deleted_at).toLocaleDateString("en-PH", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : null;
+
+  return (
+    <div className="rounded-xl border border-destructive/30 bg-card p-4 opacity-75">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">
+          {student.first_name.charAt(0).toUpperCase()}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-foreground truncate line-through text-muted-foreground">
+            {student.full_name}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {student.grade_level}
+            {student.section ? ` · ${student.section}` : ""}
+          </p>
+          {removedDate && (
+            <p className="text-xs text-destructive mt-0.5">
+              Removed: {removedDate}
+            </p>
+          )}
+        </div>
+
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => restoreMutation.mutate()}
+          disabled={restoreMutation.isPending}
+          className="shrink-0"
+        >
+          {restoreMutation.isPending ? "Restoring…" : "Restore"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // StudentCard
 // ---------------------------------------------------------------------------
 
@@ -928,6 +989,7 @@ export default function StudentsPage() {
       ? true
       : false;
 
+  const [showDeleted, setShowDeleted] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("all");
   const [search, setSearch] = useState("");
   const [gradeFilter, setGradeFilter] = useState("");
@@ -948,6 +1010,7 @@ export default function StudentsPage() {
     queryKey: [
       "students",
       {
+        showDeleted,
         activeTab,
         search,
         gradeFilter,
@@ -958,24 +1021,32 @@ export default function StudentsPage() {
       },
     ],
     queryFn: () =>
-      studentApi.list({
-        search: search || undefined,
-        grade: gradeFilter || undefined,
-        status: statusFilter || undefined,
-        type: activeTab !== "all" ? activeTab : undefined,
-        month:
-          activeTab === "subscription" && monthFilter
-            ? (monthFilter as SchoolMonth)
-            : undefined,
-        year:
-          activeTab === "subscription" && yearFilter
-            ? Number(yearFilter)
-            : undefined,
-        payment_status:
-          activeTab === "subscription" && paymentStatusFilter
-            ? paymentStatusFilter
-            : undefined,
-      }),
+      studentApi.list(
+        showDeleted
+          ? {
+              deleted: 1,
+              search: search || undefined,
+              grade: gradeFilter || undefined,
+            }
+          : {
+              search: search || undefined,
+              grade: gradeFilter || undefined,
+              status: statusFilter || undefined,
+              type: activeTab !== "all" ? activeTab : undefined,
+              month:
+                activeTab === "subscription" && monthFilter
+                  ? (monthFilter as SchoolMonth)
+                  : undefined,
+              year:
+                activeTab === "subscription" && yearFilter
+                  ? Number(yearFilter)
+                  : undefined,
+              payment_status:
+                activeTab === "subscription" && paymentStatusFilter
+                  ? paymentStatusFilter
+                  : undefined,
+            }
+      ),
   });
 
   const allStudents = data?.data ?? [];
@@ -1064,24 +1135,27 @@ export default function StudentsPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v === "all" ? "" : (v ?? ""))}
-        >
-          <SelectTrigger className="w-full sm:w-44" aria-label="Filter by status">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="enrolled">Enrolled</SelectItem>
-            <SelectItem value="paused">Paused</SelectItem>
-            <SelectItem value="unenrolled">Unenrolled</SelectItem>
-            <SelectItem value="banned">Banned</SelectItem>
-            <SelectItem value="graduated">Graduated</SelectItem>
-          </SelectContent>
-        </Select>
 
-        {activeTab === "subscription" && (
+        {!showDeleted && (
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v === "all" ? "" : (v ?? ""))}
+          >
+            <SelectTrigger className="w-full sm:w-44" aria-label="Filter by status">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="enrolled">Enrolled</SelectItem>
+              <SelectItem value="paused">Paused</SelectItem>
+              <SelectItem value="unenrolled">Unenrolled</SelectItem>
+              <SelectItem value="banned">Banned</SelectItem>
+              <SelectItem value="graduated">Graduated</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+
+        {!showDeleted && activeTab === "subscription" && (
           <>
             <Select
               value={monthFilter}
@@ -1132,38 +1206,53 @@ export default function StudentsPage() {
             </Select>
           </>
         )}
+
+        <button
+          type="button"
+          onClick={() => setShowDeleted((prev) => !prev)}
+          className={cn(
+            "rounded-lg border px-4 py-2 text-sm font-medium transition-colors sm:ml-auto",
+            showDeleted
+              ? "border-destructive bg-destructive text-destructive-foreground"
+              : "border-border hover:bg-muted/40 text-muted-foreground"
+          )}
+        >
+          {showDeleted ? "Hide Deleted" : "Show Deleted"}
+        </button>
       </div>
 
-      {/* Type tabs */}
-      <div className="flex gap-2 no-print">
-        {(
-          [
-            { value: "all", label: "All" },
-            {
-              value: "subscription",
-              label: `Subscription (${subscriptionStudents.length})`,
-            },
-            {
-              value: "non_subscription",
-              label: `Non-Subscription (${nonSubStudents.length})`,
-            },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            onClick={() => setActiveTab(tab.value)}
-            className={cn(
-              "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
-              activeTab === tab.value
-                ? "border-primary bg-primary/5 text-primary"
-                : "border-border hover:bg-muted/40 text-muted-foreground"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Type tabs — hidden in deleted mode */}
+      {!showDeleted && (
+        <div className="flex gap-2 no-print">
+          {(
+            [
+              { value: "all", label: "All" },
+              {
+                value: "subscription",
+                label: `Subscription (${subscriptionStudents.length})`,
+              },
+              {
+                value: "non_subscription",
+                label: `Non-Subscription (${nonSubStudents.length})`,
+              },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => setActiveTab(tab.value)}
+              className={cn(
+                "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
+                activeTab === tab.value
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-border hover:bg-muted/40 text-muted-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Content */}
       {isError ? (
@@ -1176,6 +1265,18 @@ export default function StudentsPage() {
             <div key={k} className="h-40 animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
+      ) : showDeleted ? (
+        !allStudents.length ? (
+          <div className="rounded-xl border border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
+            No removed students found.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {allStudents.map((s) => (
+              <DeletedStudentCard key={s.id} student={s} />
+            ))}
+          </div>
+        )
       ) : !displayedStudents.length ? (
         <div className="rounded-xl border border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
           No students found.

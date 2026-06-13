@@ -29,6 +29,7 @@ interface StudentListParams {
   payment_status?: string;
   year?: number;
   page?: number;
+  deleted?: 1;
 }
 
 export const studentApi = {
@@ -54,6 +55,9 @@ export const studentApi = {
 
   destroy: (id: number) =>
     apiClient.delete<{ message: string }>(`/students/${id}`),
+
+  restore: (id: number) =>
+    apiClient.post<Student>(`/students/${id}/restore`),
 
   regenerateQr: (id: number) =>
     apiClient.post<{ qr_code: string }>(`/students/${id}/regenerate-qr`),

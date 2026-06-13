@@ -156,6 +156,7 @@ interface EditProfileFormProps {
 function EditProfileForm({ student, onSubmit, onCancel, isPending, errors }: EditProfileFormProps) {
   const [firstName, setFirstName] = useState(student.first_name);
   const [lastName, setLastName] = useState(student.last_name);
+  const [studentNumber, setStudentNumber] = useState(student.student_number ?? "");
   const [gradeLevel, setGradeLevel] = useState(student.grade_level);
   const [section, setSection] = useState(student.section ?? "");
   const [birthday, setBirthday] = useState(student.birthday ?? "");
@@ -167,6 +168,7 @@ function EditProfileForm({ student, onSubmit, onCancel, isPending, errors }: Edi
     onSubmit({
       first_name: firstName,
       last_name: lastName,
+      student_number: studentNumber || null,
       grade_level: gradeLevel,
       section: section || undefined,
       birthday,
@@ -201,6 +203,19 @@ function EditProfileForm({ student, onSubmit, onCancel, isPending, errors }: Edi
           />
           {errors.last_name && (
             <p className="text-xs text-destructive">{errors.last_name[0]}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="edit-student-number">Student No. <span className="text-muted-foreground font-normal">(optional)</span></Label>
+          <Input
+            id="edit-student-number"
+            value={studentNumber}
+            onChange={(e) => setStudentNumber(e.target.value)}
+            placeholder="e.g. 2025-001"
+          />
+          {errors.student_number && (
+            <p className="text-xs text-destructive">{errors.student_number[0]}</p>
           )}
         </div>
 
@@ -2373,7 +2388,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                     <InfoRow label="Birthday" value={student.birthday} />
                   </div>
                   <div className="divide-y divide-border">
-                    <InfoRow label="Student Number" value={student.student_number} />
+                    <InfoRow label="Student Number" value={student.student_number ?? "—"} />
                     <InfoRow label="Student Type" value={student.student_type_label} />
                     <InfoRow label="Allergies" value={student.allergies} />
                     <InfoRow label="Notes" value={student.notes} />
