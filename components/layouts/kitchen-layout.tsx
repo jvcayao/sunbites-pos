@@ -16,6 +16,7 @@ import {
   UserCog,
   GitBranch,
   ClipboardList,
+  ClipboardCheck,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -24,9 +25,15 @@ import {
   MessageSquare,
   Activity,
   CreditCard,
+  Bell,
+  Megaphone,
 } from "lucide-react";
 
 import { AppLogo } from "@/components/app-logo";
+import { NotificationBell } from "@/components/notification-bell";
+
+import { useQuery } from "@tanstack/react-query";
+import { preRegistrationApi } from "@/lib/api/pre-registrations";
 
 import { cn } from "@/lib/utils";
 import { authApi } from "@/lib/api/auth";
@@ -36,13 +43,17 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
+  badge?: number;
 }
 
 const mainNav: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "POS", href: "/pos", icon: ShoppingCart },
   { label: "Enrollment", href: "/enrollment", icon: ClipboardList },
+  { label: "Pre-Registrations", href: "/pre-registrations", icon: ClipboardCheck },
   { label: "Students", href: "/students", icon: Users },
+  { label: "Reminders", href: "/reminders", icon: Bell },
+  { label: "Announcements", href: "/announcements", icon: Megaphone },
 ];
 
 const reportsNav: NavItem[] = [
@@ -100,6 +111,11 @@ function NavGroup({ label, items, pathname, collapsed }: NavGroupProps) {
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
             {!collapsed && <span>{item.label}</span>}
+            {!collapsed && item.badge !== undefined && item.badge > 0 && (
+              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                {item.badge > 99 ? "99+" : item.badge}
+              </span>
+            )}
           </Link>
         );
       })}
@@ -120,6 +136,32 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
 
   const isAdmin = user?.roles.includes("admin") ?? false;
   const isManager = user?.roles.includes("manager") ?? false;
+  const isSupervisor = user?.roles.includes("supervisor") ?? false;
+  const canSeeReminders = isAdmin || isManager || isSupervisor;
+  const canSeeAnnouncements = isAdmin || isManager || isSupervisor;
+  const canSeePreRegistrations = isAdmin || isManager || isSupervisor;
+
+  const { data: pendingCountData } = useQuery({
+    queryKey: ["pre-registrations-pending-count"],
+    queryFn: () => preRegistrationApi.list({ status: "pending", page: 1 }),
+    enabled: canSeePreRegistrations,
+    staleTime: 60_000,
+  });
+  const pendingPreRegCount = pendingCountData?.meta?.total ?? 0;
+
+  const mainNavFiltered = mainNav
+    .map((item) => {
+      if (item.href === "/pre-registrations") {
+        return { ...item, badge: pendingPreRegCount > 0 ? pendingPreRegCount : undefined };
+      }
+      return item;
+    })
+    .filter((item) => {
+      if (item.href === "/reminders" && !canSeeReminders) return false;
+      if (item.href === "/announcements" && !canSeeAnnouncements) return false;
+      if (item.href === "/pre-registrations" && !canSeePreRegistrations) return false;
+      return true;
+    });
 
   const referencesNavFiltered = isAdmin
     ? referencesNav
@@ -132,7 +174,7 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
       ? reportsNav
       : reportsNav.filter((item) => supervisorAllowedReports.includes(item.href));
 
-  const pageTitle = [...mainNav, ...reportsNav, ...referencesNav].find(
+  const pageTitle = [...mainNavFiltered, ...reportsNav, ...referencesNav].find(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
   )?.label ?? "Dashboard";
 
@@ -169,7 +211,7 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
         <nav className="flex-1 space-y-4 overflow-y-auto p-2 py-4">
           <NavGroup
             label="Main"
-            items={mainNav}
+            items={mainNavFiltered}
             pathname={pathname}
             collapsed={collapsed}
           />
@@ -224,6 +266,7 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
           <h1 className="text-lg font-semibold">{pageTitle}</h1>
 
           <div className="flex items-center gap-3">
+            <NotificationBell />
             {activeBranch && (() => {
               const canSwitch = isAdmin || (user?.branches?.length ?? 0) > 1;
               return canSwitch ? (
