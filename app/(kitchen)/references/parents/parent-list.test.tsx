@@ -94,9 +94,7 @@ describe("ParentsPage", () => {
     expect(
       screen.getByRole("button", { name: "Disabled" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Deleted" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Deleted" })).toBeInTheDocument();
   });
 
   it("clicking View navigates to the parent detail page", async () => {

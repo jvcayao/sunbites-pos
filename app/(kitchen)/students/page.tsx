@@ -468,10 +468,23 @@ function PrintCard({ student }: { student: Student }) {
           textAlign: "center",
         }}
       >
-        <div style={{ color: "white", fontWeight: 800, fontSize: "8px", letterSpacing: "0.3px" }}>
+        <div
+          style={{
+            color: "white",
+            fontWeight: 800,
+            fontSize: "8px",
+            letterSpacing: "0.3px",
+          }}
+        >
           🍽 SUNBITES KITCHEN
         </div>
-        <div style={{ color: "rgba(255,255,255,0.85)", fontSize: "7px", marginTop: "0.5mm" }}>
+        <div
+          style={{
+            color: "rgba(255,255,255,0.85)",
+            fontSize: "7px",
+            marginTop: "0.5mm",
+          }}
+        >
           Student Canteen ID
         </div>
       </div>
@@ -521,10 +534,25 @@ function PrintCard({ student }: { student: Student }) {
             {student.first_name.charAt(0).toUpperCase()}
           </div>
         )}
-        <p style={{ fontWeight: 700, fontSize: "9px", textAlign: "center", margin: 0, color: "#111" }}>
+        <p
+          style={{
+            fontWeight: 700,
+            fontSize: "9px",
+            textAlign: "center",
+            margin: 0,
+            color: "#111",
+          }}
+        >
           {student.full_name}
         </p>
-        <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "8px", margin: 0, fontWeight: 600 }}>
+        <p
+          style={{
+            color: "oklch(0.577 0.245 27.325)",
+            fontSize: "8px",
+            margin: 0,
+            fontWeight: 600,
+          }}
+        >
           {student.grade_level}
         </p>
         <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>
@@ -543,7 +571,11 @@ function PrintCard({ student }: { student: Student }) {
             marginTop: "1mm",
           }}
         >
-          <QRCode value={student.qr_code} size={85} style={{ width: "22mm", height: "22mm" }} />
+          <QRCode
+            value={student.qr_code}
+            size={85}
+            style={{ width: "22mm", height: "22mm" }}
+          />
         </div>
         <p
           style={{
@@ -628,10 +660,24 @@ function QrCard({ student }: { student: Student }) {
           padding: "4px 6px",
         }}
       >
-        <p style={{ color: "white", fontWeight: 800, fontSize: "8px", letterSpacing: "0.3px", margin: 0 }}>
+        <p
+          style={{
+            color: "white",
+            fontWeight: 800,
+            fontSize: "8px",
+            letterSpacing: "0.3px",
+            margin: 0,
+          }}
+        >
           🍽 Sunbites Kitchen
         </p>
-        <p style={{ color: "rgba(255,255,255,0.85)", fontSize: "6.5px", margin: "1px 0 0" }}>
+        <p
+          style={{
+            color: "rgba(255,255,255,0.85)",
+            fontSize: "6.5px",
+            margin: "1px 0 0",
+          }}
+        >
           Student Canteen ID
         </p>
       </div>
@@ -681,10 +727,24 @@ function QrCard({ student }: { student: Student }) {
             {student.first_name.charAt(0).toUpperCase()}
           </div>
         )}
-        <p style={{ fontWeight: 700, fontSize: "9px", margin: 0, lineHeight: 1.2 }}>
+        <p
+          style={{
+            fontWeight: 700,
+            fontSize: "9px",
+            margin: 0,
+            lineHeight: 1.2,
+          }}
+        >
           {student.full_name}
         </p>
-        <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "8px", margin: 0, fontWeight: 700 }}>
+        <p
+          style={{
+            color: "oklch(0.577 0.245 27.325)",
+            fontSize: "8px",
+            margin: 0,
+            fontWeight: 700,
+          }}
+        >
           {student.grade_level}
         </p>
         <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>
@@ -708,7 +768,14 @@ function QrCard({ student }: { student: Student }) {
             style={{ width: "58px", height: "58px", display: "block" }}
           />
         </div>
-        <p style={{ fontFamily: "monospace", fontSize: "5.5px", color: "#888", margin: 0 }}>
+        <p
+          style={{
+            fontFamily: "monospace",
+            fontSize: "5.5px",
+            color: "#888",
+            margin: 0,
+          }}
+        >
           {student.qr_code}
         </p>
       </div>
@@ -722,7 +789,14 @@ function QrCard({ student }: { student: Student }) {
           padding: "3px 4px",
         }}
       >
-        <p style={{ fontSize: "5px", color: "#666", margin: 0, textAlign: "center" }}>
+        <p
+          style={{
+            fontSize: "5px",
+            color: "#666",
+            margin: 0,
+            textAlign: "center",
+          }}
+        >
           Scan QR to view wallet balance
           {student.enrollment_date
             ? ` • Valid S.Y. ${getSchoolYear(student.enrollment_date)}`
@@ -812,7 +886,11 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
           <div
             className={cn(
               "grid gap-3 mt-2 justify-items-center",
-              cols === 1 ? "grid-cols-1" : cols === 2 ? "grid-cols-2" : "grid-cols-3",
+              cols === 1
+                ? "grid-cols-1"
+                : cols === 2
+                  ? "grid-cols-2"
+                  : "grid-cols-3",
             )}
           >
             {students.map((s) => (

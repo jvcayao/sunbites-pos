@@ -2304,10 +2304,23 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
               textAlign: "center",
             }}
           >
-            <div style={{ color: "white", fontWeight: 800, fontSize: "8px", letterSpacing: "0.3px" }}>
+            <div
+              style={{
+                color: "white",
+                fontWeight: 800,
+                fontSize: "8px",
+                letterSpacing: "0.3px",
+              }}
+            >
               🍽 SUNBITES KITCHEN
             </div>
-            <div style={{ color: "rgba(255,255,255,0.85)", fontSize: "7px", marginTop: "0.5mm" }}>
+            <div
+              style={{
+                color: "rgba(255,255,255,0.85)",
+                fontSize: "7px",
+                marginTop: "0.5mm",
+              }}
+            >
               Student Canteen ID
             </div>
           </div>
@@ -2357,10 +2370,25 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 {student.first_name.charAt(0).toUpperCase()}
               </div>
             )}
-            <p style={{ fontWeight: 700, fontSize: "9px", textAlign: "center", margin: 0, color: "#111" }}>
+            <p
+              style={{
+                fontWeight: 700,
+                fontSize: "9px",
+                textAlign: "center",
+                margin: 0,
+                color: "#111",
+              }}
+            >
               {student.full_name}
             </p>
-            <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "8px", margin: 0, fontWeight: 600 }}>
+            <p
+              style={{
+                color: "oklch(0.577 0.245 27.325)",
+                fontSize: "8px",
+                margin: 0,
+                fontWeight: 600,
+              }}
+            >
               {student.grade_level}
             </p>
             <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>
@@ -2383,7 +2411,11 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 marginTop: "1mm",
               }}
             >
-              <QRCode value={displayQr || "placeholder"} size={85} style={{ width: "22mm", height: "22mm" }} />
+              <QRCode
+                value={displayQr || "placeholder"}
+                size={85}
+                style={{ width: "22mm", height: "22mm" }}
+              />
             </div>
             <p
               style={{
