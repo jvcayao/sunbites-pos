@@ -347,7 +347,9 @@ export const parentFixture: Parent = {
   is_disabled: false,
   deleted_at: null,
   students_count: 1,
-  students: [{ id: 1, student_number: "2024-001", full_name: "Juan Dela Cruz" }],
+  students: [
+    { id: 1, student_number: "2024-001", full_name: "Juan Dela Cruz" },
+  ],
 };
 
 export const disabledParentFixture: Parent = {
@@ -388,7 +390,14 @@ export const parentDetailFixture: ParentDetail = {
 
 export const paginatedParentsFixture: PaginatedParents = {
   data: [parentFixture, disabledParentFixture],
-  meta: { current_page: 1, last_page: 1, per_page: 15, total: 2, from: 1, to: 2 },
+  meta: {
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 2,
+    from: 1,
+    to: 2,
+  },
 };
 
 export const paginatedStudentsFixture: PaginatedStudents = {
@@ -673,7 +682,9 @@ export const handlers = [
   ),
 
   http.post(`${API}/references/parents/:id/enable`, () =>
-    HttpResponse.json({ message: "Parent access enabled. Activation email queued." }),
+    HttpResponse.json({
+      message: "Parent access enabled. Activation email queued.",
+    }),
   ),
 
   http.delete(`${API}/references/parents/:id`, () =>
@@ -681,6 +692,8 @@ export const handlers = [
   ),
 
   http.post(`${API}/references/parents/:id/restore`, () =>
-    HttpResponse.json({ message: "Parent account restored. Activation email queued." }),
+    HttpResponse.json({
+      message: "Parent account restored. Activation email queued.",
+    }),
   ),
 ];

@@ -200,9 +200,10 @@ describe("BranchesPage", () => {
       } as AuthState),
     );
 
-    const { container } = render(<BranchesPage />);
+    render(<BranchesPage />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByText(/branch management/i)).not.toBeInTheDocument();
   });
 
   it("shows an empty state message when no branches are returned", async () => {

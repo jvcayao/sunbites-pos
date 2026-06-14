@@ -229,16 +229,25 @@ function NotificationPanel({
     mutationFn: (id: string) => staffNotificationApi.markRead(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ["staff-notifications"] });
-      const prev = queryClient.getQueryData(["staff-notifications"]) as StaffNotificationListResponse | undefined;
-      queryClient.setQueryData(["staff-notifications"], (old: StaffNotificationListResponse | undefined) => ({
-        ...old,
-        data: old?.data?.map((n: StaffNotification) =>
-          n.id === id ? { ...n, read_at: new Date().toISOString() } : n,
-        ),
-      }));
+      const prev = queryClient.getQueryData(["staff-notifications"]) as
+        | StaffNotificationListResponse
+        | undefined;
+      queryClient.setQueryData(
+        ["staff-notifications"],
+        (old: StaffNotificationListResponse | undefined) => ({
+          ...old,
+          data: old?.data?.map((n: StaffNotification) =>
+            n.id === id ? { ...n, read_at: new Date().toISOString() } : n,
+          ),
+        }),
+      );
       return { prev };
     },
-    onError: (_err: unknown, _id: string, ctx: { prev: StaffNotificationListResponse | undefined } | undefined) => {
+    onError: (
+      _err: unknown,
+      _id: string,
+      ctx: { prev: StaffNotificationListResponse | undefined } | undefined,
+    ) => {
       if (ctx?.prev)
         queryClient.setQueryData(["staff-notifications"], ctx.prev);
     },
@@ -249,14 +258,23 @@ function NotificationPanel({
     mutationFn: (id: string) => staffNotificationApi.destroy(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ["staff-notifications"] });
-      const prev = queryClient.getQueryData(["staff-notifications"]) as StaffNotificationListResponse | undefined;
-      queryClient.setQueryData(["staff-notifications"], (old: StaffNotificationListResponse | undefined) => ({
-        ...old,
-        data: old?.data?.filter((n: StaffNotification) => n.id !== id),
-      }));
+      const prev = queryClient.getQueryData(["staff-notifications"]) as
+        | StaffNotificationListResponse
+        | undefined;
+      queryClient.setQueryData(
+        ["staff-notifications"],
+        (old: StaffNotificationListResponse | undefined) => ({
+          ...old,
+          data: old?.data?.filter((n: StaffNotification) => n.id !== id),
+        }),
+      );
       return { prev };
     },
-    onError: (_err: unknown, _id: string, ctx: { prev: StaffNotificationListResponse | undefined } | undefined) => {
+    onError: (
+      _err: unknown,
+      _id: string,
+      ctx: { prev: StaffNotificationListResponse | undefined } | undefined,
+    ) => {
       if (ctx?.prev)
         queryClient.setQueryData(["staff-notifications"], ctx.prev);
     },
@@ -396,14 +414,23 @@ export function NotificationBell({ className }: Props) {
     mutationFn: (id: string) => staffNotificationApi.destroy(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ["staff-notifications"] });
-      const prev = queryClient.getQueryData(["staff-notifications"]) as StaffNotificationListResponse | undefined;
-      queryClient.setQueryData(["staff-notifications"], (old: StaffNotificationListResponse | undefined) => ({
-        ...old,
-        data: old?.data?.filter((n: StaffNotification) => n.id !== id),
-      }));
+      const prev = queryClient.getQueryData(["staff-notifications"]) as
+        | StaffNotificationListResponse
+        | undefined;
+      queryClient.setQueryData(
+        ["staff-notifications"],
+        (old: StaffNotificationListResponse | undefined) => ({
+          ...old,
+          data: old?.data?.filter((n: StaffNotification) => n.id !== id),
+        }),
+      );
       return { prev };
     },
-    onError: (_err: unknown, _id: string, ctx: { prev: StaffNotificationListResponse | undefined } | undefined) => {
+    onError: (
+      _err: unknown,
+      _id: string,
+      ctx: { prev: StaffNotificationListResponse | undefined } | undefined,
+    ) => {
       if (ctx?.prev)
         queryClient.setQueryData(["staff-notifications"], ctx.prev);
     },

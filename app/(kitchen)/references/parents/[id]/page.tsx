@@ -183,7 +183,9 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
               disabled={resendMutation.isPending}
             >
               <Mail className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              {resendMutation.isPending ? "Sending…" : "Resend Activation Email"}
+              {resendMutation.isPending
+                ? "Sending…"
+                : "Resend Activation Email"}
             </Button>
           )}
 
