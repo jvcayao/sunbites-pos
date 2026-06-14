@@ -4,6 +4,8 @@ export interface Parent {
   email: string;
   phone: string | null;
   is_activated: boolean;
+  is_disabled: boolean;
+  deleted_at: string | null;
   students_count: number;
   students: {
     id: number;
