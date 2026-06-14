@@ -99,7 +99,7 @@ export interface StudentShowResponse {
   activity_logs: Array<{
     id: number;
     description: string;
-    causer: string;
+    causer_name: string | null;
     properties: Record<string, unknown>;
     created_at: string;
   }>;
