@@ -144,7 +144,7 @@ function WalletTopUpModal({ open, onClose, student }: WalletTopUpModalProps) {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["student", student.id] });
       setSuccessMsg(
-        `Wallet topped up. New balance: ₱${data.new_balance.toFixed(2)}`,
+        `Wallet topped up. New balance: ₱${Number(data.new_balance).toFixed(2)}`,
       );
       setAmount("");
       setReferenceNumber("");
