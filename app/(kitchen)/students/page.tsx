@@ -445,39 +445,47 @@ function PrintCard({ student }: { student: Student }) {
 
   return (
     <div
+      data-qr-card
       style={{
-        width: "320px",
-        border: "2px solid oklch(0.577 0.245 27.325)",
-        borderRadius: "16px",
+        width: "53.98mm",
+        height: "85.6mm",
+        display: "flex",
+        flexDirection: "column",
+        border: "1.5px solid oklch(0.577 0.245 27.325)",
+        borderRadius: "3mm",
         overflow: "hidden",
         backgroundColor: "white",
         fontFamily: "sans-serif",
+        boxSizing: "border-box",
       }}
     >
+      {/* Header */}
       <div
         style={{
           backgroundColor: "oklch(0.577 0.245 27.325)",
-          padding: "14px",
+          padding: "2mm 3mm",
+          flexShrink: 0,
           textAlign: "center",
-          color: "white",
         }}
       >
-        <div
-          style={{ fontWeight: 800, fontSize: "17px", letterSpacing: "1px" }}
-        >
+        <div style={{ color: "white", fontWeight: 800, fontSize: "8px", letterSpacing: "0.3px" }}>
           🍽 SUNBITES KITCHEN
         </div>
-        <div style={{ fontSize: "12px", marginTop: "2px", opacity: 0.9 }}>
+        <div style={{ color: "rgba(255,255,255,0.85)", fontSize: "7px", marginTop: "0.5mm" }}>
           Student Canteen ID
         </div>
       </div>
+
+      {/* Body */}
       <div
         style={{
-          padding: "20px",
+          flex: 1,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: "6px",
+          padding: "3mm 3mm 2mm",
+          gap: "1.5mm",
+          overflow: "hidden",
         }}
       >
         {photoSrc ? (
@@ -485,91 +493,82 @@ function PrintCard({ student }: { student: Student }) {
             src={photoSrc}
             alt={student.full_name}
             style={{
-              width: "100px",
-              height: "100px",
+              width: "18mm",
+              height: "18mm",
               objectFit: "cover",
-              borderRadius: "12px",
-              border: "2px solid oklch(0.577 0.245 27.325)",
+              borderRadius: "2mm",
+              border: "1px solid oklch(0.577 0.245 27.325)",
+              flexShrink: 0,
             }}
           />
         ) : (
           <div
             style={{
-              width: "100px",
-              height: "100px",
-              borderRadius: "12px",
-              border: "2px solid oklch(0.577 0.245 27.325)",
+              width: "18mm",
+              height: "18mm",
+              borderRadius: "2mm",
+              border: "1px solid oklch(0.577 0.245 27.325)",
               backgroundColor: "#fff3f0",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "36px",
+              fontSize: "8mm",
               fontWeight: 800,
               color: "oklch(0.577 0.245 27.325)",
+              flexShrink: 0,
             }}
           >
             {student.first_name.charAt(0).toUpperCase()}
           </div>
         )}
-        <p
-          style={{
-            fontWeight: 700,
-            fontSize: "19px",
-            textAlign: "center",
-            margin: "6px 0 0",
-            color: "#111",
-          }}
-        >
+        <p style={{ fontWeight: 700, fontSize: "9px", textAlign: "center", margin: 0, color: "#111" }}>
           {student.full_name}
         </p>
-        <p
-          style={{
-            color: "oklch(0.577 0.245 27.325)",
-            fontSize: "14px",
-            margin: 0,
-            fontWeight: 600,
-          }}
-        >
+        <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "8px", margin: 0, fontWeight: 600 }}>
           {student.grade_level}
         </p>
-        <p style={{ color: "#555", fontSize: "12px", margin: 0 }}>
+        <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>
           🍽 {student.student_type_label}
         </p>
+        {enrolledFormatted && (
+          <p style={{ fontSize: "6.5px", color: "#444", margin: 0 }}>
+            Enrolled: {enrolledFormatted}
+          </p>
+        )}
         <div
           style={{
             border: "1px solid #e0e0e0",
-            borderRadius: "10px",
-            padding: "12px",
-            marginTop: "6px",
+            borderRadius: "2mm",
+            padding: "1.5mm",
+            marginTop: "1mm",
           }}
         >
-          <QRCode value={student.qr_code} size={150} />
+          <QRCode value={student.qr_code} size={85} style={{ width: "22mm", height: "22mm" }} />
         </div>
         <p
           style={{
             fontFamily: "monospace",
-            fontSize: "11px",
+            fontSize: "5px",
             color: "#888",
-            margin: "4px 0 0",
+            margin: 0,
+            textAlign: "center",
           }}
         >
           {student.qr_code}
         </p>
-        {enrolledFormatted && (
-          <p style={{ fontSize: "12px", color: "#444", margin: "6px 0 2px" }}>
-            Enrolled: {enrolledFormatted}
-          </p>
-        )}
       </div>
+
+      {/* Footer */}
       <div
         style={{
+          flexShrink: 0,
           backgroundColor: "#fff3f0",
           borderTop: "1px solid #fdd8cc",
-          padding: "10px 14px",
+          padding: "1.5mm 3mm",
           textAlign: "center",
         }}
       >
-        <p style={{ fontSize: "11px", color: "#666", margin: 0 }}>
+        <p style={{ fontSize: "5.5px", color: "#666", margin: 0 }}>
           Scan QR to view wallet balance
           {student.enrollment_date
             ? ` • Valid S.Y. ${getSchoolYear(student.enrollment_date)}`
@@ -580,7 +579,7 @@ function PrintCard({ student }: { student: Student }) {
   );
 }
 
-function QrCard({ student }: { student: Student; branchName: string }) {
+function QrCard({ student }: { student: Student }) {
   const [photoSrc, setPhotoSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -613,9 +612,9 @@ function QrCard({ student }: { student: Student; branchName: string }) {
         flexDirection: "column",
         width: "100%",
         height: "100%",
-        overflow: "hidden",
-        borderRadius: "8px",
+        borderRadius: "6px",
         border: "2px solid oklch(0.577 0.245 27.325)",
+        overflow: "hidden",
         backgroundColor: "white",
         fontFamily: "sans-serif",
         textAlign: "center",
@@ -624,31 +623,15 @@ function QrCard({ student }: { student: Student; branchName: string }) {
       {/* Header */}
       <div
         style={{
-          backgroundColor: "oklch(0.577 0.245 27.325)",
-          padding: "5px 6px",
           flexShrink: 0,
+          backgroundColor: "oklch(0.577 0.245 27.325)",
+          padding: "4px 6px",
         }}
       >
-        <p
-          style={{
-            color: "white",
-            fontWeight: 800,
-            fontSize: "9px",
-            letterSpacing: "0.5px",
-            margin: 0,
-            textTransform: "uppercase",
-          }}
-        >
+        <p style={{ color: "white", fontWeight: 800, fontSize: "8px", letterSpacing: "0.3px", margin: 0 }}>
           🍽 Sunbites Kitchen
         </p>
-        <p
-          style={{
-            color: "rgba(255,255,255,0.85)",
-            fontSize: "7px",
-            margin: "1px 0 0",
-            fontWeight: 500,
-          }}
-        >
+        <p style={{ color: "rgba(255,255,255,0.85)", fontSize: "6.5px", margin: "1px 0 0" }}>
           Student Canteen ID
         </p>
       </div>
@@ -660,124 +643,86 @@ function QrCard({ student }: { student: Student; branchName: string }) {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "space-between",
-          padding: "5px 6px 4px",
+          padding: "6px",
+          gap: "3px",
+          overflow: "hidden",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "3px",
-          }}
-        >
-          {photoSrc ? (
-            <img
-              src={photoSrc}
-              alt={student.full_name}
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "6px",
-                border: "2px solid oklch(0.577 0.245 27.325)",
-                objectFit: "cover",
-                flexShrink: 0,
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "6px",
-                border: "2px solid oklch(0.577 0.245 27.325)",
-                backgroundColor: "#fff3f0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 800,
-                fontSize: "16px",
-                color: "oklch(0.577 0.245 27.325)",
-                flexShrink: 0,
-              }}
-            >
-              {student.first_name.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <p
+        {photoSrc ? (
+          <img
+            src={photoSrc}
+            alt={student.full_name}
             style={{
-              fontWeight: 700,
-              fontSize: "10px",
-              margin: 0,
-              lineHeight: 1.2,
+              width: "44px",
+              height: "44px",
+              objectFit: "cover",
+              borderRadius: "5px",
+              border: "2px solid oklch(0.577 0.245 27.325)",
+              flexShrink: 0,
             }}
-          >
-            {student.full_name}
-          </p>
-          <p
-            style={{
-              color: "oklch(0.577 0.245 27.325)",
-              fontSize: "8px",
-              margin: 0,
-              fontWeight: 700,
-            }}
-          >
-            {student.grade_level}
-          </p>
-          <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>
-            🍽 {student.student_type_label}
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "2px",
-          }}
-        >
+          />
+        ) : (
           <div
             style={{
-              border: "1px solid #e0e0e0",
+              width: "44px",
+              height: "44px",
               borderRadius: "5px",
-              padding: "3px",
+              border: "2px solid oklch(0.577 0.245 27.325)",
+              backgroundColor: "#fff3f0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 800,
+              fontSize: "16px",
+              color: "oklch(0.577 0.245 27.325)",
+              flexShrink: 0,
             }}
           >
-            <QRCode
-              value={student.qr_code}
-              style={{ width: "58px", height: "58px", display: "block" }}
-            />
+            {student.first_name.charAt(0).toUpperCase()}
           </div>
-          <p
-            style={{
-              fontFamily: "monospace",
-              fontSize: "6px",
-              color: "#888",
-              margin: 0,
-            }}
-          >
-            {student.qr_code}
+        )}
+        <p style={{ fontWeight: 700, fontSize: "9px", margin: 0, lineHeight: 1.2 }}>
+          {student.full_name}
+        </p>
+        <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "8px", margin: 0, fontWeight: 700 }}>
+          {student.grade_level}
+        </p>
+        <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>
+          🍽 {student.student_type_label}
+        </p>
+        {enrolledFormatted && (
+          <p style={{ fontSize: "6.5px", color: "#444", margin: 0 }}>
+            Enrolled: {enrolledFormatted}
           </p>
-          {enrolledFormatted && (
-            <p style={{ fontSize: "6.5px", color: "#444", margin: 0 }}>
-              Enrolled: {enrolledFormatted}
-            </p>
-          )}
+        )}
+        <div
+          style={{
+            border: "1px solid #e0e0e0",
+            borderRadius: "5px",
+            padding: "3px",
+            marginTop: "2px",
+          }}
+        >
+          <QRCode
+            value={student.qr_code}
+            style={{ width: "58px", height: "58px", display: "block" }}
+          />
         </div>
+        <p style={{ fontFamily: "monospace", fontSize: "5.5px", color: "#888", margin: 0 }}>
+          {student.qr_code}
+        </p>
       </div>
 
       {/* Footer */}
       <div
         style={{
+          flexShrink: 0,
           backgroundColor: "#fff3f0",
           borderTop: "1px solid #fdd8cc",
           padding: "3px 4px",
-          flexShrink: 0,
         }}
       >
-        <p style={{ fontSize: "5.5px", color: "#666", margin: 0 }}>
+        <p style={{ fontSize: "5px", color: "#666", margin: 0, textAlign: "center" }}>
           Scan QR to view wallet balance
           {student.enrollment_date
             ? ` • Valid S.Y. ${getSchoolYear(student.enrollment_date)}`
@@ -789,10 +734,8 @@ function QrCard({ student }: { student: Student; branchName: string }) {
 }
 
 function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
-  const [cols, setCols] = useState<1 | 2>(2);
+  const [cols, setCols] = useState<1 | 2 | 3>(2);
   const [printRoot, setPrintRoot] = useState<HTMLDivElement | null>(null);
-  const activeBranch = useAuthStore((s) => s.activeBranch);
-  const branchName = activeBranch?.name ?? "Branch";
 
   // Mount a dedicated print container directly on <body> so window.print()
   // only shows the cards — not the dialog chrome.
@@ -821,9 +764,9 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: `repeat(${cols}, 320px)`,
-          gap: "24px",
-          padding: "32px",
+          gridTemplateColumns: `repeat(${cols}, 53.98mm)`,
+          gap: "4mm",
+          padding: "8mm",
           justifyContent: "center",
         }}
       >
@@ -848,7 +791,7 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
             <span className="text-sm text-muted-foreground">
               Cards per row:
             </span>
-            {([1, 2] as const).map((n) => (
+            {([1, 2, 3] as const).map((n) => (
               <button
                 key={n}
                 type="button"
@@ -869,12 +812,12 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
           <div
             className={cn(
               "grid gap-3 mt-2 justify-items-center",
-              cols === 1 ? "grid-cols-1" : "grid-cols-2",
+              cols === 1 ? "grid-cols-1" : cols === 2 ? "grid-cols-2" : "grid-cols-3",
             )}
           >
             {students.map((s) => (
-              <div key={s.id} className="w-[130px] h-[206px]">
-                <QrCard student={s} branchName={branchName} />
+              <div key={s.id} className="w-[152px] h-[240px]">
+                <QrCard student={s} />
               </div>
             ))}
           </div>

@@ -2260,6 +2260,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       <style>{`
         .print-only { display: none; }
         @media print {
+          @page { size: 53.98mm 85.6mm portrait; margin: 0; }
           .no-print { display: none !important; }
           body { visibility: hidden; }
           .print-only {
@@ -2270,7 +2271,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
             width: 100vw; min-height: 100vh;
             justify-content: center;
             align-items: flex-start;
-            padding: 32px;
+            padding: 0;
             background: white;
             z-index: 9999;
           }
@@ -2282,42 +2283,45 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       <div className="print-only">
         <div
           style={{
-            width: "320px",
-            border: "2px solid oklch(0.577 0.245 27.325)",
-            borderRadius: "16px",
+            width: "53.98mm",
+            height: "85.6mm",
+            display: "flex",
+            flexDirection: "column",
+            border: "1.5px solid oklch(0.577 0.245 27.325)",
+            borderRadius: "3mm",
             overflow: "hidden",
             backgroundColor: "white",
             fontFamily: "sans-serif",
+            boxSizing: "border-box",
           }}
         >
+          {/* Header */}
           <div
             style={{
               backgroundColor: "oklch(0.577 0.245 27.325)",
-              padding: "14px",
+              padding: "2mm 3mm",
+              flexShrink: 0,
               textAlign: "center",
-              color: "white",
             }}
           >
-            <div
-              style={{
-                fontWeight: 800,
-                fontSize: "17px",
-                letterSpacing: "1px",
-              }}
-            >
+            <div style={{ color: "white", fontWeight: 800, fontSize: "8px", letterSpacing: "0.3px" }}>
               🍽 SUNBITES KITCHEN
             </div>
-            <div style={{ fontSize: "12px", marginTop: "2px", opacity: 0.9 }}>
+            <div style={{ color: "rgba(255,255,255,0.85)", fontSize: "7px", marginTop: "0.5mm" }}>
               Student Canteen ID
             </div>
           </div>
+
+          {/* Body */}
           <div
             style={{
-              padding: "20px",
+              flex: 1,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: "6px",
+              padding: "3mm 3mm 2mm",
+              gap: "1.5mm",
+              overflow: "hidden",
             }}
           >
             {photoObjectUrl ? (
@@ -2325,97 +2329,89 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 src={photoObjectUrl}
                 alt={student.full_name}
                 style={{
-                  width: "100px",
-                  height: "100px",
+                  width: "18mm",
+                  height: "18mm",
                   objectFit: "cover",
-                  borderRadius: "12px",
-                  border: "2px solid oklch(0.577 0.245 27.325)",
+                  borderRadius: "2mm",
+                  border: "1px solid oklch(0.577 0.245 27.325)",
+                  flexShrink: 0,
                 }}
               />
             ) : (
               <div
                 style={{
-                  width: "100px",
-                  height: "100px",
-                  borderRadius: "12px",
-                  border: "2px solid oklch(0.577 0.245 27.325)",
+                  width: "18mm",
+                  height: "18mm",
+                  borderRadius: "2mm",
+                  border: "1px solid oklch(0.577 0.245 27.325)",
                   backgroundColor: "#fff3f0",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "36px",
+                  fontSize: "8mm",
                   fontWeight: 800,
                   color: "oklch(0.577 0.245 27.325)",
+                  flexShrink: 0,
                 }}
               >
                 {student.first_name.charAt(0).toUpperCase()}
               </div>
             )}
-            <p
-              style={{
-                fontWeight: 700,
-                fontSize: "19px",
-                textAlign: "center",
-                margin: "6px 0 0",
-                color: "#111",
-              }}
-            >
+            <p style={{ fontWeight: 700, fontSize: "9px", textAlign: "center", margin: 0, color: "#111" }}>
               {student.full_name}
             </p>
-            <p
-              style={{
-                color: "oklch(0.577 0.245 27.325)",
-                fontSize: "14px",
-                margin: 0,
-                fontWeight: 600,
-              }}
-            >
+            <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "8px", margin: 0, fontWeight: 600 }}>
               {student.grade_level}
             </p>
-            <p style={{ color: "#555", fontSize: "12px", margin: 0 }}>
+            <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>
               🍽 {student.student_type_label}
             </p>
+            {student.enrollment_date && (
+              <p style={{ fontSize: "6.5px", color: "#444", margin: 0 }}>
+                Enrolled:{" "}
+                {(() => {
+                  const p = student.enrollment_date.split("-");
+                  return `${p[1]}/${p[2]}/${p[0]}`;
+                })()}
+              </p>
+            )}
             <div
               style={{
                 border: "1px solid #e0e0e0",
-                borderRadius: "10px",
-                padding: "12px",
-                marginTop: "6px",
+                borderRadius: "2mm",
+                padding: "1.5mm",
+                marginTop: "1mm",
               }}
             >
-              <QRCode value={displayQr || "placeholder"} size={150} />
+              <QRCode value={displayQr || "placeholder"} size={85} style={{ width: "22mm", height: "22mm" }} />
             </div>
             <p
               style={{
                 fontFamily: "monospace",
-                fontSize: "11px",
+                fontSize: "5px",
                 color: "#888",
-                margin: "4px 0 0",
+                margin: 0,
+                textAlign: "center",
               }}
             >
               {displayQr}
             </p>
-            <p style={{ fontSize: "12px", color: "#444", margin: "6px 0 2px" }}>
-              {student.enrollment_date
-                ? `Enrolled: ${(() => {
-                    const p = student.enrollment_date.split("-");
-                    return `${p[1]}/${p[2]}/${p[0]}`;
-                  })()}`
-                : null}
-            </p>
           </div>
+
+          {/* Footer */}
           <div
             style={{
+              flexShrink: 0,
               backgroundColor: "#fff3f0",
               borderTop: "1px solid #fdd8cc",
-              padding: "10px 14px",
+              padding: "1.5mm 3mm",
               textAlign: "center",
             }}
           >
-            <p style={{ fontSize: "11px", color: "#666", margin: 0 }}>
-              Scan QR to view wallet balance • Valid S.Y.{" "}
+            <p style={{ fontSize: "5.5px", color: "#666", margin: 0 }}>
+              Scan QR to view wallet balance
               {student.enrollment_date
-                ? getSchoolYear(student.enrollment_date)
+                ? ` • Valid S.Y. ${getSchoolYear(student.enrollment_date)}`
                 : ""}
             </p>
           </div>
