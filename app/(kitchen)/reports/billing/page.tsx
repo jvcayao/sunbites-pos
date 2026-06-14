@@ -35,22 +35,49 @@ function formatDate(iso: string | null): string {
 }
 
 const GRADE_LEVELS = [
-  "Nursery", "Kinder 1", "Kinder 2",
-  "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6",
-  "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
+  "Nursery",
+  "Kinder 1",
+  "Kinder 2",
+  "Grade 1",
+  "Grade 2",
+  "Grade 3",
+  "Grade 4",
+  "Grade 5",
+  "Grade 6",
+  "Grade 7",
+  "Grade 8",
+  "Grade 9",
+  "Grade 10",
+  "Grade 11",
+  "Grade 12",
 ];
 
 const SCHOOL_MONTHS = [
-  "June", "July", "August", "September", "October", "November",
-  "December", "January", "February", "March",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+  "January",
+  "February",
+  "March",
 ];
 
 function getDefaultSchoolMonth(): string {
   const month = new Date().getMonth(); // 0-based
   const map: Record<number, string> = {
-    0: "January", 1: "February", 2: "March",
-    5: "June", 6: "July", 7: "August",
-    8: "September", 9: "October", 10: "November", 11: "December",
+    0: "January",
+    1: "February",
+    2: "March",
+    5: "June",
+    6: "July",
+    7: "August",
+    8: "September",
+    9: "October",
+    10: "November",
+    11: "December",
   };
   return map[month] ?? "all";
 }
@@ -64,10 +91,20 @@ function getDefaultSchoolYear(): number {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function SummaryCard({ label, value, colorClass }: { label: string; value: string; colorClass?: string }) {
+function SummaryCard({
+  label,
+  value,
+  colorClass,
+}: {
+  label: string;
+  value: string;
+  colorClass?: string;
+}) {
   return (
     <div className={cn("rounded-xl border bg-card p-4", colorClass)}>
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-1 text-2xl font-extrabold text-foreground">{value}</p>
     </div>
   );
@@ -80,7 +117,7 @@ function StatusBadge({ status }: { status: "paid" | "unpaid" }) {
         "text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize",
         status === "paid"
           ? "bg-green-100 text-green-700 border-green-300"
-          : "bg-red-100 text-red-700 border-red-300"
+          : "bg-red-100 text-red-700 border-red-300",
       )}
     >
       {status}
@@ -153,7 +190,8 @@ export default function BillingReportPage() {
             onClick={() => {
               void exportReport("reports/billing", {
                 year: year || undefined,
-                school_month: schoolMonth !== "all" ? schoolMonth.toLowerCase() : undefined,
+                school_month:
+                  schoolMonth !== "all" ? schoolMonth.toLowerCase() : undefined,
                 status: status !== "all" ? status : undefined,
                 grade_level: gradeLevel !== "all" ? gradeLevel : undefined,
                 search: search.trim() || undefined,
@@ -172,12 +210,15 @@ export default function BillingReportPage() {
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => { setSchoolMonth("all"); setPage(1); }}
+          onClick={() => {
+            setSchoolMonth("all");
+            setPage(1);
+          }}
           className={cn(
             "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
             schoolMonth === "all"
               ? "border-primary bg-primary text-primary-foreground"
-              : "border-border bg-card text-foreground hover:bg-muted"
+              : "border-border bg-card text-foreground hover:bg-muted",
           )}
         >
           All Months
@@ -186,12 +227,15 @@ export default function BillingReportPage() {
           <button
             key={m}
             type="button"
-            onClick={() => { setSchoolMonth(m); setPage(1); }}
+            onClick={() => {
+              setSchoolMonth(m);
+              setPage(1);
+            }}
             className={cn(
               "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
               schoolMonth === m
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:bg-muted"
+                : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
             {m}
@@ -201,19 +245,39 @@ export default function BillingReportPage() {
 
       {/* Secondary filters */}
       <div className="flex flex-wrap items-center gap-2">
-        <Select value={year} onValueChange={(v) => { setYear(v); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[100px] text-xs" aria-label="Year filter">
+        <Select
+          value={year}
+          onValueChange={(v) => {
+            setYear(v ?? String(getDefaultSchoolYear()));
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[100px] text-xs"
+            aria-label="Year filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {[2024, 2025, 2026, 2027].map((y) => (
-              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+              <SelectItem key={y} value={String(y)}>
+                {y}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={status} onValueChange={(v) => { setStatus(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[130px] text-xs" aria-label="Payment status filter">
+        <Select
+          value={status}
+          onValueChange={(v) => {
+            setStatus(v ?? "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[130px] text-xs"
+            aria-label="Payment status filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -223,14 +287,25 @@ export default function BillingReportPage() {
           </SelectContent>
         </Select>
 
-        <Select value={gradeLevel} onValueChange={(v) => { setGradeLevel(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[140px] text-xs" aria-label="Grade level filter">
+        <Select
+          value={gradeLevel}
+          onValueChange={(v) => {
+            setGradeLevel(v ?? "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[140px] text-xs"
+            aria-label="Grade level filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Grades</SelectItem>
             {GRADE_LEVELS.map((g) => (
-              <SelectItem key={g} value={g}>{g}</SelectItem>
+              <SelectItem key={g} value={g}>
+                {g}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -238,18 +313,26 @@ export default function BillingReportPage() {
         <input
           type="text"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           placeholder="Search student..."
           aria-label="Search student by name or number"
           className="h-8 w-[160px] rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
         />
 
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">Recorded:</span>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            Recorded:
+          </span>
           <input
             type="date"
             value={recordedFrom}
-            onChange={(e) => { setRecordedFrom(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setRecordedFrom(e.target.value);
+              setPage(1);
+            }}
             aria-label="Recorded from date"
             className="h-8 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
           />
@@ -257,7 +340,10 @@ export default function BillingReportPage() {
           <input
             type="date"
             value={recordedTo}
-            onChange={(e) => { setRecordedTo(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setRecordedTo(e.target.value);
+              setPage(1);
+            }}
             aria-label="Recorded to date"
             className="h-8 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
           />
@@ -267,10 +353,25 @@ export default function BillingReportPage() {
       {/* Summary cards */}
       {summary && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryCard label="Total Subscribers" value={String(summary.total_subscribers)} />
-          <SummaryCard label="Total Collected" value={formatPeso(summary.total_collected)} colorClass="border-green-200 bg-green-50" />
-          <SummaryCard label="Total Outstanding" value={formatPeso(summary.total_outstanding)} colorClass="border-red-200 bg-red-50" />
-          <SummaryCard label="Collection Rate" value={`${summary.collection_rate.toFixed(1)}%`} colorClass="border-blue-200 bg-blue-50" />
+          <SummaryCard
+            label="Total Subscribers"
+            value={String(summary.total_subscribers)}
+          />
+          <SummaryCard
+            label="Total Collected"
+            value={formatPeso(summary.total_collected)}
+            colorClass="border-green-200 bg-green-50"
+          />
+          <SummaryCard
+            label="Total Outstanding"
+            value={formatPeso(summary.total_outstanding)}
+            colorClass="border-red-200 bg-red-50"
+          />
+          <SummaryCard
+            label="Collection Rate"
+            value={`${summary.collection_rate.toFixed(1)}%`}
+            colorClass="border-blue-200 bg-blue-50"
+          />
         </div>
       )}
 
@@ -284,39 +385,80 @@ export default function BillingReportPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Student Name</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Student #</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Grade</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Section</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Month / Year</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Amount Due</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Status</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Paid On</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Recorded By</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Student Name
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Student #
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Grade
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Section
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Month / Year
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  Amount Due
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Paid On
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Recorded By
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} />)
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRowSkeleton key={i} />
+                ))
               ) : !rows?.length ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">
+                  <td
+                    colSpan={9}
+                    className="px-4 py-10 text-center text-muted-foreground"
+                  >
                     No billing records found for the selected filters.
                   </td>
                 </tr>
               ) : (
                 rows.map((row) => (
                   <tr key={row.id} className="hover:bg-muted/20">
-                    <td className="px-4 py-2.5 font-medium text-foreground">{row.student.full_name}</td>
-                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{row.student.student_number}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{row.student.grade_level}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{row.student.section ?? "—"}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground capitalize">{row.school_month} {row.year}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold">{formatPeso(row.amount)}</td>
-                    <td className="px-4 py-2.5"><StatusBadge status={row.status} /></td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{formatDate(row.recorded_at)}</td>
+                    <td className="px-4 py-2.5 font-medium text-foreground">
+                      {row.student.full_name}
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
+                      {row.student.student_number}
+                    </td>
                     <td className="px-4 py-2.5 text-muted-foreground">
-                      {row.recorder ? `${row.recorder.first_name} ${row.recorder.last_name}` : "—"}
+                      {row.student.grade_level}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {row.student.section ?? "—"}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground capitalize">
+                      {row.school_month} {row.year}
+                    </td>
+                    <td className="px-4 py-2.5 text-right font-semibold">
+                      {formatPeso(row.amount)}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <StatusBadge status={row.status} />
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {formatDate(row.recorded_at)}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {row.recorder
+                        ? `${row.recorder.first_name} ${row.recorder.last_name}`
+                        : "—"}
                     </td>
                   </tr>
                 ))
@@ -329,7 +471,9 @@ export default function BillingReportPage() {
       {/* Pagination */}
       {meta && meta.last_page > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Page {meta.current_page} of {meta.last_page} ({meta.total} records)</span>
+          <span>
+            Page {meta.current_page} of {meta.last_page} ({meta.total} records)
+          </span>
           <div className="flex gap-1">
             <Button
               variant="outline"
