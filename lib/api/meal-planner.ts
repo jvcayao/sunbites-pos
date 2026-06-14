@@ -29,6 +29,10 @@ export const mealPlannerApi = {
   ): Promise<UpdateWeekVisibilityResponse> =>
     apiClient.patch<UpdateWeekVisibilityResponse>(
       "/references/meal-planner/week-visibility",
-      { month: month.toLowerCase(), week, visible_to_parents: visibleToParents },
+      {
+        month: month.toLowerCase(),
+        week,
+        visible_to_parents: visibleToParents,
+      },
     ),
 };

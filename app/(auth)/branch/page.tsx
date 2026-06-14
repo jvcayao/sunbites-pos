@@ -27,7 +27,9 @@ export default function BranchPage() {
     enabled: isAdmin,
   });
 
-  const branches: Branch[] = isAdmin ? (allBranches ?? user?.branches ?? []) : (user?.branches ?? []);
+  const branches: Branch[] = isAdmin
+    ? (allBranches ?? user?.branches ?? [])
+    : (user?.branches ?? []);
 
   useEffect(() => {
     if (!user) {
@@ -68,7 +70,9 @@ export default function BranchPage() {
               {branch.name.charAt(0).toUpperCase()}
             </div>
             <p className="mt-3 font-semibold text-foreground">{branch.name}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">{branch.slug}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {branch.slug}
+            </p>
           </button>
         ))}
       </div>

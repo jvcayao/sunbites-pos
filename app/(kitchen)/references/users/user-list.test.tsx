@@ -23,7 +23,7 @@ describe("UsersPage", () => {
     expect(screen.getByText("User Management")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /add new user/i })).toHaveAttribute(
       "href",
-      "/references/users/create"
+      "/references/users/create",
     );
   });
 
@@ -48,9 +48,16 @@ describe("UsersPage", () => {
         HttpResponse.json({
           data: [],
           links: { first: null, last: null, prev: null, next: null },
-          meta: { current_page: 1, last_page: 1, per_page: 15, total: 0, from: null, to: null },
-        })
-      )
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 0,
+            from: null,
+            to: null,
+          },
+        }),
+      ),
     );
 
     render(<UsersPage />);
@@ -61,21 +68,23 @@ describe("UsersPage", () => {
   it("shows an error message when the API fails", async () => {
     server.use(
       http.get(`${API}/users`, () =>
-        HttpResponse.json({ message: "Server error" }, { status: 500 })
-      )
+        HttpResponse.json({ message: "Server error" }, { status: 500 }),
+      ),
     );
 
     render(<UsersPage />);
 
     expect(
-      await screen.findByText("Failed to load users. Please try again.")
+      await screen.findByText("Failed to load users. Please try again."),
     ).toBeInTheDocument();
   });
 
   it("renders filter controls", () => {
     render(<UsersPage />);
 
-    expect(screen.getByRole("textbox", { name: "Search users" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Search users" }),
+    ).toBeInTheDocument();
   });
 
   it("shows pagination only when there are multiple pages", async () => {
@@ -84,15 +93,24 @@ describe("UsersPage", () => {
         HttpResponse.json({
           data: [],
           links: { first: null, last: null, prev: null, next: null },
-          meta: { current_page: 1, last_page: 1, per_page: 15, total: 0, from: null, to: null },
-        })
-      )
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 0,
+            from: null,
+            to: null,
+          },
+        }),
+      ),
     );
 
     render(<UsersPage />);
 
     await waitFor(() => {
-      expect(screen.queryByRole("button", { name: "Previous page" })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Previous page" }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -113,9 +131,16 @@ describe("UsersPage", () => {
             },
           ],
           links: { first: null, last: null, prev: null, next: null },
-          meta: { current_page: 1, last_page: 1, per_page: 15, total: 1, from: 1, to: 1 },
-        })
-      )
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 1,
+            from: 1,
+            to: 1,
+          },
+        }),
+      ),
     );
 
     render(<UsersPage />);

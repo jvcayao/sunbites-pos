@@ -34,7 +34,9 @@ describe("LoginPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Sign in" }));
 
-    expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Enter a valid email address"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Password is required")).toBeInTheDocument();
   });
 
@@ -46,14 +48,19 @@ describe("LoginPage", () => {
     await user.type(screen.getByLabelText("Password"), "secret");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
 
-    expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Enter a valid email address"),
+    ).toBeInTheDocument();
   });
 
   it("redirects to /dashboard on successful login with a single branch", async () => {
     const user = userEvent.setup();
     render(<LoginPage />);
 
-    await user.type(screen.getByLabelText("Email address"), "staff@sunbites.test");
+    await user.type(
+      screen.getByLabelText("Email address"),
+      "staff@sunbites.test",
+    );
     await user.type(screen.getByLabelText("Password"), "password");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
 
@@ -74,14 +81,17 @@ describe("LoginPage", () => {
               { id: 2, name: "South Branch", slug: "south" },
             ],
           },
-        })
-      )
+        }),
+      ),
     );
 
     const user = userEvent.setup();
     render(<LoginPage />);
 
-    await user.type(screen.getByLabelText("Email address"), "staff@sunbites.test");
+    await user.type(
+      screen.getByLabelText("Email address"),
+      "staff@sunbites.test",
+    );
     await user.type(screen.getByLabelText("Password"), "password");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
 
@@ -99,21 +109,24 @@ describe("LoginPage", () => {
             email: "staff@sunbites.test",
             branches: [],
           },
-        })
-      )
+        }),
+      ),
     );
 
     const user = userEvent.setup();
     render(<LoginPage />);
 
-    await user.type(screen.getByLabelText("Email address"), "staff@sunbites.test");
+    await user.type(
+      screen.getByLabelText("Email address"),
+      "staff@sunbites.test",
+    );
     await user.type(screen.getByLabelText("Password"), "password");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     expect(
       await screen.findByText(
-        "Your account has no branch assigned. Contact your administrator."
-      )
+        "Your account has no branch assigned. Contact your administrator.",
+      ),
     ).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
   });
@@ -123,20 +136,23 @@ describe("LoginPage", () => {
       http.post(`${API}/auth/login`, () =>
         HttpResponse.json(
           { message: "These credentials do not match our records." },
-          { status: 422 }
-        )
-      )
+          { status: 422 },
+        ),
+      ),
     );
 
     const user = userEvent.setup();
     render(<LoginPage />);
 
-    await user.type(screen.getByLabelText("Email address"), "staff@sunbites.test");
+    await user.type(
+      screen.getByLabelText("Email address"),
+      "staff@sunbites.test",
+    );
     await user.type(screen.getByLabelText("Password"), "wrongpassword");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     expect(
-      await screen.findByText("These credentials do not match our records.")
+      await screen.findByText("These credentials do not match our records."),
     ).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
   });
@@ -149,13 +165,16 @@ describe("LoginPage", () => {
           token: "t",
           user: { id: 1, full_name: "T", email: "t@t.com", branches: [] },
         });
-      })
+      }),
     );
 
     const user = userEvent.setup();
     render(<LoginPage />);
 
-    await user.type(screen.getByLabelText("Email address"), "staff@sunbites.test");
+    await user.type(
+      screen.getByLabelText("Email address"),
+      "staff@sunbites.test",
+    );
     await user.type(screen.getByLabelText("Password"), "password");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
 
@@ -165,7 +184,7 @@ describe("LoginPage", () => {
   it("shows the admin contact message", () => {
     render(<LoginPage />);
     expect(
-      screen.getByText("Contact your administrator for password assistance.")
+      screen.getByText("Contact your administrator for password assistance."),
     ).toBeInTheDocument();
   });
 });

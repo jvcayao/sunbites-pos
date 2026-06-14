@@ -45,12 +45,14 @@ describe("UserDetailPage", () => {
         http.get(`${API}/users/:id`, async () => {
           await new Promise((resolve) => setTimeout(resolve, 500));
           return HttpResponse.json(staffUserFixture);
-        })
+        }),
       );
 
       render(<UserDetailPage />);
 
-      expect(document.querySelectorAll("[data-slot]").length).toBeGreaterThan(0);
+      expect(document.querySelectorAll("[data-slot]").length).toBeGreaterThan(
+        0,
+      );
     });
 
     it("renders the user header with name, role badge, and status", async () => {
@@ -67,7 +69,9 @@ describe("UserDetailPage", () => {
 
       expect(await screen.findByText("Cashier Staff")).toBeInTheDocument();
       // email appears once in header
-      expect(screen.getAllByText("juan@sunbites.test").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("juan@sunbites.test").length).toBeGreaterThan(
+        0,
+      );
       // phone appears in header and in personal tab
       expect(screen.getAllByText("09171234567").length).toBeGreaterThan(0);
     });
@@ -77,9 +81,15 @@ describe("UserDetailPage", () => {
 
       await screen.findByText("Juan Dela Cruz");
 
-      expect(screen.getByRole("tab", { name: "Personal Info" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Employment" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Gov't IDs" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: "Personal Info" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: "Employment" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("tab", { name: "Gov't IDs" }),
+      ).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: "Branches" })).toBeInTheDocument();
     });
 
@@ -94,22 +104,22 @@ describe("UserDetailPage", () => {
     it("shows an error state when the API fails", async () => {
       server.use(
         http.get(`${API}/users/:id`, () =>
-          HttpResponse.json({ message: "Not found" }, { status: 404 })
-        )
+          HttpResponse.json({ message: "Not found" }, { status: 404 }),
+        ),
       );
 
       render(<UserDetailPage />);
 
       expect(
-        await screen.findByText("Failed to load user. Please try again.")
+        await screen.findByText("Failed to load user. Please try again."),
       ).toBeInTheDocument();
     });
 
     it("shows 'Inactive' status for deactivated users", async () => {
       server.use(
         http.get(`${API}/users/:id`, () =>
-          HttpResponse.json({ ...staffUserFixture, is_active: false })
-        )
+          HttpResponse.json({ ...staffUserFixture, is_active: false }),
+        ),
       );
 
       render(<UserDetailPage />);
@@ -130,8 +140,8 @@ describe("UserDetailPage", () => {
     it("shows 'No branches assigned' when user has no branches", async () => {
       server.use(
         http.get(`${API}/users/:id`, () =>
-          HttpResponse.json({ ...staffUserFixture, branches: [] })
-        )
+          HttpResponse.json({ ...staffUserFixture, branches: [] }),
+        ),
       );
 
       render(<UserDetailPage />);
@@ -139,7 +149,9 @@ describe("UserDetailPage", () => {
 
       await userEvent.click(screen.getByRole("tab", { name: "Branches" }));
 
-      expect(await screen.findByText("No branches assigned.")).toBeInTheDocument();
+      expect(
+        await screen.findByText("No branches assigned."),
+      ).toBeInTheDocument();
     });
   });
 
@@ -161,7 +173,9 @@ describe("UserDetailPage", () => {
 
       expect(screen.getByDisplayValue("Juan")).toBeInTheDocument();
       expect(screen.getByDisplayValue("Dela Cruz")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("juan@sunbites.test")).toBeInTheDocument();
+      expect(
+        screen.getByDisplayValue("juan@sunbites.test"),
+      ).toBeInTheDocument();
     });
 
     it("pre-checks the branch checkboxes for assigned branches", async () => {
@@ -171,9 +185,13 @@ describe("UserDetailPage", () => {
       await user.click(await screen.findByRole("button", { name: "Edit" }));
 
       // @base-ui Checkbox accessible name comes from enclosing <label> text
-      const mainBranchCheckbox = await screen.findByRole("checkbox", {
-        name: "Main Branch",
-      }, { timeout: 3000 });
+      const mainBranchCheckbox = await screen.findByRole(
+        "checkbox",
+        {
+          name: "Main Branch",
+        },
+        { timeout: 3000 },
+      );
       expect(mainBranchCheckbox).toBeChecked();
 
       const southBranchCheckbox = screen.getByRole("checkbox", {
@@ -205,7 +223,9 @@ describe("UserDetailPage", () => {
       await user.clear(firstNameInput);
       await user.click(screen.getByRole("button", { name: "Save Changes" }));
 
-      expect(await screen.findByText("First name is required")).toBeInTheDocument();
+      expect(
+        await screen.findByText("First name is required"),
+      ).toBeInTheDocument();
     });
 
     it("calls update API and returns to view mode on success", async () => {
@@ -221,7 +241,9 @@ describe("UserDetailPage", () => {
       await user.click(screen.getByRole("button", { name: "Save Changes" }));
 
       await waitFor(() => {
-        expect(screen.queryByText("Edit Juan Dela Cruz")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText("Edit Juan Dela Cruz"),
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -231,26 +253,36 @@ describe("UserDetailPage", () => {
       const user = userEvent.setup();
       render(<UserDetailPage />);
 
-      await user.click(await screen.findByRole("button", { name: "More actions" }));
+      await user.click(
+        await screen.findByRole("button", { name: "More actions" }),
+      );
 
-      expect(await screen.findByRole("menuitem", { name: "Deactivate" })).toBeInTheDocument();
+      expect(
+        await screen.findByRole("menuitem", { name: "Deactivate" }),
+      ).toBeInTheDocument();
     });
 
     it("opens a confirmation dialog when Deactivate is selected", async () => {
       const user = userEvent.setup();
       render(<UserDetailPage />);
 
-      await user.click(await screen.findByRole("button", { name: "More actions" }));
-      await user.click(await screen.findByRole("menuitem", { name: "Deactivate" }));
+      await user.click(
+        await screen.findByRole("button", { name: "More actions" }),
+      );
+      await user.click(
+        await screen.findByRole("menuitem", { name: "Deactivate" }),
+      );
 
       // Dialog title may render across text nodes — match by heading role
       expect(
-        await screen.findByRole("heading", { name: /Deactivate Juan Dela Cruz/i })
+        await screen.findByRole("heading", {
+          name: /Deactivate Juan Dela Cruz/i,
+        }),
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          "This user will no longer be able to log in. You can reactivate them at any time."
-        )
+          "This user will no longer be able to log in. You can reactivate them at any time.",
+        ),
       ).toBeInTheDocument();
     });
 
@@ -258,15 +290,21 @@ describe("UserDetailPage", () => {
       const user = userEvent.setup();
       render(<UserDetailPage />);
 
-      await user.click(await screen.findByRole("button", { name: "More actions" }));
-      await user.click(await screen.findByRole("menuitem", { name: "Deactivate" }));
-      await screen.findByRole("heading", { name: /Deactivate Juan Dela Cruz/i });
+      await user.click(
+        await screen.findByRole("button", { name: "More actions" }),
+      );
+      await user.click(
+        await screen.findByRole("menuitem", { name: "Deactivate" }),
+      );
+      await screen.findByRole("heading", {
+        name: /Deactivate Juan Dela Cruz/i,
+      });
 
       await user.click(screen.getByRole("button", { name: "Cancel" }));
 
       await waitFor(() => {
         expect(
-          screen.queryByRole("heading", { name: /Deactivate Juan Dela Cruz/i })
+          screen.queryByRole("heading", { name: /Deactivate Juan Dela Cruz/i }),
         ).not.toBeInTheDocument();
       });
     });
@@ -275,15 +313,21 @@ describe("UserDetailPage", () => {
       const user = userEvent.setup();
       render(<UserDetailPage />);
 
-      await user.click(await screen.findByRole("button", { name: "More actions" }));
-      await user.click(await screen.findByRole("menuitem", { name: "Deactivate" }));
-      await screen.findByRole("heading", { name: /Deactivate Juan Dela Cruz/i });
+      await user.click(
+        await screen.findByRole("button", { name: "More actions" }),
+      );
+      await user.click(
+        await screen.findByRole("menuitem", { name: "Deactivate" }),
+      );
+      await screen.findByRole("heading", {
+        name: /Deactivate Juan Dela Cruz/i,
+      });
 
       await user.click(screen.getByRole("button", { name: "Deactivate" }));
 
       await waitFor(() => {
         expect(
-          screen.queryByRole("heading", { name: /Deactivate Juan Dela Cruz/i })
+          screen.queryByRole("heading", { name: /Deactivate Juan Dela Cruz/i }),
         ).not.toBeInTheDocument();
       });
     });
@@ -291,17 +335,23 @@ describe("UserDetailPage", () => {
     it("shows Reactivate instead of Deactivate for inactive users", async () => {
       server.use(
         http.get(`${API}/users/:id`, () =>
-          HttpResponse.json({ ...staffUserFixture, is_active: false })
-        )
+          HttpResponse.json({ ...staffUserFixture, is_active: false }),
+        ),
       );
 
       const user = userEvent.setup();
       render(<UserDetailPage />);
 
-      await user.click(await screen.findByRole("button", { name: "More actions" }));
+      await user.click(
+        await screen.findByRole("button", { name: "More actions" }),
+      );
 
-      expect(await screen.findByRole("menuitem", { name: "Reactivate" })).toBeInTheDocument();
-      expect(screen.queryByRole("menuitem", { name: "Deactivate" })).not.toBeInTheDocument();
+      expect(
+        await screen.findByRole("menuitem", { name: "Reactivate" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("menuitem", { name: "Deactivate" }),
+      ).not.toBeInTheDocument();
     });
   });
 });

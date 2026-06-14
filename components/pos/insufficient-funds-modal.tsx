@@ -50,7 +50,8 @@ export function InsufficientFundsModal({
         student_id: student.id,
         amount: shortfall,
         payment_method: reloadMethod,
-        reference_number: reloadMethod === "gcash" ? referenceNumber : undefined,
+        reference_number:
+          reloadMethod === "gcash" ? referenceNumber : undefined,
       }),
     onSuccess: () => {
       toast.success(`Wallet reloaded by ₱${shortfall.toFixed(2)}.`);
@@ -62,7 +63,12 @@ export function InsufficientFundsModal({
   });
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onCancel();
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Insufficient Wallet Balance</DialogTitle>
@@ -71,7 +77,9 @@ export function InsufficientFundsModal({
         <div className="space-y-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Wallet Balance</span>
-            <span className="font-medium">₱{Number(student.wallet_balance).toFixed(2)}</span>
+            <span className="font-medium">
+              ₱{Number(student.wallet_balance).toFixed(2)}
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Order Total</span>
@@ -90,7 +98,9 @@ export function InsufficientFundsModal({
           <div className="mb-3 rounded-lg border border-green-200 bg-white p-2.5">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Reload Amount</span>
-              <span className="font-bold text-green-700">₱{shortfall.toFixed(2)}</span>
+              <span className="font-bold text-green-700">
+                ₱{shortfall.toFixed(2)}
+              </span>
             </div>
           </div>
 
@@ -98,7 +108,10 @@ export function InsufficientFundsModal({
             <p className="text-xs font-medium text-green-700">Payment Method</p>
             <div className="flex gap-3">
               {(["cash", "gcash"] as const).map((method) => (
-                <label key={method} className="flex cursor-pointer items-center gap-2">
+                <label
+                  key={method}
+                  className="flex cursor-pointer items-center gap-2"
+                >
                   <input
                     type="radio"
                     name="reload-method"
@@ -144,13 +157,13 @@ export function InsufficientFundsModal({
             "rounded-xl border-2 p-4",
             canUseCredit
               ? "border-orange-300 bg-orange-50"
-              : "border-border bg-muted/40 opacity-60"
+              : "border-border bg-muted/40 opacity-60",
           )}
         >
           <p
             className={cn(
               "mb-2 font-semibold",
-              canUseCredit ? "text-orange-800" : "text-muted-foreground"
+              canUseCredit ? "text-orange-800" : "text-muted-foreground",
             )}
           >
             Use Credit
@@ -165,7 +178,9 @@ export function InsufficientFundsModal({
                 </div>
                 <div className="flex justify-between font-medium">
                   <span>Credit After This Order</span>
-                  <span>₱{creditAfter.toFixed(2)} / ₱{CREDIT_LIMIT.toFixed(2)}</span>
+                  <span>
+                    ₱{creditAfter.toFixed(2)} / ₱{CREDIT_LIMIT.toFixed(2)}
+                  </span>
                 </div>
               </div>
               <Button
@@ -177,7 +192,8 @@ export function InsufficientFundsModal({
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Credit limit of ₱{CREDIT_LIMIT} would be exceeded. Please reload the wallet instead.
+              Credit limit of ₱{CREDIT_LIMIT} would be exceeded. Please reload
+              the wallet instead.
             </p>
           )}
         </div>

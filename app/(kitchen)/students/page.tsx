@@ -40,6 +40,7 @@ import type {
   Student,
   WalletPaymentMethod,
 } from "@/types/student";
+import { toast } from "sonner";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -142,7 +143,9 @@ function WalletTopUpModal({ open, onClose, student }: WalletTopUpModalProps) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["student", student.id] });
-      setSuccessMsg(`Wallet topped up. New balance: ₱${data.new_balance.toFixed(2)}`);
+      setSuccessMsg(
+        `Wallet topped up. New balance: ₱${data.new_balance.toFixed(2)}`,
+      );
       setAmount("");
       setReferenceNumber("");
       setNote("");
@@ -240,7 +243,7 @@ function WalletTopUpModal({ open, onClose, student }: WalletTopUpModalProps) {
                       "rounded-lg border px-4 py-2 text-sm transition-colors",
                       paymentMethod === m.value
                         ? "border-primary bg-primary/5 text-primary font-semibold"
-                        : "border-border hover:bg-muted/40"
+                        : "border-border hover:bg-muted/40",
                     )}
                   >
                     {m.label}
@@ -274,8 +277,7 @@ function WalletTopUpModal({ open, onClose, student }: WalletTopUpModalProps) {
 
             {mutation.isError && !Object.keys(errors).length && (
               <p className="text-sm text-destructive">
-                {(mutation.error as ApiError)?.message ??
-                  "An error occurred."}
+                {(mutation.error as ApiError)?.message ?? "An error occurred."}
               </p>
             )}
 
@@ -334,8 +336,7 @@ function StatusPickerDialog({
     },
   });
 
-  const needsReason =
-    selected === "banned" || selected === "unenrolled";
+  const needsReason = selected === "banned" || selected === "unenrolled";
 
   function handleClose() {
     setSelected(currentStatus);
@@ -354,23 +355,23 @@ function StatusPickerDialog({
         </DialogHeader>
 
         <div className="space-y-2">
-          {(
-            Object.keys(ENROLLMENT_STATUS_CONFIG) as EnrollmentStatus[]
-          ).map((status) => (
-            <button
-              key={status}
-              type="button"
-              onClick={() => setSelected(status)}
-              className={cn(
-                "w-full rounded-lg border p-3 text-left text-sm transition-colors",
-                selected === status
-                  ? "border-primary bg-primary/5 font-semibold text-primary"
-                  : "border-border hover:bg-muted/40"
-              )}
-            >
-              {STATUS_EMOJI[status]}
-            </button>
-          ))}
+          {(Object.keys(ENROLLMENT_STATUS_CONFIG) as EnrollmentStatus[]).map(
+            (status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setSelected(status)}
+                className={cn(
+                  "w-full rounded-lg border p-3 text-left text-sm transition-colors",
+                  selected === status
+                    ? "border-primary bg-primary/5 font-semibold text-primary"
+                    : "border-border hover:bg-muted/40",
+                )}
+              >
+                {STATUS_EMOJI[status]}
+              </button>
+            ),
+          )}
         </div>
 
         {needsReason && (
@@ -443,33 +444,136 @@ function PrintCard({ student }: { student: Student }) {
     parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : null;
 
   return (
-    <div style={{ width: "320px", border: "2px solid oklch(0.577 0.245 27.325)", borderRadius: "16px", overflow: "hidden", backgroundColor: "white", fontFamily: "sans-serif" }}>
-      <div style={{ backgroundColor: "oklch(0.577 0.245 27.325)", padding: "14px", textAlign: "center", color: "white" }}>
-        <div style={{ fontWeight: 800, fontSize: "17px", letterSpacing: "1px" }}>🍽 SUNBITES KITCHEN</div>
-        <div style={{ fontSize: "12px", marginTop: "2px", opacity: 0.9 }}>Student Canteen ID</div>
+    <div
+      style={{
+        width: "320px",
+        border: "2px solid oklch(0.577 0.245 27.325)",
+        borderRadius: "16px",
+        overflow: "hidden",
+        backgroundColor: "white",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "oklch(0.577 0.245 27.325)",
+          padding: "14px",
+          textAlign: "center",
+          color: "white",
+        }}
+      >
+        <div
+          style={{ fontWeight: 800, fontSize: "17px", letterSpacing: "1px" }}
+        >
+          🍽 SUNBITES KITCHEN
+        </div>
+        <div style={{ fontSize: "12px", marginTop: "2px", opacity: 0.9 }}>
+          Student Canteen ID
+        </div>
       </div>
-      <div style={{ padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+      <div
+        style={{
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "6px",
+        }}
+      >
         {photoSrc ? (
-          <img src={photoSrc} alt={student.full_name} style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "12px", border: "2px solid oklch(0.577 0.245 27.325)" }} />
+          <img
+            src={photoSrc}
+            alt={student.full_name}
+            style={{
+              width: "100px",
+              height: "100px",
+              objectFit: "cover",
+              borderRadius: "12px",
+              border: "2px solid oklch(0.577 0.245 27.325)",
+            }}
+          />
         ) : (
-          <div style={{ width: "100px", height: "100px", borderRadius: "12px", border: "2px solid oklch(0.577 0.245 27.325)", backgroundColor: "#fff3f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", fontWeight: 800, color: "oklch(0.577 0.245 27.325)" }}>
+          <div
+            style={{
+              width: "100px",
+              height: "100px",
+              borderRadius: "12px",
+              border: "2px solid oklch(0.577 0.245 27.325)",
+              backgroundColor: "#fff3f0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "36px",
+              fontWeight: 800,
+              color: "oklch(0.577 0.245 27.325)",
+            }}
+          >
             {student.first_name.charAt(0).toUpperCase()}
           </div>
         )}
-        <p style={{ fontWeight: 700, fontSize: "19px", textAlign: "center", margin: "6px 0 0", color: "#111" }}>{student.full_name}</p>
-        <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "14px", margin: 0, fontWeight: 600 }}>{student.grade_level}</p>
-        <p style={{ color: "#555", fontSize: "12px", margin: 0 }}>🍽 {student.student_type_label}</p>
-        <div style={{ border: "1px solid #e0e0e0", borderRadius: "10px", padding: "12px", marginTop: "6px" }}>
+        <p
+          style={{
+            fontWeight: 700,
+            fontSize: "19px",
+            textAlign: "center",
+            margin: "6px 0 0",
+            color: "#111",
+          }}
+        >
+          {student.full_name}
+        </p>
+        <p
+          style={{
+            color: "oklch(0.577 0.245 27.325)",
+            fontSize: "14px",
+            margin: 0,
+            fontWeight: 600,
+          }}
+        >
+          {student.grade_level}
+        </p>
+        <p style={{ color: "#555", fontSize: "12px", margin: 0 }}>
+          🍽 {student.student_type_label}
+        </p>
+        <div
+          style={{
+            border: "1px solid #e0e0e0",
+            borderRadius: "10px",
+            padding: "12px",
+            marginTop: "6px",
+          }}
+        >
           <QRCode value={student.qr_code} size={150} />
         </div>
-        <p style={{ fontFamily: "monospace", fontSize: "11px", color: "#888", margin: "4px 0 0" }}>{student.qr_code}</p>
+        <p
+          style={{
+            fontFamily: "monospace",
+            fontSize: "11px",
+            color: "#888",
+            margin: "4px 0 0",
+          }}
+        >
+          {student.qr_code}
+        </p>
         {enrolledFormatted && (
-          <p style={{ fontSize: "12px", color: "#444", margin: "6px 0 2px" }}>Enrolled: {enrolledFormatted}</p>
+          <p style={{ fontSize: "12px", color: "#444", margin: "6px 0 2px" }}>
+            Enrolled: {enrolledFormatted}
+          </p>
         )}
       </div>
-      <div style={{ backgroundColor: "#fff3f0", borderTop: "1px solid #fdd8cc", padding: "10px 14px", textAlign: "center" }}>
+      <div
+        style={{
+          backgroundColor: "#fff3f0",
+          borderTop: "1px solid #fdd8cc",
+          padding: "10px 14px",
+          textAlign: "center",
+        }}
+      >
         <p style={{ fontSize: "11px", color: "#666", margin: 0 }}>
-          Scan QR to view wallet balance{student.enrollment_date ? ` • Valid S.Y. ${getSchoolYear(student.enrollment_date)}` : ""}
+          Scan QR to view wallet balance
+          {student.enrollment_date
+            ? ` • Valid S.Y. ${getSchoolYear(student.enrollment_date)}`
+            : ""}
         </p>
       </div>
     </div>
@@ -503,43 +607,181 @@ function QrCard({ student }: { student: Student; branchName: string }) {
     parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", overflow: "hidden", borderRadius: "8px", border: "2px solid oklch(0.577 0.245 27.325)", backgroundColor: "white", fontFamily: "sans-serif", textAlign: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        borderRadius: "8px",
+        border: "2px solid oklch(0.577 0.245 27.325)",
+        backgroundColor: "white",
+        fontFamily: "sans-serif",
+        textAlign: "center",
+      }}
+    >
       {/* Header */}
-      <div style={{ backgroundColor: "oklch(0.577 0.245 27.325)", padding: "5px 6px", flexShrink: 0 }}>
-        <p style={{ color: "white", fontWeight: 800, fontSize: "9px", letterSpacing: "0.5px", margin: 0, textTransform: "uppercase" }}>🍽 Sunbites Kitchen</p>
-        <p style={{ color: "rgba(255,255,255,0.85)", fontSize: "7px", margin: "1px 0 0", fontWeight: 500 }}>Student Canteen ID</p>
+      <div
+        style={{
+          backgroundColor: "oklch(0.577 0.245 27.325)",
+          padding: "5px 6px",
+          flexShrink: 0,
+        }}
+      >
+        <p
+          style={{
+            color: "white",
+            fontWeight: 800,
+            fontSize: "9px",
+            letterSpacing: "0.5px",
+            margin: 0,
+            textTransform: "uppercase",
+          }}
+        >
+          🍽 Sunbites Kitchen
+        </p>
+        <p
+          style={{
+            color: "rgba(255,255,255,0.85)",
+            fontSize: "7px",
+            margin: "1px 0 0",
+            fontWeight: 500,
+          }}
+        >
+          Student Canteen ID
+        </p>
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", padding: "5px 6px 4px" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "5px 6px 4px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "3px",
+          }}
+        >
           {photoSrc ? (
-            <img src={photoSrc} alt={student.full_name} style={{ width: "44px", height: "44px", borderRadius: "6px", border: "2px solid oklch(0.577 0.245 27.325)", objectFit: "cover", flexShrink: 0 }} />
+            <img
+              src={photoSrc}
+              alt={student.full_name}
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "6px",
+                border: "2px solid oklch(0.577 0.245 27.325)",
+                objectFit: "cover",
+                flexShrink: 0,
+              }}
+            />
           ) : (
-            <div style={{ width: "44px", height: "44px", borderRadius: "6px", border: "2px solid oklch(0.577 0.245 27.325)", backgroundColor: "#fff3f0", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "16px", color: "oklch(0.577 0.245 27.325)", flexShrink: 0 }}>
+            <div
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "6px",
+                border: "2px solid oklch(0.577 0.245 27.325)",
+                backgroundColor: "#fff3f0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 800,
+                fontSize: "16px",
+                color: "oklch(0.577 0.245 27.325)",
+                flexShrink: 0,
+              }}
+            >
               {student.first_name.charAt(0).toUpperCase()}
             </div>
           )}
-          <p style={{ fontWeight: 700, fontSize: "10px", margin: 0, lineHeight: 1.2 }}>{student.full_name}</p>
-          <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "8px", margin: 0, fontWeight: 700 }}>{student.grade_level}</p>
-          <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>🍽 {student.student_type_label}</p>
+          <p
+            style={{
+              fontWeight: 700,
+              fontSize: "10px",
+              margin: 0,
+              lineHeight: 1.2,
+            }}
+          >
+            {student.full_name}
+          </p>
+          <p
+            style={{
+              color: "oklch(0.577 0.245 27.325)",
+              fontSize: "8px",
+              margin: 0,
+              fontWeight: 700,
+            }}
+          >
+            {student.grade_level}
+          </p>
+          <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>
+            🍽 {student.student_type_label}
+          </p>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-          <div style={{ border: "1px solid #e0e0e0", borderRadius: "5px", padding: "3px" }}>
-            <QRCode value={student.qr_code} style={{ width: "58px", height: "58px", display: "block" }} />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "2px",
+          }}
+        >
+          <div
+            style={{
+              border: "1px solid #e0e0e0",
+              borderRadius: "5px",
+              padding: "3px",
+            }}
+          >
+            <QRCode
+              value={student.qr_code}
+              style={{ width: "58px", height: "58px", display: "block" }}
+            />
           </div>
-          <p style={{ fontFamily: "monospace", fontSize: "6px", color: "#888", margin: 0 }}>{student.qr_code}</p>
+          <p
+            style={{
+              fontFamily: "monospace",
+              fontSize: "6px",
+              color: "#888",
+              margin: 0,
+            }}
+          >
+            {student.qr_code}
+          </p>
           {enrolledFormatted && (
-            <p style={{ fontSize: "6.5px", color: "#444", margin: 0 }}>Enrolled: {enrolledFormatted}</p>
+            <p style={{ fontSize: "6.5px", color: "#444", margin: 0 }}>
+              Enrolled: {enrolledFormatted}
+            </p>
           )}
         </div>
       </div>
 
       {/* Footer */}
-      <div style={{ backgroundColor: "#fff3f0", borderTop: "1px solid #fdd8cc", padding: "3px 4px", flexShrink: 0 }}>
+      <div
+        style={{
+          backgroundColor: "#fff3f0",
+          borderTop: "1px solid #fdd8cc",
+          padding: "3px 4px",
+          flexShrink: 0,
+        }}
+      >
         <p style={{ fontSize: "5.5px", color: "#666", margin: 0 }}>
-          Scan QR to view wallet balance{student.enrollment_date ? ` • Valid S.Y. ${getSchoolYear(student.enrollment_date)}` : ""}
+          Scan QR to view wallet balance
+          {student.enrollment_date
+            ? ` • Valid S.Y. ${getSchoolYear(student.enrollment_date)}`
+            : ""}
         </p>
       </div>
     </div>
@@ -576,7 +818,15 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
           #qr-print-root * { visibility: visible; }
         }
       `}</style>
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 320px)`, gap: "24px", padding: "32px", justifyContent: "center" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${cols}, 320px)`,
+          gap: "24px",
+          padding: "32px",
+          justifyContent: "center",
+        }}
+      >
         {students.map((s) => (
           <PrintCard key={s.id} student={s} />
         ))}
@@ -589,11 +839,15 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Print QR Codes ({students.length} selected)</DialogTitle>
+            <DialogTitle>
+              Print QR Codes ({students.length} selected)
+            </DialogTitle>
           </DialogHeader>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Cards per row:</span>
+            <span className="text-sm text-muted-foreground">
+              Cards per row:
+            </span>
             {([1, 2] as const).map((n) => (
               <button
                 key={n}
@@ -603,7 +857,7 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
                   "rounded-lg border px-3 py-1 text-sm",
                   cols === n
                     ? "border-primary bg-primary/5 text-primary font-semibold"
-                    : "border-border hover:bg-muted/40"
+                    : "border-border hover:bg-muted/40",
                 )}
               >
                 {n}
@@ -615,7 +869,7 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
           <div
             className={cn(
               "grid gap-3 mt-2 justify-items-center",
-              cols === 1 ? "grid-cols-1" : "grid-cols-2"
+              cols === 1 ? "grid-cols-1" : "grid-cols-2",
             )}
           >
             {students.map((s) => (
@@ -626,7 +880,9 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
             <Button onClick={() => window.print()}>
               <Printer className="mr-1.5 h-4 w-4" aria-hidden="true" />
               Print All
@@ -680,13 +936,74 @@ function MonthBadges({ studentId, payments, canToggle }: MonthBadgesProps) {
               isPaid
                 ? "bg-green-100 text-green-700 border-green-300"
                 : "bg-red-100 text-destructive border-red-300",
-              !canToggle && "cursor-default"
+              !canToggle && "cursor-default",
             )}
           >
-            {month.short} &apos;{String(payment.year).slice(-2)} {isPaid ? "✓" : "✗"}
+            {month.short} &apos;{String(payment.year).slice(-2)}{" "}
+            {isPaid ? "✓" : "✗"}
           </button>
         );
       })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// DeletedStudentCard
+// ---------------------------------------------------------------------------
+
+function DeletedStudentCard({ student }: { student: Student }) {
+  const queryClient = useQueryClient();
+
+  const restoreMutation = useMutation({
+    mutationFn: () => studentApi.restore(student.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast.success("Student restored.");
+    },
+  });
+
+  const removedDate = student.deleted_at
+    ? new Date(student.deleted_at).toLocaleDateString("en-PH", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : null;
+
+  return (
+    <div className="rounded-xl border border-destructive/30 bg-card p-4 opacity-75">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">
+          {student.first_name.charAt(0).toUpperCase()}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-foreground truncate line-through text-muted-foreground">
+            {student.full_name}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {student.grade_level}
+            {student.section ? ` · ${student.section}` : ""}
+          </p>
+          {removedDate && (
+            <p className="text-xs text-destructive mt-0.5">
+              Removed: {removedDate}
+            </p>
+          )}
+        </div>
+
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => restoreMutation.mutate()}
+          disabled={restoreMutation.isPending}
+          className="shrink-0"
+        >
+          {restoreMutation.isPending ? "Restoring…" : "Restore"}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -743,7 +1060,9 @@ function StudentCard({
     <div
       className={cn(
         "rounded-xl border border-border bg-card p-4 relative",
-        isSubscription ? "border-l-4 border-l-orange-400" : "border-l-4 border-l-purple-500"
+        isSubscription
+          ? "border-l-4 border-l-orange-400"
+          : "border-l-4 border-l-purple-500",
       )}
     >
       {/* Checkbox */}
@@ -758,7 +1077,11 @@ function StudentCard({
       {/* Header */}
       <div className="flex items-start gap-3 pl-7">
         {photoSrc ? (
-          <img src={photoSrc} alt={student.full_name} className="h-10 w-10 shrink-0 rounded-full object-cover border border-primary/20" />
+          <img
+            src={photoSrc}
+            alt={student.full_name}
+            className="h-10 w-10 shrink-0 rounded-full object-cover border border-primary/20"
+          />
         ) : (
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
             {student.first_name.charAt(0).toUpperCase()}
@@ -781,7 +1104,7 @@ function StudentCard({
                 "text-[11px] font-bold px-3 py-1 rounded-full border",
                 isSubscription
                   ? "bg-orange-100 text-orange-700 border-orange-300"
-                  : "bg-purple-100 text-purple-700 border-purple-300"
+                  : "bg-purple-100 text-purple-700 border-purple-300",
               )}
             >
               {student.student_type_label}
@@ -928,6 +1251,7 @@ export default function StudentsPage() {
       ? true
       : false;
 
+  const [showDeleted, setShowDeleted] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("all");
   const [search, setSearch] = useState("");
   const [gradeFilter, setGradeFilter] = useState("");
@@ -948,6 +1272,7 @@ export default function StudentsPage() {
     queryKey: [
       "students",
       {
+        showDeleted,
         activeTab,
         search,
         gradeFilter,
@@ -958,32 +1283,40 @@ export default function StudentsPage() {
       },
     ],
     queryFn: () =>
-      studentApi.list({
-        search: search || undefined,
-        grade: gradeFilter || undefined,
-        status: statusFilter || undefined,
-        type: activeTab !== "all" ? activeTab : undefined,
-        month:
-          activeTab === "subscription" && monthFilter
-            ? (monthFilter as SchoolMonth)
-            : undefined,
-        year:
-          activeTab === "subscription" && yearFilter
-            ? Number(yearFilter)
-            : undefined,
-        payment_status:
-          activeTab === "subscription" && paymentStatusFilter
-            ? paymentStatusFilter
-            : undefined,
-      }),
+      studentApi.list(
+        showDeleted
+          ? {
+              deleted: 1,
+              search: search || undefined,
+              grade: gradeFilter || undefined,
+            }
+          : {
+              search: search || undefined,
+              grade: gradeFilter || undefined,
+              status: statusFilter || undefined,
+              type: activeTab !== "all" ? activeTab : undefined,
+              month:
+                activeTab === "subscription" && monthFilter
+                  ? (monthFilter as SchoolMonth)
+                  : undefined,
+              year:
+                activeTab === "subscription" && yearFilter
+                  ? Number(yearFilter)
+                  : undefined,
+              payment_status:
+                activeTab === "subscription" && paymentStatusFilter
+                  ? paymentStatusFilter
+                  : undefined,
+            },
+      ),
   });
 
   const allStudents = data?.data ?? [];
   const subscriptionStudents = allStudents.filter(
-    (s) => s.student_type === "subscription"
+    (s) => s.student_type === "subscription",
   );
   const nonSubStudents = allStudents.filter(
-    (s) => s.student_type === "non_subscription"
+    (s) => s.student_type === "non_subscription",
   );
 
   const selectedStudents = allStudents.filter((s) => selectedIds.has(s.id));
@@ -1042,7 +1375,10 @@ export default function StudentsPage() {
           value={gradeFilter}
           onValueChange={(v) => setGradeFilter(v === "all" ? "" : (v ?? ""))}
         >
-          <SelectTrigger className="w-full sm:w-40" aria-label="Filter by grade">
+          <SelectTrigger
+            className="w-full sm:w-40"
+            aria-label="Filter by grade"
+          >
             <SelectValue placeholder="Grade" />
           </SelectTrigger>
           <SelectContent>
@@ -1064,30 +1400,41 @@ export default function StudentsPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v === "all" ? "" : (v ?? ""))}
-        >
-          <SelectTrigger className="w-full sm:w-44" aria-label="Filter by status">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="enrolled">Enrolled</SelectItem>
-            <SelectItem value="paused">Paused</SelectItem>
-            <SelectItem value="unenrolled">Unenrolled</SelectItem>
-            <SelectItem value="banned">Banned</SelectItem>
-            <SelectItem value="graduated">Graduated</SelectItem>
-          </SelectContent>
-        </Select>
 
-        {activeTab === "subscription" && (
+        {!showDeleted && (
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v === "all" ? "" : (v ?? ""))}
+          >
+            <SelectTrigger
+              className="w-full sm:w-44"
+              aria-label="Filter by status"
+            >
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="enrolled">Enrolled</SelectItem>
+              <SelectItem value="paused">Paused</SelectItem>
+              <SelectItem value="unenrolled">Unenrolled</SelectItem>
+              <SelectItem value="banned">Banned</SelectItem>
+              <SelectItem value="graduated">Graduated</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+
+        {!showDeleted && activeTab === "subscription" && (
           <>
             <Select
               value={monthFilter}
-              onValueChange={(v) => setMonthFilter(v === "all" ? "" : (v ?? ""))}
+              onValueChange={(v) =>
+                setMonthFilter(v === "all" ? "" : (v ?? ""))
+              }
             >
-              <SelectTrigger className="w-full sm:w-40" aria-label="Filter by month">
+              <SelectTrigger
+                className="w-full sm:w-40"
+                aria-label="Filter by month"
+              >
                 <SelectValue placeholder="Month" />
               </SelectTrigger>
               <SelectContent>
@@ -1103,12 +1450,18 @@ export default function StudentsPage() {
               value={yearFilter}
               onValueChange={(v) => setYearFilter(v === "all" ? "" : (v ?? ""))}
             >
-              <SelectTrigger className="w-full sm:w-32" aria-label="Filter by year">
+              <SelectTrigger
+                className="w-full sm:w-32"
+                aria-label="Filter by year"
+              >
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Years</SelectItem>
-                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((y) => (
+                {Array.from(
+                  { length: 5 },
+                  (_, i) => new Date().getFullYear() - 2 + i,
+                ).map((y) => (
                   <SelectItem key={y} value={String(y)}>
                     {y}
                   </SelectItem>
@@ -1121,7 +1474,10 @@ export default function StudentsPage() {
                 setPaymentStatusFilter(v === "all" ? "" : (v ?? ""))
               }
             >
-              <SelectTrigger className="w-full sm:w-40" aria-label="Filter by payment status">
+              <SelectTrigger
+                className="w-full sm:w-40"
+                aria-label="Filter by payment status"
+              >
                 <SelectValue placeholder="Payment" />
               </SelectTrigger>
               <SelectContent>
@@ -1132,38 +1488,53 @@ export default function StudentsPage() {
             </Select>
           </>
         )}
+
+        <button
+          type="button"
+          onClick={() => setShowDeleted((prev) => !prev)}
+          className={cn(
+            "rounded-lg border px-4 py-2 text-sm font-medium transition-colors sm:ml-auto",
+            showDeleted
+              ? "border-destructive bg-destructive text-destructive-foreground"
+              : "border-border hover:bg-muted/40 text-muted-foreground",
+          )}
+        >
+          {showDeleted ? "Hide Deleted" : "Show Deleted"}
+        </button>
       </div>
 
-      {/* Type tabs */}
-      <div className="flex gap-2 no-print">
-        {(
-          [
-            { value: "all", label: "All" },
-            {
-              value: "subscription",
-              label: `Subscription (${subscriptionStudents.length})`,
-            },
-            {
-              value: "non_subscription",
-              label: `Non-Subscription (${nonSubStudents.length})`,
-            },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            onClick={() => setActiveTab(tab.value)}
-            className={cn(
-              "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
-              activeTab === tab.value
-                ? "border-primary bg-primary/5 text-primary"
-                : "border-border hover:bg-muted/40 text-muted-foreground"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Type tabs — hidden in deleted mode */}
+      {!showDeleted && (
+        <div className="flex gap-2 no-print">
+          {(
+            [
+              { value: "all", label: "All" },
+              {
+                value: "subscription",
+                label: `Subscription (${subscriptionStudents.length})`,
+              },
+              {
+                value: "non_subscription",
+                label: `Non-Subscription (${nonSubStudents.length})`,
+              },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => setActiveTab(tab.value)}
+              className={cn(
+                "rounded-lg border px-4 py-2 text-sm font-medium transition-colors",
+                activeTab === tab.value
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-border hover:bg-muted/40 text-muted-foreground",
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Content */}
       {isError ? (
@@ -1176,6 +1547,18 @@ export default function StudentsPage() {
             <div key={k} className="h-40 animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
+      ) : showDeleted ? (
+        !allStudents.length ? (
+          <div className="rounded-xl border border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
+            No removed students found.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {allStudents.map((s) => (
+              <DeletedStudentCard key={s.id} student={s} />
+            ))}
+          </div>
+        )
       ) : !displayedStudents.length ? (
         <div className="rounded-xl border border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
           No students found.

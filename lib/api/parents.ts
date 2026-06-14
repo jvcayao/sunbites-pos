@@ -18,5 +18,7 @@ export const parentApi = {
     apiClient.get<ParentDetail>(`/references/parents/${id}`),
 
   resendActivation: (id: number) =>
-    apiClient.post<{ message: string }>(`/references/parents/${id}/resend-activation`),
+    apiClient.post<{ message: string }>(
+      `/references/parents/${id}/resend-activation`,
+    ),
 };

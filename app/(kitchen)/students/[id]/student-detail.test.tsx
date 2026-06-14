@@ -13,8 +13,9 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/lib/store/auth", () => {
-  const actual =
-    jest.requireActual("@/lib/store/auth") as typeof import("@/lib/store/auth");
+  const actual = jest.requireActual(
+    "@/lib/store/auth",
+  ) as typeof import("@/lib/store/auth");
   return {
     ...actual,
     useAuthStore: Object.assign(jest.fn(), {
@@ -43,14 +44,16 @@ beforeEach(() => {
       user: adminUser,
       activeBranch: { id: 1, name: "Main Branch", slug: "main-branch" },
       token: "test-token",
-    } as AuthState)
+    } as AuthState),
   );
 });
 
 describe("StudentDetailPage", () => {
   it("renders student name in header", async () => {
     render(<StudentDetailPage params={{ id: "1" }} />);
-    expect((await screen.findAllByText("Maria Santos")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("Maria Santos")).length).toBeGreaterThan(
+      0,
+    );
   });
 
   it("shows tabs: Profile, Wallet, Order History, Payment, Logs", async () => {
@@ -60,11 +63,9 @@ describe("StudentDetailPage", () => {
     expect(screen.getByRole("tab", { name: /profile/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /wallet/i })).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: /order history/i })
+      screen.getByRole("tab", { name: /order history/i }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("tab", { name: /payment/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /payment/i })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: /logs/i })).toBeInTheDocument();
   });
 
@@ -99,9 +100,7 @@ describe("StudentDetailPage", () => {
     const orderTab = screen.getByRole("tab", { name: /order history/i });
     await user.click(orderTab);
 
-    expect(
-      await screen.findByText(/no orders yet/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/no orders yet/i)).toBeInTheDocument();
   });
 
   it("shows a Back to Students button", async () => {
@@ -109,7 +108,7 @@ describe("StudentDetailPage", () => {
     await screen.findAllByText("Maria Santos");
 
     expect(
-      screen.getByRole("button", { name: /students/i })
+      screen.getByRole("button", { name: /students/i }),
     ).toBeInTheDocument();
   });
 
@@ -150,7 +149,7 @@ describe("StudentDetailPage", () => {
     await user.click(logsTab);
 
     expect(
-      await screen.findByText(/no activity logs yet/i)
+      await screen.findByText(/no activity logs yet/i),
     ).toBeInTheDocument();
   });
 });

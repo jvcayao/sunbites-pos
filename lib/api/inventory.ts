@@ -19,7 +19,10 @@ export const inventoryApi = {
   listForPos: () => apiClient.get<InventoryItem[]>("/pos/inventory"),
 
   adjust: (id: number, payload: AdjustStockPayload) =>
-    apiClient.post<{ message: string; item: InventoryItem }>(`/pos/inventory/${id}/adjust`, payload),
+    apiClient.post<{ message: string; item: InventoryItem }>(
+      `/pos/inventory/${id}/adjust`,
+      payload,
+    ),
 
   create: (payload: CreateInventoryItemPayload) =>
     apiClient.post<InventoryItem>("/references/inventory", payload),
@@ -34,24 +37,37 @@ export const inventoryApi = {
     apiClient.get<InventoryLog[]>(`/references/inventory/${id}/logs`),
 
   history: (filters?: InventoryHistoryFilters) =>
-    apiClient.get<PaginatedResponse<InventoryHistoryLog>>("/references/inventory/history", {
-      params: filters as Record<string, string | number | boolean | undefined>,
-    }),
+    apiClient.get<PaginatedResponse<InventoryHistoryLog>>(
+      "/references/inventory/history",
+      {
+        params: filters as Record<
+          string,
+          string | number | boolean | undefined
+        >,
+      },
+    ),
 
   archive: (id: number) =>
     apiClient.patch<{ message: string }>(`/references/inventory/${id}/archive`),
 
   unarchive: (id: number) =>
-    apiClient.patch<{ message: string }>(`/references/inventory/${id}/unarchive`),
+    apiClient.patch<{ message: string }>(
+      `/references/inventory/${id}/unarchive`,
+    ),
 
   listIngredients: (menuItemId: number) =>
-    apiClient.get<InventoryIngredient[]>(`/references/menu-items/${menuItemId}/ingredients`),
+    apiClient.get<InventoryIngredient[]>(
+      `/references/menu-items/${menuItemId}/ingredients`,
+    ),
 
   attachIngredient: (menuItemId: number, payload: AttachIngredientPayload) =>
-    apiClient.post<InventoryIngredient[]>(`/references/menu-items/${menuItemId}/ingredients`, payload),
+    apiClient.post<InventoryIngredient[]>(
+      `/references/menu-items/${menuItemId}/ingredients`,
+      payload,
+    ),
 
   detachIngredient: (menuItemId: number, inventoryItemId: number) =>
     apiClient.delete<{ message: string }>(
-      `/references/menu-items/${menuItemId}/ingredients/${inventoryItemId}`
+      `/references/menu-items/${menuItemId}/ingredients/${inventoryItemId}`,
     ),
 };

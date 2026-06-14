@@ -44,7 +44,13 @@ const MONTHS: Array<{ key: SchoolMonthKey; label: string }> = [
   { key: "March", label: "Mar" },
 ];
 
-const DAYS: DayOfWeekKey[] = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+const DAYS: DayOfWeekKey[] = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+];
 
 const DEFAULT_ROWS: MealRow[] = DAYS.map((day) => ({
   day,
@@ -153,7 +159,8 @@ export default function MealPlannerPage() {
   const [rows, setRows] = useState<MealRow[]>(DEFAULT_ROWS);
   const [visibleToParents, setVisibleToParents] = useState<boolean>(true);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [showWeekVisibilityDialog, setShowWeekVisibilityDialog] = useState(false);
+  const [showWeekVisibilityDialog, setShowWeekVisibilityDialog] =
+    useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["meal-planner", activeMonth, activeWeek],
@@ -204,20 +211,26 @@ export default function MealPlannerPage() {
         })),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["meal-planner", activeMonth, activeWeek] });
+      queryClient.invalidateQueries({
+        queryKey: ["meal-planner", activeMonth, activeWeek],
+      });
       toast.success(`Week ${activeWeek} of ${activeMonth} menu saved.`);
     },
-    onError: (err: ApiError) => toast.error(err.message ?? "Failed to save meal plan."),
+    onError: (err: ApiError) =>
+      toast.error(err.message ?? "Failed to save meal plan."),
   });
 
   const resetMutation = useMutation({
     mutationFn: () => mealPlannerApi.reset(activeMonth, activeWeek),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["meal-planner", activeMonth, activeWeek] });
+      queryClient.invalidateQueries({
+        queryKey: ["meal-planner", activeMonth, activeWeek],
+      });
       setShowResetConfirm(false);
       toast.success("Week reset to default pattern.");
     },
-    onError: (err: ApiError) => toast.error(err.message ?? "Failed to reset meal plan."),
+    onError: (err: ApiError) =>
+      toast.error(err.message ?? "Failed to reset meal plan."),
   });
 
   const weekVisibilityMutation = useMutation({
@@ -243,7 +256,8 @@ export default function MealPlannerPage() {
     );
   }
 
-  const activeMonthLabel = MONTHS.find((m) => m.key === activeMonth)?.label ?? activeMonth;
+  const activeMonthLabel =
+    MONTHS.find((m) => m.key === activeMonth)?.label ?? activeMonth;
 
   return (
     <div className="p-6">
@@ -306,7 +320,11 @@ export default function MealPlannerPage() {
                 : "border-border bg-muted text-muted-foreground hover:bg-muted/80",
             )}
           >
-            <span>{visibleToParents ? "● Visible to Parents" : "○ Hidden from Parents"}</span>
+            <span>
+              {visibleToParents
+                ? "● Visible to Parents"
+                : "○ Hidden from Parents"}
+            </span>
           </button>
         ) : (
           <span
@@ -317,7 +335,9 @@ export default function MealPlannerPage() {
                 : "border-border bg-muted text-muted-foreground",
             )}
           >
-            {visibleToParents ? "● Visible to Parents" : "○ Hidden from Parents"}
+            {visibleToParents
+              ? "● Visible to Parents"
+              : "○ Hidden from Parents"}
           </span>
         )}
       </div>
@@ -325,7 +345,9 @@ export default function MealPlannerPage() {
       {/* Grid */}
       <div className="mt-4 overflow-x-auto rounded-xl border border-border">
         {isError ? (
-          <p className="p-4 text-sm text-destructive">Failed to load meal plan.</p>
+          <p className="p-4 text-sm text-destructive">
+            Failed to load meal plan.
+          </p>
         ) : (
           <table className="w-full min-w-[800px] border-collapse text-sm">
             <thead>
@@ -358,7 +380,10 @@ export default function MealPlannerPage() {
                     </tr>
                   ))
                 : rows.map((row) => (
-                    <tr key={row.day} className="border-b border-border last:border-0">
+                    <tr
+                      key={row.day}
+                      className="border-b border-border last:border-0"
+                    >
                       <td className="bg-muted px-4 py-2 font-bold capitalize text-primary">
                         {row.day_label || row.day}
                       </td>
@@ -367,7 +392,9 @@ export default function MealPlannerPage() {
                           {canEdit ? (
                             <Input
                               value={row[key] ?? ""}
-                              onChange={(e) => updateCell(row.day, key, e.target.value)}
+                              onChange={(e) =>
+                                updateCell(row.day, key, e.target.value)
+                              }
                               className="h-7 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
                               aria-label={`${row.day} ${key}`}
                             />
@@ -410,11 +437,14 @@ export default function MealPlannerPage() {
             <DialogTitle>Reset Meal Plan</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This will reset Week {activeWeek} of {activeMonth} to the default pattern. Any custom
-            entries will be overwritten.
+            This will reset Week {activeWeek} of {activeMonth} to the default
+            pattern. Any custom entries will be overwritten.
           </p>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setShowResetConfirm(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowResetConfirm(false)}
+            >
               Cancel
             </Button>
             <Button

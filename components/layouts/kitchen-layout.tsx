@@ -16,6 +16,7 @@ import {
   UserCog,
   GitBranch,
   ClipboardList,
+  ClipboardCheck,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -24,9 +25,15 @@ import {
   MessageSquare,
   Activity,
   CreditCard,
+  Bell,
+  Megaphone,
 } from "lucide-react";
 
 import { AppLogo } from "@/components/app-logo";
+import { NotificationBell } from "@/components/notification-bell";
+
+import { useQuery } from "@tanstack/react-query";
+import { preRegistrationApi } from "@/lib/api/pre-registrations";
 
 import { cn } from "@/lib/utils";
 import { authApi } from "@/lib/api/auth";
@@ -36,13 +43,21 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
+  badge?: number;
 }
 
 const mainNav: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "POS", href: "/pos", icon: ShoppingCart },
   { label: "Enrollment", href: "/enrollment", icon: ClipboardList },
+  {
+    label: "Pre-Registrations",
+    href: "/pre-registrations",
+    icon: ClipboardCheck,
+  },
   { label: "Students", href: "/students", icon: Users },
+  { label: "Reminders", href: "/reminders", icon: Bell },
+  { label: "Announcements", href: "/announcements", icon: Megaphone },
 ];
 
 const reportsNav: NavItem[] = [
@@ -52,19 +67,32 @@ const reportsNav: NavItem[] = [
   { label: "Inventory", href: "/reports/inventory", icon: Package },
   { label: "Daily Summary", href: "/reports/daily-summary", icon: FileText },
   { label: "Billing", href: "/reports/billing", icon: ClipboardList },
-  { label: "Activity Log", href: "/reports/activity", icon: Activity },
   { label: "Credits", href: "/reports/credits", icon: CreditCard },
+  { label: "Subscription", href: "/reports/subscription", icon: CalendarDays },
+  { label: "Activity Log", href: "/reports/activity", icon: Activity },
 ];
 
 const referencesNav: NavItem[] = [
   { label: "Inventory", href: "/references/inventory", icon: Archive },
-  { label: "Meal Planner", href: "/references/meal-planner", icon: CalendarDays },
-  { label: "Subscription Config", href: "/references/subscription-config", icon: CalendarDays },
+  {
+    label: "Meal Planner",
+    href: "/references/meal-planner",
+    icon: CalendarDays,
+  },
+  {
+    label: "Subscription Config",
+    href: "/references/subscription-config",
+    icon: CalendarDays,
+  },
   { label: "Users", href: "/references/users", icon: UserCog },
   { label: "Branches", href: "/references/branches", icon: GitBranch },
   { label: "Parents", href: "/references/parents", icon: UserRound },
   { label: "Feedback", href: "/references/feedback", icon: MessageSquare },
-  { label: "System Settings", href: "/references/system-settings", icon: Settings },
+  {
+    label: "System Settings",
+    href: "/references/system-settings",
+    icon: Settings,
+  },
 ];
 
 interface NavGroupProps {
@@ -83,7 +111,8 @@ function NavGroup({ label, items, pathname, collapsed }: NavGroupProps) {
         </p>
       )}
       {items.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const isActive =
+          pathname === item.href || pathname.startsWith(`${item.href}/`);
         const Icon = item.icon;
 
         return (
@@ -95,11 +124,16 @@ function NavGroup({ label, items, pathname, collapsed }: NavGroupProps) {
               "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
               isActive
                 ? "border-l-[3px] border-primary bg-primary/10 text-primary font-bold"
-                : "text-foreground hover:bg-muted hover:text-foreground"
+                : "text-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
             {!collapsed && <span>{item.label}</span>}
+            {!collapsed && item.badge !== undefined && item.badge > 0 && (
+              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                {item.badge > 99 ? "99+" : item.badge}
+              </span>
+            )}
           </Link>
         );
       })}
@@ -120,21 +154,62 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
 
   const isAdmin = user?.roles.includes("admin") ?? false;
   const isManager = user?.roles.includes("manager") ?? false;
+  const isSupervisor = user?.roles.includes("supervisor") ?? false;
+  const canSeeReminders = isAdmin || isManager || isSupervisor;
+  const canSeeAnnouncements = isAdmin || isManager || isSupervisor;
+  const canSeePreRegistrations = isAdmin || isManager || isSupervisor;
+
+  const { data: pendingCountData } = useQuery({
+    queryKey: ["pre-registrations-pending-count"],
+    queryFn: () => preRegistrationApi.list({ status: "pending", page: 1 }),
+    enabled: canSeePreRegistrations,
+    staleTime: 60_000,
+  });
+  const pendingPreRegCount = pendingCountData?.meta?.total ?? 0;
+
+  const mainNavFiltered = mainNav
+    .map((item) => {
+      if (item.href === "/pre-registrations") {
+        return {
+          ...item,
+          badge: pendingPreRegCount > 0 ? pendingPreRegCount : undefined,
+        };
+      }
+      return item;
+    })
+    .filter((item) => {
+      if (item.href === "/reminders" && !canSeeReminders) return false;
+      if (item.href === "/announcements" && !canSeeAnnouncements) return false;
+      if (item.href === "/pre-registrations" && !canSeePreRegistrations)
+        return false;
+      return true;
+    });
 
   const referencesNavFiltered = isAdmin
     ? referencesNav
-    : referencesNav.filter((item) => item.href !== "/references/system-settings");
+    : referencesNav.filter(
+        (item) => item.href !== "/references/system-settings",
+      );
 
-  // Supervisor can only see: Sales, Students, Inventory, Billing
-  const supervisorAllowedReports = ["/reports/sales", "/reports/students", "/reports/inventory", "/reports/billing"];
+  // Supervisor can only see: Sales, Students, Inventory, Billing, Subscription
+  const supervisorAllowedReports = [
+    "/reports/sales",
+    "/reports/students",
+    "/reports/inventory",
+    "/reports/billing",
+    "/reports/subscription",
+  ];
   const reportsNavFiltered =
     isAdmin || isManager
       ? reportsNav
-      : reportsNav.filter((item) => supervisorAllowedReports.includes(item.href));
+      : reportsNav.filter((item) =>
+          supervisorAllowedReports.includes(item.href),
+        );
 
-  const pageTitle = [...mainNav, ...reportsNav, ...referencesNav].find(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
-  )?.label ?? "Dashboard";
+  const pageTitle =
+    [...mainNavFiltered, ...reportsNav, ...referencesNav].find(
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+    )?.label ?? "Dashboard";
 
   async function handleLogout() {
     try {
@@ -152,24 +227,19 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
       <aside
         className={cn(
           "no-print flex h-full flex-col border-r border-border bg-sidebar transition-all duration-200",
-          collapsed ? "w-[60px]" : "w-[220px]"
+          collapsed ? "w-[60px]" : "w-[220px]",
         )}
       >
         {/* Logo */}
         <div className="flex h-16 items-center border-b border-border px-3">
-          {collapsed ? (
-            <AppLogo variant="icon" />
-          ) : (
-            <AppLogo variant="full" />
-          )}
+          {collapsed ? <AppLogo variant="icon" /> : <AppLogo variant="full" />}
         </div>
-
 
         {/* Nav */}
         <nav className="flex-1 space-y-4 overflow-y-auto p-2 py-4">
           <NavGroup
             label="Main"
-            items={mainNav}
+            items={mainNavFiltered}
             pathname={pathname}
             collapsed={collapsed}
           />
@@ -224,21 +294,23 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
           <h1 className="text-lg font-semibold">{pageTitle}</h1>
 
           <div className="flex items-center gap-3">
-            {activeBranch && (() => {
-              const canSwitch = isAdmin || (user?.branches?.length ?? 0) > 1;
-              return canSwitch ? (
-                <Link
-                  href="/branch"
-                  className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                >
-                  {activeBranch.name}
-                </Link>
-              ) : (
-                <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-foreground cursor-default">
-                  {activeBranch.name}
-                </span>
-              );
-            })()}
+            {activeBranch &&
+              (() => {
+                const canSwitch = isAdmin || (user?.branches?.length ?? 0) > 1;
+                return canSwitch ? (
+                  <Link
+                    href="/branch"
+                    className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    {activeBranch.name}
+                  </Link>
+                ) : (
+                  <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-foreground cursor-default">
+                    {activeBranch.name}
+                  </span>
+                );
+              })()}
+            <NotificationBell />
             {user && (
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">

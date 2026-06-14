@@ -34,9 +34,13 @@ describe("CreateUserPage", () => {
     const user = userEvent.setup();
     render(<CreateUserPage />);
 
-    await user.click(screen.getByRole("button", { name: "Create Staff Account" }));
+    await user.click(
+      screen.getByRole("button", { name: "Create Staff Account" }),
+    );
 
-    expect(await screen.findByText("First name is required")).toBeInTheDocument();
+    expect(
+      await screen.findByText("First name is required"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Last name is required")).toBeInTheDocument();
     expect(screen.getByText("Enter a valid email address")).toBeInTheDocument();
   });
@@ -48,7 +52,9 @@ describe("CreateUserPage", () => {
     // Find password input by placeholder or by position among password-type inputs
     const passwordInputs = document.querySelectorAll('input[type="password"]');
     await user.type(passwordInputs[0] as HTMLElement, "weak");
-    await user.click(screen.getByRole("button", { name: "Create Staff Account" }));
+    await user.click(
+      screen.getByRole("button", { name: "Create Staff Account" }),
+    );
 
     expect(await screen.findByText("Minimum 8 characters")).toBeInTheDocument();
   });
@@ -59,9 +65,13 @@ describe("CreateUserPage", () => {
 
     const passwordInputs = document.querySelectorAll('input[type="password"]');
     await user.type(passwordInputs[0] as HTMLElement, "password1");
-    await user.click(screen.getByRole("button", { name: "Create Staff Account" }));
+    await user.click(
+      screen.getByRole("button", { name: "Create Staff Account" }),
+    );
 
-    expect(await screen.findByText("Must contain an uppercase letter")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Must contain an uppercase letter"),
+    ).toBeInTheDocument();
   });
 
   it("shows number error for password without a digit", async () => {
@@ -70,9 +80,13 @@ describe("CreateUserPage", () => {
 
     const passwordInputs = document.querySelectorAll('input[type="password"]');
     await user.type(passwordInputs[0] as HTMLElement, "Password");
-    await user.click(screen.getByRole("button", { name: "Create Staff Account" }));
+    await user.click(
+      screen.getByRole("button", { name: "Create Staff Account" }),
+    );
 
-    expect(await screen.findByText("Must contain a number")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Must contain a number"),
+    ).toBeInTheDocument();
   });
 
   it("shows password mismatch error when confirmation does not match", async () => {
@@ -82,9 +96,13 @@ describe("CreateUserPage", () => {
     const passwordInputs = document.querySelectorAll('input[type="password"]');
     await user.type(passwordInputs[0] as HTMLElement, "Password1");
     await user.type(passwordInputs[1] as HTMLElement, "Different1");
-    await user.click(screen.getByRole("button", { name: "Create Staff Account" }));
+    await user.click(
+      screen.getByRole("button", { name: "Create Staff Account" }),
+    );
 
-    expect(await screen.findByText("Passwords do not match")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Passwords do not match"),
+    ).toBeInTheDocument();
   });
 
   it("renders branch checkboxes after the API loads", async () => {
@@ -92,10 +110,10 @@ describe("CreateUserPage", () => {
 
     // @base-ui Checkbox gets accessible name from enclosing <label> text
     expect(
-      await screen.findByRole("checkbox", { name: "Main Branch" })
+      await screen.findByRole("checkbox", { name: "Main Branch" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("checkbox", { name: "South Branch" })
+      screen.getByRole("checkbox", { name: "South Branch" }),
     ).toBeInTheDocument();
   });
 
@@ -103,7 +121,9 @@ describe("CreateUserPage", () => {
     const user = userEvent.setup();
     render(<CreateUserPage />);
 
-    const checkbox = await screen.findByRole("checkbox", { name: "Main Branch" });
+    const checkbox = await screen.findByRole("checkbox", {
+      name: "Main Branch",
+    });
     expect(checkbox).not.toBeChecked();
 
     await user.click(checkbox);
@@ -117,7 +137,9 @@ describe("CreateUserPage", () => {
     render(<CreateUserPage />);
 
     expect(
-      screen.getByText("These fields are optional. Fill in when documents are available.")
+      screen.getByText(
+        "These fields are optional. Fill in when documents are available.",
+      ),
     ).toBeInTheDocument();
   });
 
@@ -128,7 +150,9 @@ describe("CreateUserPage", () => {
     // Submit with required text fields filled but role empty
     const firstNameInputs = screen.getAllByRole("textbox");
     await user.type(firstNameInputs[0], "Juan");
-    await user.click(screen.getByRole("button", { name: "Create Staff Account" }));
+    await user.click(
+      screen.getByRole("button", { name: "Create Staff Account" }),
+    );
 
     expect(await screen.findByText("Role is required")).toBeInTheDocument();
   });
@@ -147,16 +171,21 @@ describe("CreateUserPage", () => {
     server.use(
       http.post(`${API}/users`, () =>
         HttpResponse.json(
-          { message: "The email has already been taken.", errors: { email: ["The email has already been taken."] } },
-          { status: 422 }
-        )
-      )
+          {
+            message: "The email has already been taken.",
+            errors: { email: ["The email has already been taken."] },
+          },
+          { status: 422 },
+        ),
+      ),
     );
 
     render(<CreateUserPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Create Staff Account" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Create Staff Account" }),
+      ).toBeInTheDocument();
     });
   });
 });

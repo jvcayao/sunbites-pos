@@ -4,7 +4,10 @@ import { server } from "./__tests__/mocks/server";
 process.env.NEXT_PUBLIC_API_URL = "http://localhost:8000";
 
 // Polyfill PointerEvent for @base-ui components in jsdom
-if (typeof window !== "undefined" && typeof window.PointerEvent === "undefined") {
+if (
+  typeof window !== "undefined" &&
+  typeof window.PointerEvent === "undefined"
+) {
   class PointerEvent extends MouseEvent {
     pointerId?: number;
     width?: number;

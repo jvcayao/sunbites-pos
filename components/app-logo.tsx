@@ -11,7 +11,7 @@ export function AppLogo({ variant = "full", className }: AppLogoProps) {
       <div
         className={cn(
           "flex h-10 w-10 items-center justify-center rounded-full bg-primary text-xl font-extrabold text-primary-foreground",
-          className
+          className,
         )}
       >
         S

@@ -39,6 +39,6 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         activeBranch: state.activeBranch,
       }),
-    }
-  )
+    },
+  ),
 );

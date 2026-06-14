@@ -5,7 +5,17 @@ import { useParams, useRouter } from "next/navigation";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { Camera, ChevronLeft, Mail, MoreHorizontal, Pencil, Printer, RefreshCw, Trash2, UserPlus } from "lucide-react";
+import {
+  Camera,
+  ChevronLeft,
+  Mail,
+  MoreHorizontal,
+  Pencil,
+  Printer,
+  RefreshCw,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
 import { QRCode } from "react-qr-code";
 import { toast } from "sonner";
 
@@ -44,7 +54,11 @@ import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
 import type { ApiError } from "@/types/auth";
-import type { CreateContactPayload, StudentContact, UpdateContactPayload } from "@/types/contact";
+import type {
+  CreateContactPayload,
+  StudentContact,
+  UpdateContactPayload,
+} from "@/types/contact";
 import type { Order } from "@/types/order";
 import type {
   EnrollmentStatus,
@@ -59,8 +73,6 @@ import type {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-
 
 const ENROLLMENT_STATUS_CONFIG: Record<
   EnrollmentStatus,
@@ -127,7 +139,9 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="py-2">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-medium text-foreground">{value || "—"}</p>
+      <p className="mt-0.5 text-sm font-medium text-foreground">
+        {value || "—"}
+      </p>
     </div>
   );
 }
@@ -153,9 +167,18 @@ interface EditProfileFormProps {
   errors: Record<string, string[]>;
 }
 
-function EditProfileForm({ student, onSubmit, onCancel, isPending, errors }: EditProfileFormProps) {
+function EditProfileForm({
+  student,
+  onSubmit,
+  onCancel,
+  isPending,
+  errors,
+}: EditProfileFormProps) {
   const [firstName, setFirstName] = useState(student.first_name);
   const [lastName, setLastName] = useState(student.last_name);
+  const [studentNumber, setStudentNumber] = useState(
+    student.student_number ?? "",
+  );
   const [gradeLevel, setGradeLevel] = useState(student.grade_level);
   const [section, setSection] = useState(student.section ?? "");
   const [birthday, setBirthday] = useState(student.birthday ?? "");
@@ -167,6 +190,7 @@ function EditProfileForm({ student, onSubmit, onCancel, isPending, errors }: Edi
     onSubmit({
       first_name: firstName,
       last_name: lastName,
+      student_number: studentNumber || null,
       grade_level: gradeLevel,
       section: section || undefined,
       birthday,
@@ -205,14 +229,41 @@ function EditProfileForm({ student, onSubmit, onCancel, isPending, errors }: Edi
         </div>
 
         <div className="space-y-1.5">
+          <Label htmlFor="edit-student-number">
+            Student No.{" "}
+            <span className="text-muted-foreground font-normal">
+              (optional)
+            </span>
+          </Label>
+          <Input
+            id="edit-student-number"
+            value={studentNumber}
+            onChange={(e) => setStudentNumber(e.target.value)}
+            placeholder="e.g. 2025-001"
+          />
+          {errors.student_number && (
+            <p className="text-xs text-destructive">
+              {errors.student_number[0]}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor="edit-grade-level">Grade Level</Label>
-          <Select value={gradeLevel} onValueChange={(v) => { if (v) setGradeLevel(v); }}>
+          <Select
+            value={gradeLevel}
+            onValueChange={(v) => {
+              if (v) setGradeLevel(v);
+            }}
+          >
             <SelectTrigger id="edit-grade-level">
               <SelectValue placeholder="Select grade" />
             </SelectTrigger>
             <SelectContent>
               {GRADE_LEVELS.map((g) => (
-                <SelectItem key={g} value={g}>{g}</SelectItem>
+                <SelectItem key={g} value={g}>
+                  {g}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -277,7 +328,12 @@ function EditProfileForm({ student, onSubmit, onCancel, isPending, errors }: Edi
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isPending}
+        >
           Cancel
         </Button>
         <Button type="submit" disabled={isPending}>
@@ -325,7 +381,7 @@ function WalletTopUpModal({
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["student", studentId] });
       setSuccessMsg(
-        `Wallet topped up. New balance: ₱${Number(data.new_balance).toFixed(2)}`
+        `Wallet topped up. New balance: ₱${Number(data.new_balance).toFixed(2)}`,
       );
     },
     onError: (err: ApiError) => {
@@ -367,7 +423,9 @@ function WalletTopUpModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Top Up Wallet</DialogTitle>
-          <DialogDescription>Add funds to this student&apos;s wallet.</DialogDescription>
+          <DialogDescription>
+            Add funds to this student&apos;s wallet.
+          </DialogDescription>
         </DialogHeader>
 
         {successMsg ? (
@@ -423,7 +481,7 @@ function WalletTopUpModal({
                       "rounded-lg border px-4 py-2 text-sm transition-colors",
                       paymentMethod === m.value
                         ? "border-primary bg-primary/5 text-primary font-semibold"
-                        : "border-border hover:bg-muted/40"
+                        : "border-border hover:bg-muted/40",
                     )}
                   >
                     {m.label}
@@ -494,7 +552,8 @@ function ChangeTypeDialog({
   currentType,
 }: ChangeTypeDialogProps) {
   const queryClient = useQueryClient();
-  const newType = currentType === "subscription" ? "non_subscription" : "subscription";
+  const newType =
+    currentType === "subscription" ? "non_subscription" : "subscription";
   const changeLabel =
     currentType === "subscription"
       ? "Switch from Subscription to Wallet (Pay-per-meal)"
@@ -524,7 +583,11 @@ function ChangeTypeDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={mutation.isPending}
+          >
             Cancel
           </Button>
           <Button
@@ -591,23 +654,23 @@ function StatusPickerDialog({
         </DialogHeader>
 
         <div className="space-y-2">
-          {(
-            Object.keys(ENROLLMENT_STATUS_CONFIG) as EnrollmentStatus[]
-          ).map((status) => (
-            <button
-              key={status}
-              type="button"
-              onClick={() => setSelected(status)}
-              className={cn(
-                "w-full rounded-lg border p-3 text-left text-sm transition-colors",
-                selected === status
-                  ? "border-primary bg-primary/5 font-semibold text-primary"
-                  : "border-border hover:bg-muted/40"
-              )}
-            >
-              {ENROLLMENT_STATUS_CONFIG[status].label}
-            </button>
-          ))}
+          {(Object.keys(ENROLLMENT_STATUS_CONFIG) as EnrollmentStatus[]).map(
+            (status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setSelected(status)}
+                className={cn(
+                  "w-full rounded-lg border p-3 text-left text-sm transition-colors",
+                  selected === status
+                    ? "border-primary bg-primary/5 font-semibold text-primary"
+                    : "border-border hover:bg-muted/40",
+                )}
+              >
+                {ENROLLMENT_STATUS_CONFIG[status].label}
+              </button>
+            ),
+          )}
         </div>
 
         {needsReason && (
@@ -690,7 +753,7 @@ function AddSubscriptionPeriodDialog({
           ? ` ${result.skipped.length} already existed and were skipped.`
           : "";
       setSuccessMsg(
-        `${result.created} ${result.created === 1 ? "month" : "months"} added.${skippedNote}`
+        `${result.created} ${result.created === 1 ? "month" : "months"} added.${skippedNote}`,
       );
     },
   });
@@ -718,7 +781,7 @@ function AddSubscriptionPeriodDialog({
       endYear > SUBSCRIPTION_YEAR_MAX
     ) {
       setValidationError(
-        `Year must be between ${SUBSCRIPTION_YEAR_MIN} and ${SUBSCRIPTION_YEAR_MAX}.`
+        `Year must be between ${SUBSCRIPTION_YEAR_MIN} and ${SUBSCRIPTION_YEAR_MAX}.`,
       );
       return;
     }
@@ -880,7 +943,9 @@ function EditAmountDialog({
     mutationFn: () =>
       studentApi.updatePaymentAmount(studentId, payment.id, parseFloat(amount)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["student-payments", studentId] });
+      queryClient.invalidateQueries({
+        queryKey: ["student-payments", studentId],
+      });
       setSavedIndicator(true);
       setTimeout(() => {
         setSavedIndicator(false);
@@ -956,7 +1021,10 @@ function EditAmountDialog({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={mutation.isPending || savedIndicator}>
+            <Button
+              type="submit"
+              disabled={mutation.isPending || savedIndicator}
+            >
               {mutation.isPending ? "Saving…" : "Save Amount"}
             </Button>
           </DialogFooter>
@@ -1015,11 +1083,15 @@ function ContactFormModal({
   title,
 }: ContactFormModalProps) {
   const [fullName, setFullName] = useState(initialValues?.full_name ?? "");
-  const [relationship, setRelationship] = useState(initialValues?.relationship ?? "");
+  const [relationship, setRelationship] = useState(
+    initialValues?.relationship ?? "",
+  );
   const [phone, setPhone] = useState(initialValues?.phone ?? "");
   const [address, setAddress] = useState(initialValues?.address ?? "");
   const [email, setEmail] = useState(initialValues?.email ?? "");
-  const [isPrimary, setIsPrimary] = useState(initialValues?.is_primary ?? false);
+  const [isPrimary, setIsPrimary] = useState(
+    initialValues?.is_primary ?? false,
+  );
   const [localErrors, setLocalErrors] = useState<Record<string, string[]>>({});
 
   const allErrors = { ...localErrors, ...errors };
@@ -1041,7 +1113,9 @@ function ContactFormModal({
     };
     const result = contactFormSchema.safeParse(raw);
     if (!result.success) {
-      setLocalErrors(result.error.flatten().fieldErrors as Record<string, string[]>);
+      setLocalErrors(
+        result.error.flatten().fieldErrors as Record<string, string[]>,
+      );
       return;
     }
     setLocalErrors({});
@@ -1065,10 +1139,14 @@ function ContactFormModal({
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 aria-invalid={!!allErrors.full_name?.length}
-                className={cn(allErrors.full_name?.length && "border-destructive")}
+                className={cn(
+                  allErrors.full_name?.length && "border-destructive",
+                )}
               />
               {allErrors.full_name?.[0] && (
-                <p role="alert" className="text-xs text-destructive">{allErrors.full_name[0]}</p>
+                <p role="alert" className="text-xs text-destructive">
+                  {allErrors.full_name[0]}
+                </p>
               )}
             </div>
 
@@ -1076,11 +1154,16 @@ function ContactFormModal({
               <Label htmlFor="cf-relationship">
                 Relationship <span className="text-destructive">*</span>
               </Label>
-              <Select value={relationship} onValueChange={(v) => setRelationship(v ?? "")}>
+              <Select
+                value={relationship}
+                onValueChange={(v) => setRelationship(v ?? "")}
+              >
                 <SelectTrigger
                   id="cf-relationship"
                   aria-invalid={!!allErrors.relationship?.length}
-                  className={cn(allErrors.relationship?.length && "border-destructive")}
+                  className={cn(
+                    allErrors.relationship?.length && "border-destructive",
+                  )}
                 >
                   <SelectValue placeholder="Select…" />
                 </SelectTrigger>
@@ -1092,7 +1175,9 @@ function ContactFormModal({
                 </SelectContent>
               </Select>
               {allErrors.relationship?.[0] && (
-                <p role="alert" className="text-xs text-destructive">{allErrors.relationship[0]}</p>
+                <p role="alert" className="text-xs text-destructive">
+                  {allErrors.relationship[0]}
+                </p>
               )}
             </div>
 
@@ -1110,7 +1195,9 @@ function ContactFormModal({
                 className={cn(allErrors.phone?.length && "border-destructive")}
               />
               {allErrors.phone?.[0] && (
-                <p role="alert" className="text-xs text-destructive">{allErrors.phone[0]}</p>
+                <p role="alert" className="text-xs text-destructive">
+                  {allErrors.phone[0]}
+                </p>
               )}
             </div>
 
@@ -1126,7 +1213,9 @@ function ContactFormModal({
                 className={cn(allErrors.email?.length && "border-destructive")}
               />
               {allErrors.email?.[0] && (
-                <p role="alert" className="text-xs text-destructive">{allErrors.email[0]}</p>
+                <p role="alert" className="text-xs text-destructive">
+                  {allErrors.email[0]}
+                </p>
               )}
             </div>
           </div>
@@ -1144,7 +1233,9 @@ function ContactFormModal({
               className={cn(allErrors.address?.length && "border-destructive")}
             />
             {allErrors.address?.[0] && (
-              <p role="alert" className="text-xs text-destructive">{allErrors.address[0]}</p>
+              <p role="alert" className="text-xs text-destructive">
+                {allErrors.address[0]}
+              </p>
             )}
           </div>
 
@@ -1154,11 +1245,18 @@ function ContactFormModal({
               checked={isPrimary}
               onCheckedChange={(checked) => setIsPrimary(checked === true)}
             />
-            <span className="text-sm text-foreground">Set as primary contact</span>
+            <span className="text-sm text-foreground">
+              Set as primary contact
+            </span>
           </label>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isPending}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
@@ -1175,7 +1273,11 @@ function ContactFormModal({
 // Portal status badge
 // ---------------------------------------------------------------------------
 
-function PortalStatusBadge({ status }: { status: StudentContact["portal_status"] }) {
+function PortalStatusBadge({
+  status,
+}: {
+  status: StudentContact["portal_status"];
+}) {
   if (status === "activated") {
     return (
       <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-green-100 text-green-700 border-green-300">
@@ -1207,12 +1309,22 @@ interface ContactsTabProps {
   canResendActivation: boolean;
 }
 
-function ContactsTab({ studentId, canManageContacts, canResendActivation }: ContactsTabProps) {
+function ContactsTab({
+  studentId,
+  canManageContacts,
+  canResendActivation,
+}: ContactsTabProps) {
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingContact, setEditingContact] = useState<StudentContact | null>(null);
-  const [deletingContactId, setDeletingContactId] = useState<number | null>(null);
-  const [mutationErrors, setMutationErrors] = useState<Record<string, string[]>>({});
+  const [editingContact, setEditingContact] = useState<StudentContact | null>(
+    null,
+  );
+  const [deletingContactId, setDeletingContactId] = useState<number | null>(
+    null,
+  );
+  const [mutationErrors, setMutationErrors] = useState<
+    Record<string, string[]>
+  >({});
 
   const { data: contacts, isLoading } = useQuery({
     queryKey: ["contacts", studentId],
@@ -1234,8 +1346,13 @@ function ContactsTab({ studentId, canManageContacts, canResendActivation }: Cont
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ contactId, payload }: { contactId: number; payload: UpdateContactPayload }) =>
-      contactApi.update(studentId, contactId, payload),
+    mutationFn: ({
+      contactId,
+      payload,
+    }: {
+      contactId: number;
+      payload: UpdateContactPayload;
+    }) => contactApi.update(studentId, contactId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts", studentId] });
       setEditingContact(null);
@@ -1362,19 +1479,20 @@ function ContactsTab({ studentId, canManageContacts, canResendActivation }: Cont
                   </>
                 )}
 
-                {canResendActivation && contact.portal_status === "pending_activation" && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => resendMutation.mutate(contact.id)}
-                    disabled={resendMutation.isPending}
-                    aria-label={`Resend activation email to ${contact.full_name}`}
-                  >
-                    <Mail className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-                    Resend Activation
-                  </Button>
-                )}
+                {canResendActivation &&
+                  contact.portal_status === "pending_activation" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => resendMutation.mutate(contact.id)}
+                      disabled={resendMutation.isPending}
+                      aria-label={`Resend activation email to ${contact.full_name}`}
+                    >
+                      <Mail className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                      Resend Activation
+                    </Button>
+                  )}
               </div>
             </div>
           ))}
@@ -1450,7 +1568,10 @@ function ContactsTab({ studentId, canManageContacts, canResendActivation }: Cont
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeletingContactId(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeletingContactId(null)}
+            >
               Cancel
             </Button>
             <Button
@@ -1484,7 +1605,9 @@ interface PaymentTabProps {
 function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
   const queryClient = useQueryClient();
   const [showAddPeriod, setShowAddPeriod] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<MonthlyPayment | null>(null);
+  const [editingPayment, setEditingPayment] = useState<MonthlyPayment | null>(
+    null,
+  );
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ["student-payments", studentId],
@@ -1554,7 +1677,7 @@ function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
       acc[year].push(payment);
       return acc;
     },
-    {}
+    {},
   );
   const sortedYears = Object.keys(paymentsByYear)
     .map(Number)
@@ -1604,7 +1727,7 @@ function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
                       "text-[11px] font-bold px-3 py-1 rounded-full border",
                       isPaid
                         ? "bg-green-100 text-green-700 border-green-300"
-                        : "bg-red-100 text-destructive border-red-300"
+                        : "bg-red-100 text-destructive border-red-300",
                     )}
                   >
                     {isPaid ? "Paid" : "Unpaid"}
@@ -1700,7 +1823,9 @@ function OrderHistoryTab({ studentId }: { studentId: number }) {
   if (error) {
     return (
       <div className="mt-4 rounded-xl border border-border bg-card p-5">
-        <p className="text-sm text-destructive">Failed to load order history. Please try again.</p>
+        <p className="text-sm text-destructive">
+          Failed to load order history. Please try again.
+        </p>
       </div>
     );
   }
@@ -1721,29 +1846,52 @@ function OrderHistoryTab({ studentId }: { studentId: number }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Receipt</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Items</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Method</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Total</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Date</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+                Receipt
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+                Items
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+                Method
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
+                Status
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
+                Total
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">
+                Date
+              </th>
             </tr>
           </thead>
           <tbody>
             {data.data.map((order: Order) => (
-              <tr key={order.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{order.receipt_number}</td>
-                <td className="px-4 py-3 text-sm">
-                  {order.items?.map((item) => `${item.name} x${item.quantity}`).join(", ") ?? "—"}
+              <tr
+                key={order.id}
+                className="border-b border-border last:border-0"
+              >
+                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                  {order.receipt_number}
                 </td>
-                <td className="px-4 py-3 text-sm">{order.payment_method_label}</td>
+                <td className="px-4 py-3 text-sm">
+                  {order.items
+                    ?.map((item) => `${item.name} x${item.quantity}`)
+                    .join(", ") ?? "—"}
+                </td>
+                <td className="px-4 py-3 text-sm">
+                  {order.payment_method_label}
+                </td>
                 <td className="px-4 py-3">
-                  <span className={cn(
-                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                    order.status === "completed"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  )}>
+                  <span
+                    className={cn(
+                      "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                      order.status === "completed"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700",
+                    )}
+                  >
                     {order.status === "completed" ? "Completed" : "Voided"}
                   </span>
                 </td>
@@ -1774,7 +1922,8 @@ function OrderHistoryTab({ studentId }: { studentId: number }) {
             Previous
           </Button>
           <span className="text-xs text-muted-foreground">
-            Page {meta.current_page} of {meta.last_page} &middot; {meta.total} orders
+            Page {meta.current_page} of {meta.last_page} &middot; {meta.total}{" "}
+            orders
           </span>
           <Button
             variant="outline"
@@ -1821,18 +1970,27 @@ function CameraModal({
       streamRef.current = null;
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: selectedDeviceId ? { deviceId: { exact: selectedDeviceId } } : true,
+          video: selectedDeviceId
+            ? { deviceId: { exact: selectedDeviceId } }
+            : true,
         });
-        if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
         streamRef.current = stream;
         if (videoRef.current) videoRef.current.srcObject = stream;
         setError(null);
         if (!selectedDeviceId) {
           const all = await navigator.mediaDevices.enumerateDevices();
-          if (!cancelled) setDevices(all.filter((d) => d.kind === "videoinput"));
+          if (!cancelled)
+            setDevices(all.filter((d) => d.kind === "videoinput"));
         }
       } catch {
-        if (!cancelled) setError("Camera access denied. Allow camera permissions in your browser.");
+        if (!cancelled)
+          setError(
+            "Camera access denied. Allow camera permissions in your browser.",
+          );
       }
     };
 
@@ -1889,7 +2047,10 @@ function CameraModal({
 
         <div className="space-y-3">
           {devices.length > 1 && !captured && (
-            <Select value={selectedDeviceId} onValueChange={(v) => v && setSelectedDeviceId(v)}>
+            <Select
+              value={selectedDeviceId}
+              onValueChange={(v) => v && setSelectedDeviceId(v)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select camera" />
               </SelectTrigger>
@@ -1918,7 +2079,11 @@ function CameraModal({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <img src={captured} alt="Captured" className="h-full w-full object-cover" />
+                <img
+                  src={captured}
+                  alt="Captured"
+                  className="h-full w-full object-cover"
+                />
               )}
             </div>
           )}
@@ -1960,10 +2125,12 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const user = useAuthStore((s) => s.user);
 
   const canTogglePayment =
-    user?.roles.includes("admin") === true || user?.roles.includes("manager") === true;
+    user?.roles.includes("admin") === true ||
+    user?.roles.includes("manager") === true;
 
   const canManageStatus =
-    user?.roles.includes("admin") === true || user?.roles.includes("manager") === true;
+    user?.roles.includes("admin") === true ||
+    user?.roles.includes("manager") === true;
 
   const canChangeType =
     user?.roles.includes("admin") === true ||
@@ -2113,39 +2280,143 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
       {/* Print-only canteen ID card */}
       <div className="print-only">
-        <div style={{ width: "320px", border: "2px solid oklch(0.577 0.245 27.325)", borderRadius: "16px", overflow: "hidden", backgroundColor: "white", fontFamily: "sans-serif" }}>
-          <div style={{ backgroundColor: "oklch(0.577 0.245 27.325)", padding: "14px", textAlign: "center", color: "white" }}>
-            <div style={{ fontWeight: 800, fontSize: "17px", letterSpacing: "1px" }}>🍽 SUNBITES KITCHEN</div>
-            <div style={{ fontSize: "12px", marginTop: "2px", opacity: 0.9 }}>Student Canteen ID</div>
+        <div
+          style={{
+            width: "320px",
+            border: "2px solid oklch(0.577 0.245 27.325)",
+            borderRadius: "16px",
+            overflow: "hidden",
+            backgroundColor: "white",
+            fontFamily: "sans-serif",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "oklch(0.577 0.245 27.325)",
+              padding: "14px",
+              textAlign: "center",
+              color: "white",
+            }}
+          >
+            <div
+              style={{
+                fontWeight: 800,
+                fontSize: "17px",
+                letterSpacing: "1px",
+              }}
+            >
+              🍽 SUNBITES KITCHEN
+            </div>
+            <div style={{ fontSize: "12px", marginTop: "2px", opacity: 0.9 }}>
+              Student Canteen ID
+            </div>
           </div>
-          <div style={{ padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+          <div
+            style={{
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
             {photoObjectUrl ? (
               <img
                 src={photoObjectUrl}
                 alt={student.full_name}
-                style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "12px", border: "2px solid oklch(0.577 0.245 27.325)" }}
+                style={{
+                  width: "100px",
+                  height: "100px",
+                  objectFit: "cover",
+                  borderRadius: "12px",
+                  border: "2px solid oklch(0.577 0.245 27.325)",
+                }}
               />
             ) : (
-              <div style={{ width: "100px", height: "100px", borderRadius: "12px", border: "2px solid oklch(0.577 0.245 27.325)", backgroundColor: "#fff3f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", fontWeight: 800, color: "oklch(0.577 0.245 27.325)" }}>
+              <div
+                style={{
+                  width: "100px",
+                  height: "100px",
+                  borderRadius: "12px",
+                  border: "2px solid oklch(0.577 0.245 27.325)",
+                  backgroundColor: "#fff3f0",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "36px",
+                  fontWeight: 800,
+                  color: "oklch(0.577 0.245 27.325)",
+                }}
+              >
                 {student.first_name.charAt(0).toUpperCase()}
               </div>
             )}
-            <p style={{ fontWeight: 700, fontSize: "19px", textAlign: "center", margin: "6px 0 0", color: "#111" }}>{student.full_name}</p>
-            <p style={{ color: "oklch(0.577 0.245 27.325)", fontSize: "14px", margin: 0, fontWeight: 600 }}>{student.grade_level}</p>
-            <p style={{ color: "#555", fontSize: "12px", margin: 0 }}>🍽 {student.student_type_label}</p>
-            <div style={{ border: "1px solid #e0e0e0", borderRadius: "10px", padding: "12px", marginTop: "6px" }}>
+            <p
+              style={{
+                fontWeight: 700,
+                fontSize: "19px",
+                textAlign: "center",
+                margin: "6px 0 0",
+                color: "#111",
+              }}
+            >
+              {student.full_name}
+            </p>
+            <p
+              style={{
+                color: "oklch(0.577 0.245 27.325)",
+                fontSize: "14px",
+                margin: 0,
+                fontWeight: 600,
+              }}
+            >
+              {student.grade_level}
+            </p>
+            <p style={{ color: "#555", fontSize: "12px", margin: 0 }}>
+              🍽 {student.student_type_label}
+            </p>
+            <div
+              style={{
+                border: "1px solid #e0e0e0",
+                borderRadius: "10px",
+                padding: "12px",
+                marginTop: "6px",
+              }}
+            >
               <QRCode value={displayQr || "placeholder"} size={150} />
             </div>
-            <p style={{ fontFamily: "monospace", fontSize: "11px", color: "#888", margin: "4px 0 0" }}>{displayQr}</p>
+            <p
+              style={{
+                fontFamily: "monospace",
+                fontSize: "11px",
+                color: "#888",
+                margin: "4px 0 0",
+              }}
+            >
+              {displayQr}
+            </p>
             <p style={{ fontSize: "12px", color: "#444", margin: "6px 0 2px" }}>
               {student.enrollment_date
-                ? `Enrolled: ${(() => { const p = student.enrollment_date.split("-"); return `${p[1]}/${p[2]}/${p[0]}`; })()}`
+                ? `Enrolled: ${(() => {
+                    const p = student.enrollment_date.split("-");
+                    return `${p[1]}/${p[2]}/${p[0]}`;
+                  })()}`
                 : null}
             </p>
           </div>
-          <div style={{ backgroundColor: "#fff3f0", borderTop: "1px solid #fdd8cc", padding: "10px 14px", textAlign: "center" }}>
+          <div
+            style={{
+              backgroundColor: "#fff3f0",
+              borderTop: "1px solid #fdd8cc",
+              padding: "10px 14px",
+              textAlign: "center",
+            }}
+          >
             <p style={{ fontSize: "11px", color: "#666", margin: 0 }}>
-              Scan QR to view wallet balance • Valid S.Y. {student.enrollment_date ? getSchoolYear(student.enrollment_date) : ""}
+              Scan QR to view wallet balance • Valid S.Y.{" "}
+              {student.enrollment_date
+                ? getSchoolYear(student.enrollment_date)
+                : ""}
             </p>
           </div>
         </div>
@@ -2171,7 +2442,11 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="outline" size="icon" aria-label="Student actions" />
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Student actions"
+              />
             }
           >
             <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
@@ -2274,7 +2549,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                     "text-[11px] font-bold px-3 py-1 rounded-full border",
                     student.student_type === "subscription"
                       ? "bg-orange-100 text-orange-700 border-orange-300"
-                      : "bg-purple-100 text-purple-700 border-purple-300"
+                      : "bg-purple-100 text-purple-700 border-purple-300",
                   )}
                 >
                   {student.student_type_label}
@@ -2295,20 +2570,20 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
 
           <div className="flex flex-wrap gap-2 no-print">
             <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
-              <span className="text-xs text-muted-foreground block">Wallet</span>
+              <span className="text-xs text-muted-foreground block">
+                Wallet
+              </span>
               <span className="font-bold">
                 ₱{Number(student.wallet_balance ?? 0).toFixed(2)}
               </span>
             </div>
             <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
               <span className="text-xs text-muted-foreground block">QR ID</span>
-              <span className="font-mono text-xs">{student.qr_code.slice(0, 12)}</span>
+              <span className="font-mono text-xs">
+                {student.qr_code.slice(0, 12)}
+              </span>
             </div>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setShowTopUp(true)}
-            >
+            <Button type="button" size="sm" onClick={() => setShowTopUp(true)}>
               + Top Up
             </Button>
             <Button
@@ -2359,7 +2634,10 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 <EditProfileForm
                   student={student}
                   onSubmit={(payload) => updateMutation.mutate(payload)}
-                  onCancel={() => { setIsEditing(false); setEditErrors({}); }}
+                  onCancel={() => {
+                    setIsEditing(false);
+                    setEditErrors({});
+                  }}
                   isPending={updateMutation.isPending}
                   errors={editErrors}
                 />
@@ -2373,8 +2651,14 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                     <InfoRow label="Birthday" value={student.birthday} />
                   </div>
                   <div className="divide-y divide-border">
-                    <InfoRow label="Student Number" value={student.student_number} />
-                    <InfoRow label="Student Type" value={student.student_type_label} />
+                    <InfoRow
+                      label="Student Number"
+                      value={student.student_number ?? "—"}
+                    />
+                    <InfoRow
+                      label="Student Type"
+                      value={student.student_type_label}
+                    />
                     <InfoRow label="Allergies" value={student.allergies} />
                     <InfoRow label="Notes" value={student.notes} />
                   </div>
@@ -2453,7 +2737,9 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
             <div className="rounded-xl border border-border bg-card p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-xs text-muted-foreground">Current Balance</p>
+                  <p className="text-xs text-muted-foreground">
+                    Current Balance
+                  </p>
                   <p className="text-2xl font-bold text-foreground">
                     ₱{Number(student.wallet_balance ?? 0).toFixed(2)}
                   </p>
@@ -2467,7 +2753,8 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 </Button>
               </div>
 
-              {data?.wallet_transactions && data.wallet_transactions.length > 0 ? (
+              {data?.wallet_transactions &&
+              data.wallet_transactions.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>

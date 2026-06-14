@@ -38,7 +38,9 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="py-2">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-medium text-foreground">{value || "—"}</p>
+      <p className="mt-0.5 text-sm font-medium text-foreground">
+        {value || "—"}
+      </p>
     </div>
   );
 }
@@ -58,7 +60,11 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { data: parent, isLoading, isError } = useQuery({
+  const {
+    data: parent,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["parent", parentId],
     queryFn: () => parentApi.show(parentId!),
     enabled: parentId !== null,
@@ -141,13 +147,15 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold text-foreground">{parent.full_name}</h1>
+              <h1 className="text-xl font-bold text-foreground">
+                {parent.full_name}
+              </h1>
               <span
                 className={cn(
                   "text-[11px] font-bold px-2 py-0.5 rounded-full border",
                   parent.is_activated
                     ? "bg-green-100 text-green-700 border-green-300"
-                    : "bg-muted text-muted-foreground border-border"
+                    : "bg-muted text-muted-foreground border-border",
                 )}
               >
                 {parent.is_activated ? "Active" : "Pending Activation"}
@@ -213,9 +221,15 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
                     <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
                       {student.student_number}
                     </td>
-                    <td className="px-3 py-2 font-medium">{student.full_name}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{student.grade_level}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{student.branch_name}</td>
+                    <td className="px-3 py-2 font-medium">
+                      {student.full_name}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {student.grade_level}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {student.branch_name}
+                    </td>
                     <td className="px-3 py-2">
                       PHP {Number(student.wallet_alert_threshold).toFixed(2)}
                     </td>

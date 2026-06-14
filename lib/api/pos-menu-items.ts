@@ -1,6 +1,10 @@
 import { apiClient } from "./client";
 
-import type { CreateMenuItemPayload, PosMenuItem, UpdateMenuItemPayload } from "@/types/pos-menu-item";
+import type {
+  CreateMenuItemPayload,
+  PosMenuItem,
+  UpdateMenuItemPayload,
+} from "@/types/pos-menu-item";
 
 export const posMenuItemApi = {
   list: () => apiClient.get<PosMenuItem[]>("/pos/menu-items"),

@@ -15,16 +15,23 @@ export const orderApi = {
     apiClient.post<{ order: Order }>("/pos/checkout", payload),
 
   transactions: (params?: TransactionListParams) =>
-    apiClient.get<{ data: Order[]; meta: PaginatedOrders["meta"]; summary: TransactionSummary }>(
-      "/pos/transactions",
-      {
-        params: params as Record<string, string | number | boolean | undefined>,
-      }
-    ),
+    apiClient.get<{
+      data: Order[];
+      meta: PaginatedOrders["meta"];
+      summary: TransactionSummary;
+    }>("/pos/transactions", {
+      params: params as Record<string, string | number | boolean | undefined>,
+    }),
 
   void: (orderId: number, payload: VoidPayload) =>
-    apiClient.post<{ order: Order }>(`/pos/transactions/${orderId}/void`, payload),
+    apiClient.post<{ order: Order }>(
+      `/pos/transactions/${orderId}/void`,
+      payload,
+    ),
 
   inlineReload: (payload: InlineReloadPayload) =>
-    apiClient.post<{ message: string; new_balance: number }>("/pos/inline-reload", payload),
+    apiClient.post<{ message: string; new_balance: number }>(
+      "/pos/inline-reload",
+      payload,
+    ),
 };
