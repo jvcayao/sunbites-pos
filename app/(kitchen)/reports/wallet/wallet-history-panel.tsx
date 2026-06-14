@@ -48,7 +48,7 @@ function PurchasesSection({ studentId }: { studentId: number }) {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
 
-  const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage } =
+  const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage, isError } =
     useWalletHistory(studentId, "purchases", deferredSearch);
 
   const rows = data?.pages.flatMap((p) => p.data) ?? [];
@@ -74,6 +74,10 @@ function PurchasesSection({ studentId }: { studentId: number }) {
 
       {isLoading ? (
         <SectionSkeleton />
+      ) : isError ? (
+        <p className="py-4 text-center text-xs text-red-500">
+          Failed to load. Please try again.
+        </p>
       ) : rows.length === 0 ? (
         <p className="py-4 text-center text-xs text-muted-foreground">
           No purchases found.
@@ -138,7 +142,7 @@ function TopUpsSection({ studentId }: { studentId: number }) {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
 
-  const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage } =
+  const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage, isError } =
     useWalletHistory(studentId, "topups", deferredSearch);
 
   const rows = data?.pages.flatMap((p) => p.data) ?? [];
@@ -164,6 +168,10 @@ function TopUpsSection({ studentId }: { studentId: number }) {
 
       {isLoading ? (
         <SectionSkeleton />
+      ) : isError ? (
+        <p className="py-4 text-center text-xs text-red-500">
+          Failed to load. Please try again.
+        </p>
       ) : rows.length === 0 ? (
         <p className="py-4 text-center text-xs text-muted-foreground">
           No top-ups found.
