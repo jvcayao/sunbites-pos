@@ -12,6 +12,13 @@ interface LoginResponse {
   user: AuthUser;
 }
 
+interface ResetPasswordPayload {
+  token: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
 export const authApi = {
   login: (payload: LoginPayload) =>
     apiClient.post<LoginResponse>("/auth/login", payload),
@@ -27,4 +34,7 @@ export const authApi = {
       branch_id: branchId,
       from_branch_id: fromBranchId,
     }),
+
+  resetPassword: (payload: ResetPasswordPayload) =>
+    apiClient.post<{ message: string }>("/auth/password/reset", payload),
 };

@@ -17,7 +17,6 @@ import { reportApi, exportReport } from "@/lib/api/reports";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -46,6 +45,25 @@ const SCHOOL_MONTHS = [
   "December", "January", "February", "March",
 ];
 
+function getDefaultSchoolMonth(): string {
+  const month = new Date().getMonth(); // 0-based
+  const map: Record<number, string> = {
+    0: "January", 1: "February", 2: "March",
+    5: "June", 6: "July", 7: "August",
+    8: "September", 9: "October", 10: "November", 11: "December",
+  };
+  return map[month] ?? "all";
+}
+
+function getDefaultSchoolYear(): number {
+  const now = new Date();
+  return now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
 function SummaryCard({ label, value, colorClass }: { label: string; value: string; colorClass?: string }) {
   return (
     <div className={cn("rounded-xl border bg-card p-4", colorClass)}>
@@ -57,12 +75,14 @@ function SummaryCard({ label, value, colorClass }: { label: string; value: strin
 
 function StatusBadge({ status }: { status: "paid" | "unpaid" }) {
   return (
-    <span className={cn(
-      "text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize",
-      status === "paid"
-        ? "bg-green-100 text-green-700 border-green-300"
-        : "bg-red-100 text-red-700 border-red-300"
-    )}>
+    <span
+      className={cn(
+        "text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize",
+        status === "paid"
+          ? "bg-green-100 text-green-700 border-green-300"
+          : "bg-red-100 text-red-700 border-red-300"
+      )}
+    >
       {status}
     </span>
   );
@@ -89,18 +109,23 @@ export default function BillingReportPage() {
   const isAdmin = user?.roles.includes("admin") ?? false;
   const isManager = user?.roles.includes("manager") ?? false;
 
-  const currentYear = new Date().getFullYear();
-  const [year, setYear] = useState(String(currentYear));
-  const [schoolMonth, setSchoolMonth] = useState("all");
+  const [year, setYear] = useState(String(getDefaultSchoolYear()));
+  const [schoolMonth, setSchoolMonth] = useState(getDefaultSchoolMonth());
   const [status, setStatus] = useState("all");
   const [gradeLevel, setGradeLevel] = useState("all");
+  const [search, setSearch] = useState("");
+  const [recordedFrom, setRecordedFrom] = useState("");
+  const [recordedTo, setRecordedTo] = useState("");
   const [page, setPage] = useState(1);
 
   const params = {
     year: year ? Number(year) : undefined,
-    school_month: schoolMonth !== "all" ? schoolMonth : undefined,
+    school_month: schoolMonth !== "all" ? schoolMonth.toLowerCase() : undefined,
     status: status !== "all" ? status : undefined,
-    grade: gradeLevel !== "all" ? gradeLevel : undefined,
+    grade_level: gradeLevel !== "all" ? gradeLevel : undefined,
+    search: search.trim() || undefined,
+    recorded_from: recordedFrom || undefined,
+    recorded_to: recordedTo || undefined,
     page,
   };
 
@@ -128,9 +153,12 @@ export default function BillingReportPage() {
             onClick={() => {
               void exportReport("reports/billing", {
                 year: year || undefined,
-                school_month: schoolMonth !== "all" ? schoolMonth : undefined,
+                school_month: schoolMonth !== "all" ? schoolMonth.toLowerCase() : undefined,
                 status: status !== "all" ? status : undefined,
-                grade: gradeLevel !== "all" ? gradeLevel : undefined,
+                grade_level: gradeLevel !== "all" ? gradeLevel : undefined,
+                search: search.trim() || undefined,
+                recorded_from: recordedFrom || undefined,
+                recorded_to: recordedTo || undefined,
               });
             }}
           >
@@ -140,9 +168,40 @@ export default function BillingReportPage() {
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <Select value={year} onValueChange={(v) => { setYear(v ?? String(currentYear)); setPage(1); }}>
+      {/* Month pill filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => { setSchoolMonth("all"); setPage(1); }}
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+            schoolMonth === "all"
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-border bg-card text-foreground hover:bg-muted"
+          )}
+        >
+          All Months
+        </button>
+        {SCHOOL_MONTHS.map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => { setSchoolMonth(m); setPage(1); }}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+              schoolMonth === m
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-foreground hover:bg-muted"
+            )}
+          >
+            {m}
+          </button>
+        ))}
+      </div>
+
+      {/* Secondary filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={year} onValueChange={(v) => { setYear(v); setPage(1); }}>
           <SelectTrigger className="h-8 w-[100px] text-xs" aria-label="Year filter">
             <SelectValue />
           </SelectTrigger>
@@ -153,20 +212,8 @@ export default function BillingReportPage() {
           </SelectContent>
         </Select>
 
-        <Select value={schoolMonth} onValueChange={(v) => { setSchoolMonth(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[140px] text-xs" aria-label="School month filter">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Months</SelectItem>
-            {SCHOOL_MONTHS.map((m) => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
         <Select value={status} onValueChange={(v) => { setStatus(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[120px] text-xs" aria-label="Payment status filter">
+          <SelectTrigger className="h-8 w-[130px] text-xs" aria-label="Payment status filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -187,6 +234,34 @@ export default function BillingReportPage() {
             ))}
           </SelectContent>
         </Select>
+
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder="Search student..."
+          aria-label="Search student by name or number"
+          className="h-8 w-[160px] rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        />
+
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Recorded:</span>
+          <input
+            type="date"
+            value={recordedFrom}
+            onChange={(e) => { setRecordedFrom(e.target.value); setPage(1); }}
+            aria-label="Recorded from date"
+            className="h-8 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
+          />
+          <span className="text-xs text-muted-foreground">to</span>
+          <input
+            type="date"
+            value={recordedTo}
+            onChange={(e) => { setRecordedTo(e.target.value); setPage(1); }}
+            aria-label="Recorded to date"
+            className="h-8 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
+          />
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -236,14 +311,12 @@ export default function BillingReportPage() {
                     <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{row.student.student_number}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{row.student.grade_level}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{row.student.section ?? "—"}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{row.school_month} {row.year}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground capitalize">{row.school_month} {row.year}</td>
                     <td className="px-4 py-2.5 text-right font-semibold">{formatPeso(row.amount)}</td>
                     <td className="px-4 py-2.5"><StatusBadge status={row.status} /></td>
                     <td className="px-4 py-2.5 text-muted-foreground">{formatDate(row.recorded_at)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">
-                      {row.recorder
-                        ? `${row.recorder.first_name} ${row.recorder.last_name}`
-                        : "—"}
+                      {row.recorder ? `${row.recorder.first_name} ${row.recorder.last_name}` : "—"}
                     </td>
                   </tr>
                 ))
@@ -258,11 +331,25 @@ export default function BillingReportPage() {
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>Page {meta.current_page} of {meta.last_page} ({meta.total} records)</span>
           <div className="flex gap-1">
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              aria-label="Previous page"
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="flex items-center px-2 font-medium text-foreground">{page} / {meta.last_page}</span>
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))} disabled={page === meta.last_page} aria-label="Next page">
+            <span className="flex items-center px-2 font-medium text-foreground">
+              {page} / {meta.last_page}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
+              disabled={page === meta.last_page}
+              aria-label="Next page"
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

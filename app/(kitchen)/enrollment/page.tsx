@@ -383,7 +383,7 @@ export default function EnrollmentPage() {
 
     const raw = {
       branch_id: branchId as number,
-      student_number: studentNumber || null,
+      student_number: studentNumber || undefined,
       first_name: firstName,
       last_name: lastName,
       grade_level: gradeLevel,
