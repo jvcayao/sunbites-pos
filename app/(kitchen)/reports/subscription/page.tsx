@@ -20,23 +20,36 @@ import { cn } from "@/lib/utils";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const SCHOOL_MONTHS: { value: string; label: string }[] = [
-  { value: "june", label: "June" },
-  { value: "july", label: "July" },
-  { value: "august", label: "August" },
-  { value: "september", label: "September" },
-  { value: "october", label: "October" },
-  { value: "november", label: "November" },
-  { value: "december", label: "December" },
-  { value: "january", label: "January" },
-  { value: "february", label: "February" },
-  { value: "march", label: "March" },
+const SCHOOL_MONTHS = [
+  "June", "July", "August", "September", "October", "November",
+  "December", "January", "February", "March",
 ];
 
-function resolveCurrentSchoolMonth(): string {
-  const month = new Date().getMonth(); // 0-indexed
-  const names = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
-  return names[month] ?? "june";
+const GRADE_LEVELS = [
+  "Nursery", "Kinder 1", "Kinder 2",
+  "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6",
+  "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
+];
+
+function getDefaultSchoolMonth(): string {
+  const month = new Date().getMonth();
+  const map: Record<number, string> = {
+    0: "January", 1: "February", 2: "March",
+    5: "June", 6: "July", 7: "August",
+    8: "September", 9: "October", 10: "November", 11: "December",
+  };
+  return map[month] ?? "June";
+}
+
+function getDefaultSchoolYear(): number {
+  const now = new Date();
+  return now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+}
+
+function usageCellClass(remaining: number): string {
+  if (remaining === 0) return "text-red-600 font-semibold";
+  if (remaining <= 5) return "text-amber-600 font-semibold";
+  return "text-foreground";
 }
 
 function PaymentStatusBadge({ status }: { status: "paid" | "unpaid" | "not_recorded" }) {
@@ -53,16 +66,10 @@ function PaymentStatusBadge({ status }: { status: "paid" | "unpaid" | "not_recor
   );
 }
 
-function usageCellClass(remaining: number): string {
-  if (remaining === 0) return "text-red-600 font-semibold";
-  if (remaining <= 5) return "text-amber-600 font-semibold";
-  return "text-foreground";
-}
-
 function TableRowSkeleton() {
   return (
     <tr>
-      {Array.from({ length: 9 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
           <Skeleton className="h-4 w-full" />
         </td>
@@ -76,15 +83,19 @@ function TableRowSkeleton() {
 // ---------------------------------------------------------------------------
 
 export default function SubscriptionReportPage() {
-  const currentYear = new Date().getFullYear();
-
-  const [schoolMonth, setSchoolMonth] = useState(resolveCurrentSchoolMonth);
-  const [year, setYear] = useState(String(currentYear));
+  const [schoolMonth, setSchoolMonth] = useState(getDefaultSchoolMonth);
+  const [year, setYear] = useState(String(getDefaultSchoolYear()));
+  const [status, setStatus] = useState("all");
+  const [gradeLevel, setGradeLevel] = useState("all");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const params = {
-    month: schoolMonth,
+    month: schoolMonth.toLowerCase(),
     year: Number(year),
+    status: status !== "all" ? status : undefined,
+    grade_level: gradeLevel !== "all" ? gradeLevel : undefined,
+    search: search.trim() || undefined,
     page,
   };
 
@@ -104,45 +115,70 @@ export default function SubscriptionReportPage() {
         <h1 className="text-xl font-bold text-foreground">Subscription Usage Report</h1>
       </div>
 
-      {/* Filters */}
+      {/* Month pill filters */}
       <div className="flex flex-wrap items-center gap-2">
         {SCHOOL_MONTHS.map((m) => (
           <button
-            key={m.value}
+            key={m}
             type="button"
-            onClick={() => {
-              setSchoolMonth(m.value);
-              setPage(1);
-            }}
+            onClick={() => { setSchoolMonth(m); setPage(1); }}
             className={cn(
               "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
-              schoolMonth === m.value
+              schoolMonth === m
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-card text-foreground hover:bg-muted"
             )}
           >
-            {m.label}
+            {m}
           </button>
         ))}
+      </div>
 
-        <Select
-          value={year}
-          onValueChange={(v) => {
-            setYear(v ?? String(currentYear));
-            setPage(1);
-          }}
-        >
+      {/* Secondary filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={year} onValueChange={(v) => { setYear(v ?? String(getDefaultSchoolYear())); setPage(1); }}>
           <SelectTrigger className="h-8 w-[100px] text-xs" aria-label="Year filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {[2024, 2025, 2026, 2027].map((y) => (
-              <SelectItem key={y} value={String(y)}>
-                {y}
-              </SelectItem>
+              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={status} onValueChange={(v) => { setStatus(v ?? "all"); setPage(1); }}>
+          <SelectTrigger className="h-8 w-[150px] text-xs" aria-label="Payment status filter">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="unpaid">Unpaid</SelectItem>
+            <SelectItem value="not_recorded">Not Recorded</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={gradeLevel} onValueChange={(v) => { setGradeLevel(v ?? "all"); setPage(1); }}>
+          <SelectTrigger className="h-8 w-[140px] text-xs" aria-label="Grade level filter">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Grades</SelectItem>
+            {GRADE_LEVELS.map((g) => (
+              <SelectItem key={g} value={g}>{g}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder="Search student..."
+          aria-label="Search student by name or number"
+          className="h-8 w-[160px] rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        />
       </div>
 
       {/* Table */}
@@ -171,7 +207,7 @@ export default function SubscriptionReportPage() {
               ) : !rows?.length ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
-                    No subscription students found for this month.
+                    No subscription students found for the selected filters.
                   </td>
                 </tr>
               ) : (
@@ -227,9 +263,7 @@ export default function SubscriptionReportPage() {
       {/* Pagination */}
       {meta && meta.last_page > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            Page {meta.current_page} of {meta.last_page} ({meta.total} records)
-          </span>
+          <span>Page {meta.current_page} of {meta.last_page} ({meta.total} records)</span>
           <div className="flex gap-1">
             <Button
               variant="outline"

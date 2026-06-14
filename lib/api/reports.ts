@@ -326,7 +326,7 @@ export const reportApi = {
       { params: params as Record<string, string | number | boolean | undefined> }
     ),
 
-  subscriptionUsage: (params: { month: string; year: number; page?: number }) =>
+  subscriptionUsage: (params: { month: string; year: number; status?: string; grade_level?: string; search?: string; page?: number }) =>
     apiClient.get<{ data: SubscriptionReportRow[]; meta: PaginatedMeta }>("/reports/subscription", {
       params: params as Record<string, string | number | boolean | undefined>,
     }),
