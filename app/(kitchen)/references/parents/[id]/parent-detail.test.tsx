@@ -49,14 +49,16 @@ beforeEach(() => {
 
 describe("ParentDetailPage", () => {
   it("renders parent name", async () => {
-    render(<ParentDetailPage params={{ id: "1" }} />);
+    render(<ParentDetailPage />);
     expect(await screen.findByText("Maria Dela Cruz")).toBeInTheDocument();
   });
 
   it("shows Disable button for an active, non-deleted parent", async () => {
-    render(<ParentDetailPage params={{ id: "1" }} />);
+    render(<ParentDetailPage />);
     await screen.findByText("Maria Dela Cruz");
-    expect(screen.getByRole("button", { name: /disable/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /disable/i }),
+    ).toBeInTheDocument();
   });
 
   it("shows Enable button (not Disable) for a disabled parent", async () => {
@@ -71,7 +73,7 @@ describe("ParentDetailPage", () => {
       ),
     );
 
-    render(<ParentDetailPage params={{ id: "1" }} />);
+    render(<ParentDetailPage />);
     await screen.findByText("Maria Dela Cruz");
 
     expect(screen.getByRole("button", { name: /enable/i })).toBeInTheDocument();
@@ -92,7 +94,7 @@ describe("ParentDetailPage", () => {
       ),
     );
 
-    render(<ParentDetailPage params={{ id: "1" }} />);
+    render(<ParentDetailPage />);
     await screen.findByText("Maria Dela Cruz");
 
     expect(
@@ -105,7 +107,7 @@ describe("ParentDetailPage", () => {
 
   it("calls disable API and shows success toast on Disable click", async () => {
     const user = userEvent.setup();
-    render(<ParentDetailPage params={{ id: "1" }} />);
+    render(<ParentDetailPage />);
     await screen.findByText("Maria Dela Cruz");
 
     const disableBtn = screen.getByRole("button", { name: /disable/i });
@@ -118,11 +120,19 @@ describe("ParentDetailPage", () => {
 
   it("calls delete API and navigates away on Delete click", async () => {
     const user = userEvent.setup();
-    render(<ParentDetailPage params={{ id: "1" }} />);
+    render(<ParentDetailPage />);
     await screen.findByText("Maria Dela Cruz");
 
-    const deleteBtn = screen.getByRole("button", { name: /delete/i });
+    // Open the confirmation dialog
+    const [deleteBtn] = screen.getAllByRole("button", { name: /^delete$/i });
     await user.click(deleteBtn);
+
+    // Confirm deletion in the AlertDialog
+    const confirmBtn = await screen.findByRole("button", {
+      name: /^delete$/i,
+      hidden: false,
+    });
+    await user.click(confirmBtn);
 
     expect(
       await screen.findByText(/parent account deleted/i),

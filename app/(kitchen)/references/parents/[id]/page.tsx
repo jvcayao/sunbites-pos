@@ -193,7 +193,7 @@ export default function ParentDetailPage() {
               size="sm"
               variant="outline"
               onClick={() => resendMutation.mutate()}
-              disabled={resendMutation.isPending}
+              disabled={anyPending}
             >
               <Mail className="mr-1.5 h-4 w-4" aria-hidden="true" />
               {resendMutation.isPending
@@ -208,7 +208,7 @@ export default function ParentDetailPage() {
               size="sm"
               variant="outline"
               onClick={() => disableMutation.mutate()}
-              disabled={disableMutation.isPending}
+              disabled={anyPending}
             >
               {disableMutation.isPending ? "Disabling…" : "Disable"}
             </Button>
@@ -220,22 +220,45 @@ export default function ParentDetailPage() {
               size="sm"
               variant="outline"
               onClick={() => enableMutation.mutate()}
-              disabled={enableMutation.isPending}
+              disabled={anyPending}
             >
               {enableMutation.isPending ? "Enabling…" : "Enable"}
             </Button>
           )}
 
           {!parent.deleted_at && (
-            <Button
-              type="button"
-              size="sm"
-              variant="destructive"
-              onClick={() => destroyMutation.mutate()}
-              disabled={destroyMutation.isPending}
-            >
-              {destroyMutation.isPending ? "Deleting…" : "Delete"}
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    disabled={anyPending}
+                  />
+                }
+              >
+                Delete
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete parent account?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will disable portal access and remove the account from
+                    active lists. The account can be restored later.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => destroyMutation.mutate()}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {destroyMutation.isPending ? "Deleting…" : "Delete"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
 
           {parent.deleted_at !== null && (
@@ -244,7 +267,7 @@ export default function ParentDetailPage() {
               size="sm"
               variant="outline"
               onClick={() => restoreMutation.mutate()}
-              disabled={restoreMutation.isPending}
+              disabled={anyPending}
             >
               {restoreMutation.isPending ? "Restoring…" : "Restore"}
             </Button>
@@ -349,7 +372,7 @@ export default function ParentDetailPage() {
                       {student.branch_name}
                     </td>
                     <td className="px-3 py-2">
-                      PHP {Number(student.wallet_alert_threshold).toFixed(2)}
+                      PHP {student.wallet_alert_threshold.toFixed(2)}
                     </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">
                       {new Date(student.linked_at).toLocaleDateString("en-PH", {
