@@ -91,13 +91,19 @@ export default function LoginPage() {
             autoComplete="email"
             placeholder="you@example.com"
             value={values.email ?? ""}
-            onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))}
+            onChange={(e) =>
+              setValues((v) => ({ ...v, email: e.target.value }))
+            }
             aria-invalid={!!fieldErrors.email}
             aria-describedby={fieldErrors.email ? "email-error" : undefined}
             className={cn(fieldErrors.email && "border-destructive")}
           />
           {fieldErrors.email && (
-            <p id="email-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+            <p
+              id="email-error"
+              role="alert"
+              className="flex items-center gap-1 text-xs text-destructive"
+            >
               <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               {fieldErrors.email[0]}
             </p>
@@ -116,11 +122,17 @@ export default function LoginPage() {
               setValues((v) => ({ ...v, password: e.target.value }))
             }
             aria-invalid={!!fieldErrors.password}
-            aria-describedby={fieldErrors.password ? "password-error" : undefined}
+            aria-describedby={
+              fieldErrors.password ? "password-error" : undefined
+            }
             className={cn(fieldErrors.password && "border-destructive")}
           />
           {fieldErrors.password && (
-            <p id="password-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+            <p
+              id="password-error"
+              role="alert"
+              className="flex items-center gap-1 text-xs text-destructive"
+            >
               <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               {fieldErrors.password[0]}
             </p>
@@ -136,11 +148,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={mutation.isPending}
-        >
+        <Button type="submit" className="w-full" disabled={mutation.isPending}>
           {mutation.isPending ? "Signing in…" : "Sign in"}
         </Button>
       </form>

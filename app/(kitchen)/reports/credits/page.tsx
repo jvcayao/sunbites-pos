@@ -19,7 +19,6 @@ import { reportApi } from "@/lib/api/reports";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -69,7 +68,12 @@ function TypeBadge({ type }: { type: "charged" | "settled" | "voided" }) {
     voided: "bg-muted text-muted-foreground border-border",
   };
   return (
-    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize", map[type])}>
+    <span
+      className={cn(
+        "text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize",
+        map[type],
+      )}
+    >
       {type}
     </span>
   );
@@ -86,7 +90,9 @@ function SummaryCard({
 }) {
   return (
     <div className={cn("rounded-xl border bg-card p-4", colorClass)}>
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-1 text-2xl font-extrabold text-foreground">{value}</p>
     </div>
   );
@@ -152,8 +158,13 @@ export default function CreditsReportPage() {
     return (
       <div className="p-6">
         <div className="rounded-xl border border-border bg-card p-8 text-center space-y-4">
-          <AlertTriangle className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
-          <p className="text-lg font-semibold text-foreground">Access Restricted</p>
+          <AlertTriangle
+            className="mx-auto h-8 w-8 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <p className="text-lg font-semibold text-foreground">
+            Access Restricted
+          </p>
           <p className="text-sm text-muted-foreground">
             {"You don't have permission to view this report."}
           </p>
@@ -174,7 +185,9 @@ export default function CreditsReportPage() {
       {/* Header */}
       <div>
         <p className="text-xs text-muted-foreground">Reports</p>
-        <h1 className="text-xl font-bold text-foreground">Credit Collection Report</h1>
+        <h1 className="text-xl font-bold text-foreground">
+          Credit Collection Report
+        </h1>
       </div>
 
       {/* Filters */}
@@ -191,7 +204,7 @@ export default function CreditsReportPage() {
               "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
               preset === p.value
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:bg-muted"
+                : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
             {p.label}
@@ -203,7 +216,10 @@ export default function CreditsReportPage() {
             <input
               type="date"
               value={customFrom}
-              onChange={(e) => { setCustomFrom(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setCustomFrom(e.target.value);
+                setPage(1);
+              }}
               aria-label="From date"
               className="rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
             />
@@ -211,15 +227,27 @@ export default function CreditsReportPage() {
             <input
               type="date"
               value={customTo}
-              onChange={(e) => { setCustomTo(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setCustomTo(e.target.value);
+                setPage(1);
+              }}
               aria-label="To date"
               className="rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
             />
           </div>
         )}
 
-        <Select value={type} onValueChange={(v) => { setType(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[130px] text-xs" aria-label="Credit type filter">
+        <Select
+          value={type}
+          onValueChange={(v) => {
+            setType(v ?? "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[130px] text-xs"
+            aria-label="Credit type filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -233,7 +261,10 @@ export default function CreditsReportPage() {
         <Input
           placeholder="Search student…"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           className="h-8 max-w-[200px] text-xs"
           aria-label="Search by student name or number"
         />
@@ -242,10 +273,25 @@ export default function CreditsReportPage() {
       {/* Summary cards */}
       {summary && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryCard label="Total Charged" value={formatPeso(summary.total_charged)} colorClass="border-red-200 bg-red-50" />
-          <SummaryCard label="Total Settled" value={formatPeso(summary.total_settled)} colorClass="border-green-200 bg-green-50" />
-          <SummaryCard label="Total Voided" value={formatPeso(summary.total_voided)} />
-          <SummaryCard label="Net Outstanding" value={formatPeso(summary.net_outstanding)} colorClass="border-amber-200 bg-amber-50" />
+          <SummaryCard
+            label="Total Charged"
+            value={formatPeso(summary.total_charged)}
+            colorClass="border-red-200 bg-red-50"
+          />
+          <SummaryCard
+            label="Total Settled"
+            value={formatPeso(summary.total_settled)}
+            colorClass="border-green-200 bg-green-50"
+          />
+          <SummaryCard
+            label="Total Voided"
+            value={formatPeso(summary.total_voided)}
+          />
+          <SummaryCard
+            label="Net Outstanding"
+            value={formatPeso(summary.net_outstanding)}
+            colorClass="border-amber-200 bg-amber-50"
+          />
         </div>
       )}
 
@@ -259,21 +305,40 @@ export default function CreditsReportPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Date / Time</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Student</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Grade</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Type</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Amount</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Notes</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Staff</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Date / Time
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Student
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Grade
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Type
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  Amount
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Notes
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Staff
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} />)
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRowSkeleton key={i} />
+                ))
               ) : !rows?.length ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-10 text-center text-muted-foreground"
+                  >
                     No credit records found for the selected filters.
                   </td>
                 </tr>
@@ -284,16 +349,26 @@ export default function CreditsReportPage() {
                       {formatDateTime(row.created_at)}
                     </td>
                     <td className="px-4 py-2.5">
-                      <p className="font-medium text-foreground">{row.student.full_name}</p>
-                      <p className="text-xs font-mono text-muted-foreground">{row.student.student_number}</p>
+                      <p className="font-medium text-foreground">
+                        {row.student.full_name}
+                      </p>
+                      <p className="text-xs font-mono text-muted-foreground">
+                        {row.student.student_number}
+                      </p>
                     </td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{row.student.grade_level}</td>
-                    <td className="px-4 py-2.5"><TypeBadge type={row.type} /></td>
-                    <td className={cn(
-                      "px-4 py-2.5 text-right font-semibold",
-                      row.type === "charged" && "text-red-600",
-                      row.type === "settled" && "text-green-700"
-                    )}>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {row.student.grade_level}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <TypeBadge type={row.type} />
+                    </td>
+                    <td
+                      className={cn(
+                        "px-4 py-2.5 text-right font-semibold",
+                        row.type === "charged" && "text-red-600",
+                        row.type === "settled" && "text-green-700",
+                      )}
+                    >
                       {formatPeso(row.amount)}
                     </td>
                     <td className="px-4 py-2.5 max-w-[160px] truncate text-muted-foreground">
@@ -315,13 +390,29 @@ export default function CreditsReportPage() {
       {/* Pagination */}
       {meta && meta.last_page > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Page {meta.current_page} of {meta.last_page} ({meta.total} records)</span>
+          <span>
+            Page {meta.current_page} of {meta.last_page} ({meta.total} records)
+          </span>
           <div className="flex gap-1">
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              aria-label="Previous page"
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="flex items-center px-2 font-medium text-foreground">{page} / {meta.last_page}</span>
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))} disabled={page === meta.last_page} aria-label="Next page">
+            <span className="flex items-center px-2 font-medium text-foreground">
+              {page} / {meta.last_page}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
+              disabled={page === meta.last_page}
+              aria-label="Next page"
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

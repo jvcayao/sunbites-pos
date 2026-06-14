@@ -16,7 +16,9 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/lib/store/auth", () => {
-  const actual = jest.requireActual("@/lib/store/auth") as typeof import("@/lib/store/auth");
+  const actual = jest.requireActual(
+    "@/lib/store/auth",
+  ) as typeof import("@/lib/store/auth");
   return {
     ...actual,
     useAuthStore: Object.assign(jest.fn(), {
@@ -40,7 +42,10 @@ const adminUser = {
 
 beforeEach(() => {
   mockUseAuthStore.mockImplementation((selector) =>
-    (selector as (state: AuthState) => unknown)({ user: adminUser, activeBranch: null } as AuthState)
+    (selector as (state: AuthState) => unknown)({
+      user: adminUser,
+      activeBranch: null,
+    } as AuthState),
   );
 });
 
@@ -48,8 +53,11 @@ beforeEach(() => {
 beforeEach(() => {
   server.use(
     http.get(`${API}/references/inventory/history`, () =>
-      HttpResponse.json({ data: [], meta: { current_page: 1, last_page: 1, total: 0, per_page: 25 } })
-    )
+      HttpResponse.json({
+        data: [],
+        meta: { current_page: 1, last_page: 1, total: 0, per_page: 25 },
+      }),
+    ),
   );
 });
 
@@ -57,7 +65,9 @@ describe("ReferencesInventoryPage", () => {
   it("renders the Inventory heading", () => {
     render(<ReferencesInventoryPage />);
 
-    expect(screen.getByRole("heading", { name: "Inventory" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Inventory" }),
+    ).toBeInTheDocument();
   });
 
   it("renders inventory table with items", async () => {
@@ -102,7 +112,9 @@ describe("ReferencesInventoryPage", () => {
     await user.click(screen.getByRole("button", { name: /\+ Add/i }));
 
     await waitFor(() => {
-      expect(screen.queryByRole("button", { name: /Adding…/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Adding…/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -114,15 +126,17 @@ describe("ReferencesInventoryPage", () => {
 
     await user.click(screen.getAllByRole("button", { name: /Edit/i })[0]);
 
-    expect(await screen.findByRole("heading", { name: /Edit: Rice/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /Edit: Rice/i }),
+    ).toBeInTheDocument();
     expect(screen.getByDisplayValue("Rice")).toBeInTheDocument();
   });
 
   it("opens history dialog with log history", async () => {
     server.use(
       http.get(`${API}/references/inventory/:id/logs`, () =>
-        HttpResponse.json(inventoryLogsFixture)
-      )
+        HttpResponse.json(inventoryLogsFixture),
+      ),
     );
 
     const user = userEvent.setup();
@@ -145,17 +159,21 @@ describe("ReferencesInventoryPage", () => {
 
     await user.click(screen.getAllByRole("button", { name: /Delete/i })[0]);
 
-    expect(await screen.findByText(/Delete Inventory Item/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Delete Inventory Item/i),
+    ).toBeInTheDocument();
   });
 
   it("shows 422 error message when item has logs and cannot be deleted", async () => {
     server.use(
       http.delete(`${API}/references/inventory/:id`, () =>
         HttpResponse.json(
-          { message: "This item has adjustment history and cannot be deleted." },
-          { status: 422 }
-        )
-      )
+          {
+            message: "This item has adjustment history and cannot be deleted.",
+          },
+          { status: 422 },
+        ),
+      ),
     );
 
     const user = userEvent.setup();
@@ -169,7 +187,9 @@ describe("ReferencesInventoryPage", () => {
     await user.click(screen.getByRole("button", { name: /^Delete$/i }));
 
     expect(
-      await screen.findByText(/This item has adjustment history and cannot be deleted/i)
+      await screen.findByText(
+        /This item has adjustment history and cannot be deleted/i,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -185,19 +205,23 @@ describe("ReferencesInventoryPage", () => {
     await user.click(screen.getByRole("button", { name: /^Delete$/i }));
 
     await waitFor(() => {
-      expect(screen.queryByText(/Delete Inventory Item/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/Delete Inventory Item/i),
+      ).not.toBeInTheDocument();
     });
   });
 
   it("shows error when API fails to load inventory", async () => {
     server.use(
       http.get(`${API}/references/inventory`, () =>
-        HttpResponse.json({ message: "Server error" }, { status: 500 })
-      )
+        HttpResponse.json({ message: "Server error" }, { status: 500 }),
+      ),
     );
 
     render(<ReferencesInventoryPage />);
 
-    expect(await screen.findByText(/Failed to load inventory/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Failed to load inventory/i),
+    ).toBeInTheDocument();
   });
 });

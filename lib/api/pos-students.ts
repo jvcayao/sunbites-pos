@@ -1,6 +1,10 @@
 import { apiClient } from "./client";
 
-import type { PosStudent, StudentLookupPayload, StudentLookupResult } from "@/types/order";
+import type {
+  PosStudent,
+  StudentLookupPayload,
+  StudentLookupResult,
+} from "@/types/order";
 
 export const posStudentApi = {
   lookup: (payload: StudentLookupPayload) =>

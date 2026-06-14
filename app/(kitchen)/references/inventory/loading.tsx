@@ -6,7 +6,10 @@ export default function InventoryLoading() {
       <Skeleton className="h-8 w-40" />
       <div className="mt-6 overflow-hidden rounded-xl border border-border">
         {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="flex gap-4 border-b border-border px-4 py-3 last:border-0">
+          <div
+            key={i}
+            className="flex gap-4 border-b border-border px-4 py-3 last:border-0"
+          >
             <Skeleton className="h-5 flex-1" />
             <Skeleton className="h-5 w-16" />
             <Skeleton className="h-5 w-12" />

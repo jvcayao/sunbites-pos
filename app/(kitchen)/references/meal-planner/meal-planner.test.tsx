@@ -16,7 +16,9 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/lib/store/auth", () => {
-  const actual = jest.requireActual("@/lib/store/auth") as typeof import("@/lib/store/auth");
+  const actual = jest.requireActual(
+    "@/lib/store/auth",
+  ) as typeof import("@/lib/store/auth");
   return {
     ...actual,
     useAuthStore: Object.assign(jest.fn(), {
@@ -42,7 +44,10 @@ const supervisorUser = { ...adminUser, roles: ["supervisor"] as string[] };
 
 beforeEach(() => {
   mockUseAuthStore.mockImplementation((selector) =>
-    (selector as (state: AuthState) => unknown)({ user: adminUser, activeBranch: null } as AuthState)
+    (selector as (state: AuthState) => unknown)({
+      user: adminUser,
+      activeBranch: null,
+    } as AuthState),
   );
 });
 
@@ -56,7 +61,18 @@ describe("MealPlannerPage", () => {
   it("renders all 10 month tabs", () => {
     render(<MealPlannerPage />);
 
-    const monthLabels = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"];
+    const monthLabels = [
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+    ];
     monthLabels.forEach((label) => {
       expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
     });
@@ -66,7 +82,9 @@ describe("MealPlannerPage", () => {
     render(<MealPlannerPage />);
 
     [1, 2, 3, 4].forEach((w) => {
-      expect(screen.getByRole("button", { name: `Week ${w}` })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: `Week ${w}` }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -74,7 +92,9 @@ describe("MealPlannerPage", () => {
     render(<MealPlannerPage />);
 
     // Admin sees data inside <Input> fields — use findByDisplayValue
-    expect(await screen.findByDisplayValue("Chicken Adobo")).toBeInTheDocument();
+    expect(
+      await screen.findByDisplayValue("Chicken Adobo"),
+    ).toBeInTheDocument();
     expect(screen.getByDisplayValue("Chopsuey")).toBeInTheDocument();
     expect(screen.getByText("Monday")).toBeInTheDocument();
   });
@@ -90,7 +110,10 @@ describe("MealPlannerPage", () => {
 
   it("supervisor sees plain text in grid cells (not inputs)", async () => {
     mockUseAuthStore.mockImplementation((selector) =>
-      (selector as (state: AuthState) => unknown)({ user: supervisorUser, activeBranch: null } as AuthState)
+      (selector as (state: AuthState) => unknown)({
+        user: supervisorUser,
+        activeBranch: null,
+      } as AuthState),
     );
 
     render(<MealPlannerPage />);
@@ -104,13 +127,20 @@ describe("MealPlannerPage", () => {
 
   it("supervisor does not see Save or Reset buttons", async () => {
     mockUseAuthStore.mockImplementation((selector) =>
-      (selector as (state: AuthState) => unknown)({ user: supervisorUser, activeBranch: null } as AuthState)
+      (selector as (state: AuthState) => unknown)({
+        user: supervisorUser,
+        activeBranch: null,
+      } as AuthState),
     );
 
     render(<MealPlannerPage />);
 
-    expect(screen.queryByRole("button", { name: /Save Week/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Reset/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Save Week/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Reset/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("Save Week button submits PATCH and shows success toast", async () => {
@@ -122,7 +152,9 @@ describe("MealPlannerPage", () => {
     await user.click(screen.getByRole("button", { name: /Save Week/i }));
 
     await waitFor(() => {
-      expect(screen.queryByRole("button", { name: /Saving…/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Saving…/i }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -159,20 +191,26 @@ describe("MealPlannerPage", () => {
   it("shows error when API fails", async () => {
     server.use(
       http.get(`${API}/references/meal-planner`, () =>
-        HttpResponse.json({ message: "Server error" }, { status: 500 })
-      )
+        HttpResponse.json({ message: "Server error" }, { status: 500 }),
+      ),
     );
 
     render(<MealPlannerPage />);
 
-    expect(await screen.findByText(/Failed to load meal plan/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Failed to load meal plan/i),
+    ).toBeInTheDocument();
   });
 
   it("renders Snacks column in the meal grid", async () => {
     render(<MealPlannerPage />);
 
-    expect(await screen.findByDisplayValue("Chicken Adobo")).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Snacks" })).toBeInTheDocument();
+    expect(
+      await screen.findByDisplayValue("Chicken Adobo"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Snacks" }),
+    ).toBeInTheDocument();
     expect(screen.getByDisplayValue("Graham Crackers")).toBeInTheDocument();
   });
 
@@ -181,7 +219,9 @@ describe("MealPlannerPage", () => {
 
     await screen.findByDisplayValue("Chicken Adobo");
 
-    expect(screen.getByRole("button", { name: /Visible to Parents/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Visible to Parents/i }),
+    ).toBeInTheDocument();
   });
 
   it("admin can click visibility badge to open WeekVisibilityDialog", async () => {
@@ -190,15 +230,24 @@ describe("MealPlannerPage", () => {
 
     await screen.findByDisplayValue("Chicken Adobo");
 
-    await user.click(screen.getByRole("button", { name: /Visible to Parents/i }));
+    await user.click(
+      screen.getByRole("button", { name: /Visible to Parents/i }),
+    );
 
-    expect(await screen.findByText(/Hide .* from Parents\?/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Yes, Hide It/i })).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Hide .* from Parents\?/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Yes, Hide It/i }),
+    ).toBeInTheDocument();
   });
 
   it("supervisor sees read-only visibility badge (not a button)", async () => {
     mockUseAuthStore.mockImplementation((selector) =>
-      (selector as (state: AuthState) => unknown)({ user: supervisorUser, activeBranch: null } as AuthState)
+      (selector as (state: AuthState) => unknown)({
+        user: supervisorUser,
+        activeBranch: null,
+      } as AuthState),
     );
 
     render(<MealPlannerPage />);
@@ -206,6 +255,8 @@ describe("MealPlannerPage", () => {
     await screen.findByText("Chicken Adobo");
 
     expect(screen.getByText(/Visible to Parents/i)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Visible to Parents/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Visible to Parents/i }),
+    ).not.toBeInTheDocument();
   });
 });

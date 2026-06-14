@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,9 +77,16 @@ const CATEGORY_CLASSES: Record<string, string> = {
 };
 
 function CategoryBadge({ category }: { category: string }) {
-  const cls = CATEGORY_CLASSES[category?.toLowerCase()] ?? "bg-muted text-muted-foreground border-border";
+  const cls =
+    CATEGORY_CLASSES[category?.toLowerCase()] ??
+    "bg-muted text-muted-foreground border-border";
   return (
-    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize", cls)}>
+    <span
+      className={cn(
+        "text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize",
+        cls,
+      )}
+    >
       {category}
     </span>
   );
@@ -86,7 +99,16 @@ const PRESETS: { value: DatePreset; label: string }[] = [
   { value: "custom", label: "Custom" },
 ];
 
-const CATEGORIES = ["auth", "pos", "students", "wallet", "payments", "menu", "inventory", "users"];
+const CATEGORIES = [
+  "auth",
+  "pos",
+  "students",
+  "wallet",
+  "payments",
+  "menu",
+  "inventory",
+  "users",
+];
 
 function TableRowSkeleton() {
   return (
@@ -117,8 +139,12 @@ function ActivityRow({ row }: { row: ActivityLogRow }) {
         <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
           {formatDateTime(row.created_at)}
         </td>
-        <td className="px-4 py-2.5 text-foreground">{row.causer_name ?? "System"}</td>
-        <td className="px-4 py-2.5 text-muted-foreground max-w-[240px] truncate">{row.description}</td>
+        <td className="px-4 py-2.5 text-foreground">
+          {row.causer_name ?? "System"}
+        </td>
+        <td className="px-4 py-2.5 text-muted-foreground max-w-[240px] truncate">
+          {row.description}
+        </td>
         <td className="px-4 py-2.5">
           <CategoryBadge category={row.log_name} />
         </td>
@@ -190,8 +216,13 @@ export default function ActivityLogPage() {
     return (
       <div className="p-6">
         <div className="rounded-xl border border-border bg-card p-8 text-center space-y-4">
-          <AlertTriangle className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
-          <p className="text-lg font-semibold text-foreground">Access Restricted</p>
+          <AlertTriangle
+            className="mx-auto h-8 w-8 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <p className="text-lg font-semibold text-foreground">
+            Access Restricted
+          </p>
           <p className="text-sm text-muted-foreground">
             {"You don't have permission to view this report."}
           </p>
@@ -228,7 +259,7 @@ export default function ActivityLogPage() {
               "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
               preset === p.value
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:bg-muted"
+                : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
             {p.label}
@@ -240,7 +271,10 @@ export default function ActivityLogPage() {
             <input
               type="date"
               value={customFrom}
-              onChange={(e) => { setCustomFrom(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setCustomFrom(e.target.value);
+                setPage(1);
+              }}
               aria-label="From date"
               className="rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
             />
@@ -248,21 +282,35 @@ export default function ActivityLogPage() {
             <input
               type="date"
               value={customTo}
-              onChange={(e) => { setCustomTo(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setCustomTo(e.target.value);
+                setPage(1);
+              }}
               aria-label="To date"
               className="rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
             />
           </div>
         )}
 
-        <Select value={category} onValueChange={(v) => { setCategory(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[140px] text-xs" aria-label="Category filter">
+        <Select
+          value={category}
+          onValueChange={(v) => {
+            setCategory(v ?? "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[140px] text-xs"
+            aria-label="Category filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
             {CATEGORIES.map((c) => (
-              <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+              <SelectItem key={c} value={c} className="capitalize">
+                {c}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -270,7 +318,10 @@ export default function ActivityLogPage() {
         <Input
           placeholder="Search activity…"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           className="h-8 max-w-[200px] text-xs"
           aria-label="Search activity log"
         />
@@ -286,20 +337,35 @@ export default function ActivityLogPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Date & Time</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">User</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Action</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Category</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Subject</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Date & Time
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  User
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Action
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Category
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Subject
+                </th>
                 <th className="px-4 py-2 w-8" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} />)
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRowSkeleton key={i} />
+                ))
               ) : !rows?.length ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                  <td
+                    colSpan={6}
+                    className="px-4 py-10 text-center text-muted-foreground"
+                  >
                     No activity records found.
                   </td>
                 </tr>
@@ -314,13 +380,29 @@ export default function ActivityLogPage() {
       {/* Pagination */}
       {meta && meta.last_page > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Page {meta.current_page} of {meta.last_page} ({meta.total} records)</span>
+          <span>
+            Page {meta.current_page} of {meta.last_page} ({meta.total} records)
+          </span>
           <div className="flex gap-1">
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              aria-label="Previous page"
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="flex items-center px-2 font-medium text-foreground">{page} / {meta.last_page}</span>
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))} disabled={page === meta.last_page} aria-label="Next page">
+            <span className="flex items-center px-2 font-medium text-foreground">
+              {page} / {meta.last_page}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
+              disabled={page === meta.last_page}
+              aria-label="Next page"
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

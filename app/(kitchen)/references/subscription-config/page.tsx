@@ -39,23 +39,29 @@ const CATEGORY_LABELS: Record<keyof BranchSubscriptionConfig, string> = {
 
 function DailyLimitsCard() {
   const queryClient = useQueryClient();
-  const [overrides, setOverrides] = useState<Partial<BranchSubscriptionConfig>>({});
+  const [overrides, setOverrides] = useState<Partial<BranchSubscriptionConfig>>(
+    {},
+  );
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["pos-subscription-config"],
     queryFn: subscriptionConfigApi.show,
   });
 
-  const limits: BranchSubscriptionConfig | null = data ? { ...data, ...overrides } : null;
+  const limits: BranchSubscriptionConfig | null = data
+    ? { ...data, ...overrides }
+    : null;
 
   const saveMutation = useMutation({
-    mutationFn: (updated: BranchSubscriptionConfig) => subscriptionConfigApi.update(updated),
+    mutationFn: (updated: BranchSubscriptionConfig) =>
+      subscriptionConfigApi.update(updated),
     onSuccess: (updated) => {
       queryClient.setQueryData(["pos-subscription-config"], updated);
       setOverrides({});
       toast.success("Daily limits saved.");
     },
-    onError: (err: ApiError) => toast.error(err.message ?? "Failed to save limits."),
+    onError: (err: ApiError) =>
+      toast.error(err.message ?? "Failed to save limits."),
   });
 
   function handleChange(field: keyof BranchSubscriptionConfig, raw: string) {
@@ -70,7 +76,9 @@ function DailyLimitsCard() {
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
-      <h2 className="mb-1 text-base font-semibold text-foreground">Daily Category Limits</h2>
+      <h2 className="mb-1 text-base font-semibold text-foreground">
+        Daily Category Limits
+      </h2>
       <p className="mb-4 text-sm text-muted-foreground">
         Maximum items a subscription student can order per category per day.
       </p>
@@ -90,9 +98,13 @@ function DailyLimitsCard() {
       {limits && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {(Object.keys(CATEGORY_LABELS) as (keyof BranchSubscriptionConfig)[]).map((field) => (
+            {(
+              Object.keys(CATEGORY_LABELS) as (keyof BranchSubscriptionConfig)[]
+            ).map((field) => (
               <div key={field} className="space-y-1.5">
-                <Label htmlFor={`limit-${field}`}>{CATEGORY_LABELS[field]}</Label>
+                <Label htmlFor={`limit-${field}`}>
+                  {CATEGORY_LABELS[field]}
+                </Label>
                 <Input
                   id={`limit-${field}`}
                   type="number"
@@ -135,7 +147,12 @@ interface EditDaysDialogProps {
   onClose: () => void;
 }
 
-function EditDaysDialog({ row, year, dailyMealRate, onClose }: EditDaysDialogProps) {
+function EditDaysDialog({
+  row,
+  year,
+  dailyMealRate,
+  onClose,
+}: EditDaysDialogProps) {
   const queryClient = useQueryClient();
   const [days, setDays] = useState<number>(row?.days ?? 0);
   const [amountOverride, setAmountOverride] = useState("");
@@ -156,7 +173,9 @@ function EditDaysDialog({ row, year, dailyMealRate, onClose }: EditDaysDialogPro
     mutationFn: () => {
       if (!row) throw new Error("No row selected.");
       const overrideAmount =
-        amountOverride.trim() !== "" && !isNaN(parseFloat(amountOverride)) && parseFloat(amountOverride) > 0
+        amountOverride.trim() !== "" &&
+        !isNaN(parseFloat(amountOverride)) &&
+        parseFloat(amountOverride) > 0
           ? parseFloat(amountOverride)
           : undefined;
       if (row.is_configured && row.id !== null) {
@@ -249,7 +268,9 @@ function EditDaysDialog({ row, year, dailyMealRate, onClose }: EditDaysDialogPro
           <div className="space-y-1.5">
             <Label htmlFor="edit-amount-override">
               Amount Override{" "}
-              <span className="text-muted-foreground font-normal">(optional)</span>
+              <span className="text-muted-foreground font-normal">
+                (optional)
+              </span>
             </Label>
             <Input
               id="edit-amount-override"
@@ -325,7 +346,7 @@ function ConfigRow({ row, year, onEdit }: ConfigRowProps) {
             "text-[11px] font-bold px-2.5 py-1 rounded-full border",
             row.is_configured
               ? "bg-green-100 text-green-700 border-green-300"
-              : "bg-muted text-muted-foreground border-border"
+              : "bg-muted text-muted-foreground border-border",
           )}
         >
           {row.is_configured ? "Configured" : "Default"}
@@ -384,7 +405,8 @@ export default function SubscriptionConfigPage() {
 
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<number>(currentYear);
-  const [editingRow, setEditingRow] = useState<BranchMonthlyAmountConfig | null>(null);
+  const [editingRow, setEditingRow] =
+    useState<BranchMonthlyAmountConfig | null>(null);
 
   useEffect(() => {
     if (!isAdmin) {

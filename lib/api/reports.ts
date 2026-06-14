@@ -3,14 +3,20 @@ import { apiClient } from "./client";
 export async function exportReport(
   path: string,
   params?: Record<string, string | number | undefined>,
-  filename?: string
+  filename?: string,
 ): Promise<void> {
   const filtered = params
     ? Object.fromEntries(
-        Object.entries(params).filter((entry): entry is [string, string | number] => entry[1] !== undefined)
+        Object.entries(params).filter(
+          (entry): entry is [string, string | number] => entry[1] !== undefined,
+        ),
       )
     : undefined;
-  await apiClient.download(`/${path}/export`, filtered as Record<string, string | number | boolean | undefined>, filename);
+  await apiClient.download(
+    `/${path}/export`,
+    filtered as Record<string, string | number | boolean | undefined>,
+    filename,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -225,13 +231,36 @@ export interface BillingPayment {
   recorder: { id: number; first_name: string; last_name: string } | null;
 }
 
+export interface SubscriptionReportRow {
+  id: number;
+  full_name: string;
+  student_number: string | null;
+  grade_level: string;
+  section: string | null;
+  payment_status: "paid" | "unpaid" | "not_recorded";
+  subscription_monthly_status: {
+    month: string;
+    year: number;
+    categories: {
+      meal: { allocated: number; used: number; remaining: number };
+      snack: { allocated: number; used: number; remaining: number };
+      drink: { allocated: number; used: number; remaining: number };
+      extra: { allocated: number; used: number; remaining: number };
+    };
+  };
+}
+
 export interface DailySummaryData {
   date: string;
   total_orders: number;
   total_discounts: number;
   total_revenue: number;
   payment_breakdown: Array<{ method: string; count: number; amount: number }>;
-  cashier_breakdown: Array<{ cashier_name: string; orders: number; amount: number }>;
+  cashier_breakdown: Array<{
+    cashier_name: string;
+    orders: number;
+    amount: number;
+  }>;
   items_sold: Array<{ name: string; quantity_sold: number }>;
 }
 
@@ -245,7 +274,7 @@ export const reportApi = {
   updateStaffStatus: (userId: number, status: string) =>
     apiClient.post<{ id: number; user_id: number; status: string }>(
       "/dashboard/staff-status",
-      { user_id: userId, status }
+      { user_id: userId, status },
     ),
 
   sales: (params: Record<string, string | number | boolean | undefined>) =>
@@ -276,7 +305,11 @@ export const reportApi = {
   inventory: (params?: Record<string, string | number | boolean | undefined>) =>
     apiClient.get<{
       data: InventoryReportRow[];
-      summary: { out_of_stock: number; below_threshold: number; over_stock: number };
+      summary: {
+        out_of_stock: number;
+        below_threshold: number;
+        over_stock: number;
+      };
       logs?: { data: InventoryReportLog[]; meta: PaginatedMeta };
       discrepancy?: InventoryDiscrepancyRow[];
     }>("/reports/inventory", { params }),
@@ -289,7 +322,9 @@ export const reportApi = {
   activity: (params: Record<string, string | number | undefined>) =>
     apiClient.get<{ data: ActivityLogRow[]; meta: PaginatedMeta }>(
       "/reports/activity",
-      { params: params as Record<string, string | number | boolean | undefined> }
+      {
+        params: params as Record<string, string | number | boolean | undefined>,
+      },
     ),
 
   billing: (params: Record<string, string | number | undefined>) =>
@@ -302,9 +337,26 @@ export const reportApi = {
     }),
 
   credits: (params: Record<string, string | number | undefined>) =>
-    apiClient.get<{ data: CreditRow[]; meta: PaginatedMeta; summary: CreditSummary }>(
-      "/reports/credits",
-      { params: params as Record<string, string | number | boolean | undefined> }
-    ),
+    apiClient.get<{
+      data: CreditRow[];
+      meta: PaginatedMeta;
+      summary: CreditSummary;
+    }>("/reports/credits", {
+      params: params as Record<string, string | number | boolean | undefined>,
+    }),
 
+  subscriptionUsage: (params: {
+    month: string;
+    year: number;
+    status?: string;
+    grade_level?: string;
+    search?: string;
+    page?: number;
+  }) =>
+    apiClient.get<{ data: SubscriptionReportRow[]; meta: PaginatedMeta }>(
+      "/reports/subscription",
+      {
+        params: params as Record<string, string | number | boolean | undefined>,
+      },
+    ),
 };

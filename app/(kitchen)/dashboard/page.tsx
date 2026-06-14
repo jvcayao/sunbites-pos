@@ -80,9 +80,15 @@ function PaymentBadge({ method }: { method: string | null }) {
     wallet: "bg-purple-100 text-purple-700 border-purple-300",
     subscription: "bg-orange-100 text-orange-700 border-orange-300",
   };
-  const cls = map[method.toLowerCase()] ?? "bg-muted text-muted-foreground border-border";
+  const cls =
+    map[method.toLowerCase()] ?? "bg-muted text-muted-foreground border-border";
   return (
-    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize", cls)}>
+    <span
+      className={cn(
+        "text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize",
+        cls,
+      )}
+    >
       {method}
     </span>
   );
@@ -101,9 +107,15 @@ const STATUS_CLASSES: Record<string, string> = {
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const cls = STATUS_CLASSES[status] ?? "bg-muted text-muted-foreground border-border";
+  const cls =
+    STATUS_CLASSES[status] ?? "bg-muted text-muted-foreground border-border";
   return (
-    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", cls)}>
+    <span
+      className={cn(
+        "text-[11px] font-bold px-2 py-0.5 rounded-full border",
+        cls,
+      )}
+    >
       {status}
     </span>
   );
@@ -155,7 +167,10 @@ function StaffRosterWidget({ roster }: StaffRosterWidgetProps) {
                 if (val) mutation.mutate({ userId: staff.id, status: val });
               }}
             >
-              <SelectTrigger className="w-[120px] h-8 text-xs" aria-label={`Status for ${staff.full_name}`}>
+              <SelectTrigger
+                className="w-[120px] h-8 text-xs"
+                aria-label={`Status for ${staff.full_name}`}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -164,7 +179,7 @@ function StaffRosterWidget({ roster }: StaffRosterWidgetProps) {
                     <SelectItem key={s} value={s} className="text-xs">
                       {s}
                     </SelectItem>
-                  )
+                  ),
                 )}
               </SelectContent>
             </Select>
@@ -191,7 +206,10 @@ function LowStockWidget({ items }: { items: DashboardData["low_stock"] }) {
     <div className="rounded-xl border border-amber-300 bg-amber-50">
       <div className="flex items-center justify-between border-b border-amber-200 px-4 py-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-amber-600" aria-hidden="true" />
+          <AlertTriangle
+            className="h-4 w-4 text-amber-600"
+            aria-hidden="true"
+          />
           <h2 className="font-semibold text-amber-800">Low Stock Alerts</h2>
         </div>
         <Link
@@ -203,7 +221,10 @@ function LowStockWidget({ items }: { items: DashboardData["low_stock"] }) {
       </div>
       <div className="divide-y divide-amber-200">
         {items.map((item) => (
-          <div key={item.id} className="flex items-center justify-between px-4 py-2.5">
+          <div
+            key={item.id}
+            className="flex items-center justify-between px-4 py-2.5"
+          >
             <div>
               <p className="text-sm font-medium text-amber-900">{item.name}</p>
               <p className="text-xs text-amber-700">
@@ -215,7 +236,7 @@ function LowStockWidget({ items }: { items: DashboardData["low_stock"] }) {
                 "text-[11px] font-bold px-2 py-0.5 rounded-full border",
                 item.status === "out"
                   ? "bg-red-100 text-red-700 border-red-300"
-                  : "bg-yellow-100 text-amber-700 border-yellow-300"
+                  : "bg-yellow-100 text-amber-700 border-yellow-300",
               )}
             >
               {item.status === "out" ? "OUT" : "LOW"}
@@ -231,20 +252,31 @@ function LowStockWidget({ items }: { items: DashboardData["low_stock"] }) {
 // Credit Alerts Widget
 // ---------------------------------------------------------------------------
 
-function CreditAlertsWidget({ alerts }: { alerts: DashboardData["credit_alerts"] }) {
+function CreditAlertsWidget({
+  alerts,
+}: {
+  alerts: DashboardData["credit_alerts"];
+}) {
   if (alerts.length === 0) return null;
 
   return (
     <div className="rounded-xl border border-red-300 bg-red-50">
       <div className="border-b border-red-200 px-4 py-3">
-        <h2 className="font-semibold text-red-800">Outstanding Credit Alerts</h2>
+        <h2 className="font-semibold text-red-800">
+          Outstanding Credit Alerts
+        </h2>
         <p className="text-xs text-red-600">Students with unpaid credit</p>
       </div>
       <div className="divide-y divide-red-200">
         {alerts.map((alert) => (
-          <div key={alert.id} className="flex items-center justify-between px-4 py-2.5">
+          <div
+            key={alert.id}
+            className="flex items-center justify-between px-4 py-2.5"
+          >
             <div>
-              <p className="text-sm font-medium text-red-900">{alert.full_name}</p>
+              <p className="text-sm font-medium text-red-900">
+                {alert.full_name}
+              </p>
               <p className="text-xs text-red-700">{alert.grade_level}</p>
             </div>
             <div className="flex items-center gap-2">
@@ -275,7 +307,10 @@ function TopItemsWidget({ items }: { items: DashboardData["top_items"] }) {
     <div className="rounded-xl border border-border bg-card">
       <div className="border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          <TrendingUp
+            className="h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
           <h2 className="font-semibold text-foreground">Top Items Today</h2>
         </div>
       </div>
@@ -419,7 +454,10 @@ export default function DashboardPage() {
           <tbody className="divide-y divide-border">
             {data.recent_orders.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                <td
+                  colSpan={6}
+                  className="px-4 py-8 text-center text-muted-foreground"
+                >
                   No orders today yet.
                 </td>
               </tr>
@@ -434,7 +472,9 @@ export default function DashboardPage() {
                   </td>
                   <td className="px-4 py-2.5">
                     {order.student ?? (
-                      <span className="text-muted-foreground italic">Walk-In</span>
+                      <span className="text-muted-foreground italic">
+                        Walk-In
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-2.5 max-w-[200px] truncate text-muted-foreground">

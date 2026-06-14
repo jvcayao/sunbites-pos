@@ -93,7 +93,12 @@ function EditBranchDialog({ branch, onClose }: EditBranchDialogProps) {
   }
 
   return (
-    <Dialog open={branch !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open={branch !== null}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Branch: {branch?.name}</DialogTitle>
@@ -107,12 +112,18 @@ function EditBranchDialog({ branch, onClose }: EditBranchDialogProps) {
             <Input
               id="branch-name"
               value={values.name}
-              onChange={(e) => setValues((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(e) =>
+                setValues((prev) => ({ ...prev, name: e.target.value }))
+              }
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "branch-name-error" : undefined}
             />
             {errors.name && (
-              <p id="branch-name-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+              <p
+                id="branch-name-error"
+                role="alert"
+                className="flex items-center gap-1 text-xs text-destructive"
+              >
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {errors.name[0]}
               </p>
@@ -131,10 +142,16 @@ function EditBranchDialog({ branch, onClose }: EditBranchDialogProps) {
                 }))
               }
               aria-invalid={!!errors.gcash_number}
-              aria-describedby={errors.gcash_number ? "branch-gcash-error" : undefined}
+              aria-describedby={
+                errors.gcash_number ? "branch-gcash-error" : undefined
+              }
             />
             {errors.gcash_number && (
-              <p id="branch-gcash-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+              <p
+                id="branch-gcash-error"
+                role="alert"
+                className="flex items-center gap-1 text-xs text-destructive"
+              >
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {errors.gcash_number[0]}
               </p>
@@ -153,10 +170,16 @@ function EditBranchDialog({ branch, onClose }: EditBranchDialogProps) {
                 }))
               }
               aria-invalid={!!errors.address}
-              aria-describedby={errors.address ? "branch-address-error" : undefined}
+              aria-describedby={
+                errors.address ? "branch-address-error" : undefined
+              }
             />
             {errors.address && (
-              <p id="branch-address-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+              <p
+                id="branch-address-error"
+                role="alert"
+                className="flex items-center gap-1 text-xs text-destructive"
+              >
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {errors.address[0]}
               </p>
@@ -165,7 +188,8 @@ function EditBranchDialog({ branch, onClose }: EditBranchDialogProps) {
 
           {mutation.isError && (
             <p className="text-sm text-destructive">
-              {mutation.error != null && typeof (mutation.error as ApiError).message === "string"
+              {mutation.error != null &&
+              typeof (mutation.error as ApiError).message === "string"
                 ? (mutation.error as ApiError).message
                 : "An error occurred. Please try again."}
             </p>
@@ -212,7 +236,7 @@ function BranchCard({ branch, onEdit }: BranchCardProps) {
   function handleToggle() {
     const action = branch.is_active ? "deactivate" : "activate";
     const confirmed = window.confirm(
-      `Are you sure you want to ${action} this branch?`
+      `Are you sure you want to ${action} this branch?`,
     );
     if (!confirmed) return;
     setToggleError(null);
@@ -244,9 +268,9 @@ function BranchCard({ branch, onEdit }: BranchCardProps) {
 
       {/* Stats row */}
       <p className="mt-3 text-sm font-semibold text-foreground">
-        Staff: {branch.staff_count}&nbsp;&nbsp;·&nbsp;&nbsp;
-        Students: {branch.student_count}&nbsp;&nbsp;·&nbsp;&nbsp;
-        Orders Today: {branch.orders_today}
+        Staff: {branch.staff_count}&nbsp;&nbsp;·&nbsp;&nbsp; Students:{" "}
+        {branch.student_count}&nbsp;&nbsp;·&nbsp;&nbsp; Orders Today:{" "}
+        {branch.orders_today}
       </p>
 
       {/* Toggle error */}
@@ -256,11 +280,7 @@ function BranchCard({ branch, onEdit }: BranchCardProps) {
 
       {/* Actions */}
       <div className="mt-4 flex justify-end gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit(branch)}
-        >
+        <Button variant="ghost" size="sm" onClick={() => onEdit(branch)}>
           Edit
         </Button>
         <Button
@@ -277,8 +297,8 @@ function BranchCard({ branch, onEdit }: BranchCardProps) {
           {toggleMutation.isPending
             ? "Updating…"
             : branch.is_active
-            ? "Deactivate"
-            : "Activate"}
+              ? "Deactivate"
+              : "Activate"}
         </Button>
       </div>
     </div>
@@ -339,7 +359,9 @@ export default function BranchesPage() {
     <div className="p-6">
       <div>
         <p className="text-xs text-muted-foreground">References</p>
-        <h1 className="text-2xl font-bold text-foreground">Branch Management</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          Branch Management
+        </h1>
       </div>
 
       {isError ? (
@@ -352,7 +374,9 @@ export default function BranchesPage() {
               <BranchCardSkeleton />
             </>
           ) : !data?.length ? (
-            <p className="col-span-2 text-sm text-muted-foreground">No branches found.</p>
+            <p className="col-span-2 text-sm text-muted-foreground">
+              No branches found.
+            </p>
           ) : (
             data.map((branch) => (
               <BranchCard

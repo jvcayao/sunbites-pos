@@ -3,6 +3,7 @@
 import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { EchoProvider } from "@/components/providers/echo-provider";
 import { KitchenLayout } from "@/components/layouts/kitchen-layout";
 import { useAuthStore } from "@/lib/store/auth";
 
@@ -39,5 +40,9 @@ export default function KitchenGroupLayout({
   const isCashier = user?.roles.includes("cashier");
   if (!mounted || !token || !activeBranch || isCashier) return null;
 
-  return <KitchenLayout>{children}</KitchenLayout>;
+  return (
+    <EchoProvider>
+      <KitchenLayout>{children}</KitchenLayout>
+    </EchoProvider>
+  );
 }

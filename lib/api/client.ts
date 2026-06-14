@@ -8,7 +8,10 @@ interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function request<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
   const { params, ...init } = options;
   const store = useAuthStore.getState();
 
@@ -41,8 +44,14 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: "An error occurred." }));
-    if (response.status === 422 && typeof error.message === "string" && error.message.includes("No active branch")) {
+    const error = await response
+      .json()
+      .catch(() => ({ message: "An error occurred." }));
+    if (
+      response.status === 422 &&
+      typeof error.message === "string" &&
+      error.message.includes("No active branch")
+    ) {
       useAuthStore.getState().setActiveBranch(null);
       if (typeof window !== "undefined") window.location.href = "/branch";
     }
@@ -53,7 +62,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return response.json() as Promise<T>;
 }
 
-async function downloadFile(path: string, params?: Record<string, string | number | boolean | undefined>, filename?: string): Promise<void> {
+async function downloadFile(
+  path: string,
+  params?: Record<string, string | number | boolean | undefined>,
+  filename?: string,
+): Promise<void> {
   const store = useAuthStore.getState();
 
   const url = new URL(`${BASE_URL}${path}`);
@@ -63,9 +76,12 @@ async function downloadFile(path: string, params?: Record<string, string | numbe
     });
   }
 
-  const headers: Record<string, string> = { Accept: "application/octet-stream" };
+  const headers: Record<string, string> = {
+    Accept: "application/octet-stream",
+  };
   if (store.token) headers["Authorization"] = `Bearer ${store.token}`;
-  if (store.activeBranch) headers["X-Branch-Id"] = String(store.activeBranch.id);
+  if (store.activeBranch)
+    headers["X-Branch-Id"] = String(store.activeBranch.id);
 
   const response = await fetch(url.toString(), { headers });
 
@@ -75,7 +91,9 @@ async function downloadFile(path: string, params?: Record<string, string | numbe
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: "Export failed." }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: "Export failed." }));
     throw error as ApiError;
   }
 
@@ -94,11 +112,19 @@ export const apiClient = {
   get: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: "GET" }),
   post: <T>(path: string, body?: unknown, options?: RequestOptions) =>
-    request<T>(path, { ...options, method: "POST", body: JSON.stringify(body) }),
+    request<T>(path, {
+      ...options,
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
   put: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>(path, { ...options, method: "PUT", body: JSON.stringify(body) }),
   patch: <T>(path: string, body?: unknown, options?: RequestOptions) =>
-    request<T>(path, { ...options, method: "PATCH", body: JSON.stringify(body) }),
+    request<T>(path, {
+      ...options,
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
   delete: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: "DELETE" }),
   download: downloadFile,

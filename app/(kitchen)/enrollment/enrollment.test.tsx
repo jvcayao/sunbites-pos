@@ -14,8 +14,9 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/lib/store/auth", () => {
-  const actual =
-    jest.requireActual("@/lib/store/auth") as typeof import("@/lib/store/auth");
+  const actual = jest.requireActual(
+    "@/lib/store/auth",
+  ) as typeof import("@/lib/store/auth");
   return {
     ...actual,
     useAuthStore: Object.assign(jest.fn(), {
@@ -35,7 +36,11 @@ jest.mock("@/components/ui/select", () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require("react");
 
-  type TriggerMeta = { id?: string; ariaLabel?: string; ariaLabelledBy?: string };
+  type TriggerMeta = {
+    id?: string;
+    ariaLabel?: string;
+    ariaLabelledBy?: string;
+  };
 
   type CtxValue = {
     value?: string;
@@ -133,8 +138,12 @@ jest.mock("@/components/ui/select", () => {
     SelectContent,
     SelectItem,
     SelectValue,
-    SelectGroup: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    SelectLabel: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    SelectGroup: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
+    SelectLabel: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
     SelectSeparator: () => null,
     SelectScrollUpButton: () => null,
     SelectScrollDownButton: () => null,
@@ -160,7 +169,7 @@ beforeEach(() => {
       user: adminUser,
       activeBranch: { id: 1, name: "Main Branch", slug: "main-branch" },
       token: "test-token",
-    } as AuthState)
+    } as AuthState),
   );
 });
 
@@ -188,17 +197,25 @@ async function fillAndSubmitForm(user: ReturnType<typeof userEvent.setup>) {
 
   await user.type(screen.getByLabelText(/first name/i), "Maria");
   await user.type(screen.getByLabelText(/last name/i), "Santos");
-  await user.type(screen.getByLabelText(/student number/i), "TEST-001");
+  await user.type(screen.getByLabelText(/student no/i), "TEST-001");
   await user.type(screen.getByLabelText(/birthday/i), "2015-03-14");
 
   const fullNameInputs = screen.getAllByLabelText(/full name/i);
   await user.type(fullNameInputs[0], "Ana Santos");
   await user.type(document.getElementById("contact-0-phone")!, "09171234567");
-  await user.type(document.getElementById("contact-0-email")!, "ana@example.com");
-  await user.type(document.getElementById("contact-0-address")!, "123 Rizal St");
+  await user.type(
+    document.getElementById("contact-0-email")!,
+    "ana@example.com",
+  );
+  await user.type(
+    document.getElementById("contact-0-address")!,
+    "123 Rizal St",
+  );
 
   // Select relationship via native <select>
-  const relCombo = screen.getAllByRole("combobox", { name: /relationship/i })[0];
+  const relCombo = screen.getAllByRole("combobox", {
+    name: /relationship/i,
+  })[0];
   await userEvent.selectOptions(relCombo, "Mother");
 
   // Select grade level via native <select>
@@ -220,7 +237,7 @@ describe("EnrollmentPage", () => {
   it("renders the enrollment form heading", async () => {
     render(<EnrollmentPage />);
     expect(
-      await screen.findByText(/student enrollment form/i)
+      await screen.findByText(/student enrollment form/i),
     ).toBeInTheDocument();
   });
 
@@ -252,7 +269,7 @@ describe("EnrollmentPage", () => {
     await user.click(submitBtn);
 
     expect(
-      await screen.findByText(/first name is required/i)
+      await screen.findByText(/first name is required/i),
     ).toBeInTheDocument();
   });
 
@@ -261,7 +278,9 @@ describe("EnrollmentPage", () => {
     render(<EnrollmentPage />);
     await fillAndSubmitForm(user);
 
-    expect(await screen.findByText(/enrollment successful/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/enrollment successful/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/ANT-2025-010/i)).toBeInTheDocument();
   });
 
@@ -271,7 +290,9 @@ describe("EnrollmentPage", () => {
     await fillAndSubmitForm(user);
 
     await screen.findByText(/enrollment successful/i);
-    expect(screen.getByRole("button", { name: /print qr code/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /print qr code/i }),
+    ).toBeInTheDocument();
   });
 
   it("resets form when Enroll Another Student is clicked", async () => {
@@ -280,8 +301,12 @@ describe("EnrollmentPage", () => {
     await fillAndSubmitForm(user);
     await screen.findByText(/enrollment successful/i);
 
-    await user.click(screen.getByRole("button", { name: /enroll another student/i }));
-    expect(await screen.findByText(/student enrollment form/i)).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: /enroll another student/i }),
+    );
+    expect(
+      await screen.findByText(/student enrollment form/i),
+    ).toBeInTheDocument();
   });
 
   it("shows an API error message when submission fails", async () => {
@@ -289,16 +314,18 @@ describe("EnrollmentPage", () => {
       http.post(`${API}/enrollment`, () =>
         HttpResponse.json(
           { message: "Student number already exists." },
-          { status: 422 }
-        )
-      )
+          { status: 422 },
+        ),
+      ),
     );
 
     const user = userEvent.setup();
     render(<EnrollmentPage />);
     await fillAndSubmitForm(user);
 
-    expect(await screen.findByText(/student number already exists/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/student number already exists/i),
+    ).toBeInTheDocument();
   });
 
   it("allows adding an additional contact", async () => {

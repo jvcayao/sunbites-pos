@@ -10,7 +10,13 @@ import { orderApi } from "@/lib/api/orders";
 import { useAuthStore } from "@/lib/store/auth";
 import { useCartStore } from "@/lib/store/cart";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { InsufficientFundsModal } from "@/components/pos/insufficient-funds-modal";
 
@@ -62,7 +68,9 @@ function CartItemRow({
         >
           −
         </button>
-        <span className="w-6 text-center text-sm font-semibold">{quantity}</span>
+        <span className="w-6 text-center text-sm font-semibold">
+          {quantity}
+        </span>
         <button
           type="button"
           aria-label="Increase quantity"
@@ -100,7 +108,8 @@ export function CartPanel({ onOrderComplete, className }: Props) {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const { items, student, isWalkIn, paymentMethod, notes } = useCartStore();
-  const { updateQuantity, removeItem, clearCart, setPaymentMethod, setNotes } = useCartStore();
+  const { updateQuantity, removeItem, clearCart, setPaymentMethod, setNotes } =
+    useCartStore();
 
   const [amountTendered, setAmountTendered] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -115,7 +124,10 @@ export function CartPanel({ onOrderComplete, className }: Props) {
   const canApplyDiscount =
     user?.roles.includes("admin") || user?.roles.includes("manager");
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
 
   const discountValue = parseFloat(discountInput) || 0;
   const discountAmount =
@@ -132,13 +144,20 @@ export function CartPanel({ onOrderComplete, className }: Props) {
   const change = tendered - total;
 
   const subscriptionLimitError = (() => {
-    if (paymentMethod !== "subscription" || !student?.subscription_daily_status) return null;
-    const usageByCategory = items.reduce<Record<string, number>>((acc, item) => {
-      acc[item.category] = (acc[item.category] ?? 0) + item.quantity;
-      return acc;
-    }, {});
+    if (paymentMethod !== "subscription" || !student?.subscription_daily_status)
+      return null;
+    const usageByCategory = items.reduce<Record<string, number>>(
+      (acc, item) => {
+        acc[item.category] = (acc[item.category] ?? 0) + item.quantity;
+        return acc;
+      },
+      {},
+    );
     for (const [cat, qty] of Object.entries(usageByCategory)) {
-      const status = student.subscription_daily_status[cat as keyof typeof student.subscription_daily_status];
+      const status =
+        student.subscription_daily_status[
+          cat as keyof typeof student.subscription_daily_status
+        ];
       if (status && qty > status.remaining) {
         return `Daily ${cat} limit reached. Only ${status.remaining} remaining today.`;
       }
@@ -149,7 +168,11 @@ export function CartPanel({ onOrderComplete, className }: Props) {
   const isCheckoutValid = (() => {
     if (items.length === 0) return false;
     if (paymentMethod === "cash" && tendered < total) return false;
-    if (paymentMethod === "subscription" && (!student || student.student_type !== "subscription")) return false;
+    if (
+      paymentMethod === "subscription" &&
+      (!student || student.student_type !== "subscription")
+    )
+      return false;
     if (subscriptionLimitError) return false;
     return true;
   })();
@@ -225,7 +248,12 @@ export function CartPanel({ onOrderComplete, className }: Props) {
   }
 
   return (
-    <div className={cn("flex flex-col gap-0 rounded-xl border border-border bg-card", className)}>
+    <div
+      className={cn(
+        "flex flex-col gap-0 rounded-xl border border-border bg-card",
+        className,
+      )}
+    >
       {/* Header */}
       <div className="border-b border-border px-4 py-3">
         <h2 className="font-semibold text-foreground">Order Summary</h2>
@@ -235,7 +263,9 @@ export function CartPanel({ onOrderComplete, className }: Props) {
       <div className="flex-1 overflow-y-auto px-4">
         {items.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">Add items from the menu.</p>
+            <p className="text-sm text-muted-foreground">
+              Add items from the menu.
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -269,7 +299,9 @@ export function CartPanel({ onOrderComplete, className }: Props) {
       {/* Discount block — admin/manager only; hidden for subscription payments */}
       {canApplyDiscount && paymentMethod !== "subscription" && (
         <div className="border-t border-border px-4 py-3 space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase">Discount</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase">
+            Discount
+          </p>
           <div className="flex gap-2">
             <button
               type="button"
@@ -278,7 +310,7 @@ export function CartPanel({ onOrderComplete, className }: Props) {
                 "flex-1 rounded-lg border py-1.5 text-xs font-medium transition-colors",
                 discountType === "percent"
                   ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-background text-foreground hover:bg-muted"
+                  : "border-border bg-background text-foreground hover:bg-muted",
               )}
             >
               % Percent
@@ -290,7 +322,7 @@ export function CartPanel({ onOrderComplete, className }: Props) {
                 "flex-1 rounded-lg border py-1.5 text-xs font-medium transition-colors",
                 discountType === "fixed"
                   ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-background text-foreground hover:bg-muted"
+                  : "border-border bg-background text-foreground hover:bg-muted",
               )}
             >
               ₱ Fixed
@@ -302,7 +334,10 @@ export function CartPanel({ onOrderComplete, className }: Props) {
             step="0.01"
             placeholder={discountType === "percent" ? "0%" : "₱0.00"}
             value={discountInput}
-            onChange={(e) => { setDiscountInput(e.target.value); setDiscountError(null); }}
+            onChange={(e) => {
+              setDiscountInput(e.target.value);
+              setDiscountError(null);
+            }}
             className="w-full rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
           />
           {discountAmount > 0 && (
@@ -310,12 +345,17 @@ export function CartPanel({ onOrderComplete, className }: Props) {
               type="text"
               placeholder="Discount reason (required)"
               value={discountReason}
-              onChange={(e) => { setDiscountReason(e.target.value); setDiscountError(null); }}
+              onChange={(e) => {
+                setDiscountReason(e.target.value);
+                setDiscountError(null);
+              }}
               className="w-full rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
             />
           )}
           {discountError && (
-            <p role="alert" className="text-xs text-destructive">{discountError}</p>
+            <p role="alert" className="text-xs text-destructive">
+              {discountError}
+            </p>
           )}
         </div>
       )}
@@ -340,33 +380,46 @@ export function CartPanel({ onOrderComplete, className }: Props) {
 
       {/* Payment method */}
       <div className="border-t border-border px-4 py-3 space-y-2">
-        <p className="text-xs font-semibold text-muted-foreground uppercase">Payment Method</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase">
+          Payment Method
+        </p>
         <div className="flex gap-2">
-          {(Object.entries(PAYMENT_METHOD_CONFIG) as [OrderPaymentMethod, { label: string; icon: string }][]).map(
-            ([method, config]) => {
-              const isDisabled =
-                (method === "wallet" && (isWalkIn || !student)) ||
-                (method === "subscription" && (isWalkIn || !student || student.student_type !== "subscription"));
-              return (
-                <button
-                  key={method}
-                  type="button"
-                  disabled={isDisabled}
-                  onClick={() => { setPaymentMethod(method); setUseCredit(false); }}
-                  className={cn(
-                    "flex-1 rounded-xl border py-2 text-xs font-medium transition-colors",
-                    paymentMethod === method
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background text-foreground hover:border-primary/50",
-                    isDisabled && "cursor-not-allowed opacity-40"
-                  )}
-                >
-                  <span className="block text-base leading-tight">{config.icon}</span>
-                  {config.label}
-                </button>
-              );
-            }
-          )}
+          {(
+            Object.entries(PAYMENT_METHOD_CONFIG) as [
+              OrderPaymentMethod,
+              { label: string; icon: string },
+            ][]
+          ).map(([method, config]) => {
+            const isDisabled =
+              (method === "wallet" && (isWalkIn || !student)) ||
+              (method === "subscription" &&
+                (isWalkIn ||
+                  !student ||
+                  student.student_type !== "subscription"));
+            return (
+              <button
+                key={method}
+                type="button"
+                disabled={isDisabled}
+                onClick={() => {
+                  setPaymentMethod(method);
+                  setUseCredit(false);
+                }}
+                className={cn(
+                  "flex-1 rounded-xl border py-2 text-xs font-medium transition-colors",
+                  paymentMethod === method
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-foreground hover:border-primary/50",
+                  isDisabled && "cursor-not-allowed opacity-40",
+                )}
+              >
+                <span className="block text-base leading-tight">
+                  {config.icon}
+                </span>
+                {config.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -375,7 +428,10 @@ export function CartPanel({ onOrderComplete, className }: Props) {
         {paymentMethod === "cash" && (
           <>
             <div>
-              <label htmlFor="cash-tendered" className="mb-1 block text-xs font-medium text-muted-foreground">
+              <label
+                htmlFor="cash-tendered"
+                className="mb-1 block text-xs font-medium text-muted-foreground"
+              >
                 Amount Tendered
               </label>
               <input
@@ -393,7 +449,9 @@ export function CartPanel({ onOrderComplete, className }: Props) {
               <div
                 className={cn(
                   "flex justify-between rounded-lg p-2 text-sm font-medium",
-                  change >= 0 ? "bg-green-50 text-green-700" : "bg-destructive/10 text-destructive"
+                  change >= 0
+                    ? "bg-green-50 text-green-700"
+                    : "bg-destructive/10 text-destructive",
                 )}
               >
                 <span>Change</span>
@@ -405,7 +463,10 @@ export function CartPanel({ onOrderComplete, className }: Props) {
 
         {paymentMethod === "gcash" && (
           <div>
-            <label htmlFor="gcash-ref" className="mb-1 block text-xs font-medium text-muted-foreground">
+            <label
+              htmlFor="gcash-ref"
+              className="mb-1 block text-xs font-medium text-muted-foreground"
+            >
               Reference Number (optional)
             </label>
             <input
@@ -427,7 +488,11 @@ export function CartPanel({ onOrderComplete, className }: Props) {
             </div>
             <div className="flex justify-between font-medium">
               <span className="text-muted-foreground">After Purchase</span>
-              <span className={cn(walletAfter < 0 ? "text-destructive" : "text-foreground")}>
+              <span
+                className={cn(
+                  walletAfter < 0 ? "text-destructive" : "text-foreground",
+                )}
+              >
                 ₱{walletAfter.toFixed(2)}
               </span>
             </div>
@@ -439,26 +504,87 @@ export function CartPanel({ onOrderComplete, className }: Props) {
           </div>
         )}
 
-        {paymentMethod === "subscription" && student?.subscription_daily_status && (
-          <div className="rounded-lg border border-border bg-muted/40 p-2.5 space-y-1.5">
-            <p className="text-xs font-semibold text-muted-foreground uppercase">Daily Usage</p>
-            <div className="grid grid-cols-2 gap-1">
-              {Object.entries(student.subscription_daily_status).map(([cat, s]) => (
-                <div key={cat} className="flex items-center justify-between text-xs">
-                  <span className="capitalize text-muted-foreground">{cat}</span>
-                  <span className={cn("font-medium", s.used >= s.limit && s.limit > 0 ? "text-destructive" : "text-foreground")}>
-                    {s.used}/{s.limit}
-                  </span>
-                </div>
-              ))}
+        {paymentMethod === "subscription" &&
+          student?.subscription_daily_status && (
+            <div className="rounded-lg border border-border bg-muted/40 p-2.5 space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase">
+                Daily Usage
+              </p>
+              <div className="grid grid-cols-2 gap-1">
+                {Object.entries(student.subscription_daily_status).map(
+                  ([cat, s]) => (
+                    <div
+                      key={cat}
+                      className="flex items-center justify-between text-xs"
+                    >
+                      <span className="capitalize text-muted-foreground">
+                        {cat}
+                      </span>
+                      <span
+                        className={cn(
+                          "font-medium",
+                          s.used >= s.limit && s.limit > 0
+                            ? "text-destructive"
+                            : "text-foreground",
+                        )}
+                      >
+                        {s.used}/{s.limit}
+                      </span>
+                    </div>
+                  ),
+                )}
+              </div>
             </div>
-          </div>
-        )}
-        {paymentMethod === "subscription" && !student?.subscription_daily_status && (
-          <div className="rounded-lg border border-border bg-muted/40 p-2.5 text-sm text-muted-foreground">
-            Covered by monthly subscription
-          </div>
-        )}
+          )}
+        {paymentMethod === "subscription" &&
+          !student?.subscription_daily_status && (
+            <div className="rounded-lg border border-border bg-muted/40 p-2.5 text-sm text-muted-foreground">
+              Covered by monthly subscription
+            </div>
+          )}
+
+        {paymentMethod === "subscription" &&
+          student?.subscription_monthly_status && (
+            <div className="rounded-lg border border-border bg-muted/40 p-2.5 space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Monthly Usage (
+                {(() => {
+                  const m = student.subscription_monthly_status.month;
+                  return m.charAt(0).toUpperCase() + m.slice(1);
+                })()}
+                )
+              </p>
+              <div className="space-y-1">
+                {Object.entries(student.subscription_monthly_status.categories)
+                  .filter(([, s]) => s.allocated > 0)
+                  .map(([cat, s]) => (
+                    <div
+                      key={cat}
+                      className="flex items-center justify-between text-xs"
+                    >
+                      <span className="capitalize text-muted-foreground w-12">
+                        {cat}
+                      </span>
+                      <span className="text-muted-foreground tabular-nums">
+                        {s.used} / {s.allocated}
+                      </span>
+                      <span
+                        className={cn(
+                          "font-medium tabular-nums w-14 text-right",
+                          s.remaining === 0
+                            ? "text-destructive"
+                            : s.remaining <= 5
+                              ? "text-amber-600"
+                              : "text-foreground",
+                        )}
+                      >
+                        {s.remaining} left
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
       </div>
 
       {/* Checkout button */}
@@ -480,7 +606,12 @@ export function CartPanel({ onOrderComplete, className }: Props) {
       </div>
 
       {/* Confirm Purchase Dialog */}
-      <Dialog open={showConfirm} onOpenChange={(open) => { if (!open) setShowConfirm(false); }}>
+      <Dialog
+        open={showConfirm}
+        onOpenChange={(open) => {
+          if (!open) setShowConfirm(false);
+        }}
+      >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Confirm Purchase</DialogTitle>
@@ -494,7 +625,9 @@ export function CartPanel({ onOrderComplete, className }: Props) {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Items</span>
-              <span className="font-medium">{items.reduce((s, i) => s + i.quantity, 0)}</span>
+              <span className="font-medium">
+                {items.reduce((s, i) => s + i.quantity, 0)}
+              </span>
             </div>
             {discountAmount > 0 && (
               <div className="flex justify-between text-destructive">
@@ -513,7 +646,9 @@ export function CartPanel({ onOrderComplete, className }: Props) {
             {paymentMethod === "cash" && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Change</span>
-                <span className="font-medium">₱{Math.max(0, tendered - total).toFixed(2)}</span>
+                <span className="font-medium">
+                  ₱{Math.max(0, tendered - total).toFixed(2)}
+                </span>
               </div>
             )}
           </div>
@@ -522,7 +657,10 @@ export function CartPanel({ onOrderComplete, className }: Props) {
               Cancel
             </Button>
             <Button
-              onClick={() => { setShowConfirm(false); handleCheckout(); }}
+              onClick={() => {
+                setShowConfirm(false);
+                handleCheckout();
+              }}
               disabled={checkoutMutation.isPending}
             >
               Proceed

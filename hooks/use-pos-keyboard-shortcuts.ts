@@ -37,7 +37,8 @@ export function usePosKeyboardShortcuts({
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement).tagName.toLowerCase();
-      const isEditable = tag === "input" || tag === "textarea" || tag === "select";
+      const isEditable =
+        tag === "input" || tag === "textarea" || tag === "select";
 
       switch (e.key) {
         case "F1": {

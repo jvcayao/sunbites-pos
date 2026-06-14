@@ -10,7 +10,12 @@ export type SchoolMonthKey =
   | "February"
   | "March";
 
-export type DayOfWeekKey = "monday" | "tuesday" | "wednesday" | "thursday" | "friday";
+export type DayOfWeekKey =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday";
 
 export type CategoryKey = "ulam" | "vegetables" | "fruit" | "soup" | "snacks";
 

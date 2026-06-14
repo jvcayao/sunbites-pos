@@ -7,6 +7,7 @@ interface UserListParams {
   role?: string;
   status?: string;
   page?: number;
+  per_page?: number;
 }
 
 interface CreateUserPayload {
@@ -40,14 +41,18 @@ interface CreateUserPayload {
   tin_number?: string;
 }
 
-type UpdateUserPayload = Omit<CreateUserPayload, "password" | "password_confirmation">;
+type UpdateUserPayload = Omit<
+  CreateUserPayload,
+  "password" | "password_confirmation"
+>;
 
 export const userApi = {
   list: (params?: UserListParams) =>
-    apiClient.get<PaginatedStaffUsers>("/users", { params: params as Record<string, string | number | boolean | undefined> }),
+    apiClient.get<PaginatedStaffUsers>("/users", {
+      params: params as Record<string, string | number | boolean | undefined>,
+    }),
 
-  show: (id: number) =>
-    apiClient.get<StaffUser>(`/users/${id}`),
+  show: (id: number) => apiClient.get<StaffUser>(`/users/${id}`),
 
   create: (data: CreateUserPayload) =>
     apiClient.post<StaffUser>("/users", data),

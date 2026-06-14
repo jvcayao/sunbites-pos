@@ -83,7 +83,7 @@ function countSubscriptionMonths(
   startMonth: SchoolMonth,
   startYear: number,
   endMonth: SchoolMonth,
-  endYear: number
+  endYear: number,
 ): number {
   const startIdx = SCHOOL_MONTH_ORDER[startMonth];
   const endIdx = SCHOOL_MONTH_ORDER[endMonth];
@@ -130,8 +130,9 @@ const enrollSchema = z.object({
   branch_id: z.number({ error: "Branch is required" }),
   student_number: z
     .string()
-    .min(1, "Student number is required")
-    .max(50, "Student number is too long"),
+    .max(50, "Student number is too long")
+    .optional()
+    .or(z.literal("")),
   first_name: z
     .string()
     .min(1, "First name is required")
@@ -149,8 +150,16 @@ const enrollSchema = z.object({
       const d = new Date(v);
       if (isNaN(d.getTime())) return false;
       const now = new Date();
-      const minAge = new Date(now.getFullYear() - 20, now.getMonth(), now.getDate());
-      const maxAge = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate());
+      const minAge = new Date(
+        now.getFullYear() - 20,
+        now.getMonth(),
+        now.getDate(),
+      );
+      const maxAge = new Date(
+        now.getFullYear() - 2,
+        now.getMonth(),
+        now.getDate(),
+      );
       // Birthday must be between 2 and 20 years ago (school-age children)
       return d >= minAge && d <= maxAge;
     }, "Please enter a valid birthday (student must be 2–20 years old)"),
@@ -224,7 +233,10 @@ function FieldError({ error }: { error?: string[] | string }) {
   const msg = Array.isArray(error) ? error[0] : error;
   if (!msg) return null;
   return (
-    <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive">
+    <p
+      role="alert"
+      className="mt-1 flex items-center gap-1 text-xs text-destructive"
+    >
       <AlertCircle className="h-3.5 w-3.5 shrink-0" />
       {msg}
     </p>
@@ -267,7 +279,7 @@ export default function EnrollmentPage() {
   const isAdmin = user?.roles.includes("admin") ?? false;
 
   const [branchId, setBranchId] = useState<number | null>(
-    activeBranch?.id ?? null
+    activeBranch?.id ?? null,
   );
   const [studentType, setStudentType] = useState<
     "subscription" | "non_subscription" | null
@@ -286,13 +298,17 @@ export default function EnrollmentPage() {
   const [permissionMeals, setPermissionMeals] = useState(false);
   const [permissionDietary, setPermissionDietary] = useState(false);
   const [signature, setSignature] = useState("");
-  const [subscriptionStartMonth, setSubscriptionStartMonth] = useState<SchoolMonth | "">("");
+  const [subscriptionStartMonth, setSubscriptionStartMonth] = useState<
+    SchoolMonth | ""
+  >("");
   const [subscriptionStartYear, setSubscriptionStartYear] = useState<number>(
-    new Date().getFullYear()
+    new Date().getFullYear(),
   );
-  const [subscriptionEndMonth, setSubscriptionEndMonth] = useState<SchoolMonth | "">("");
+  const [subscriptionEndMonth, setSubscriptionEndMonth] = useState<
+    SchoolMonth | ""
+  >("");
   const [subscriptionEndYear, setSubscriptionEndYear] = useState<number>(
-    new Date().getFullYear()
+    new Date().getFullYear(),
   );
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [enrolledResult, setEnrolledResult] =
@@ -343,10 +359,10 @@ export default function EnrollmentPage() {
   function updateContact(
     index: number,
     field: keyof StudentContactInput,
-    value: string
+    value: string,
   ) {
     setContacts((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, [field]: value } : c))
+      prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)),
     );
   }
 
@@ -382,7 +398,7 @@ export default function EnrollmentPage() {
 
     const raw = {
       branch_id: branchId as number,
-      student_number: studentNumber,
+      student_number: studentNumber || undefined,
       first_name: firstName,
       last_name: lastName,
       grade_level: gradeLevel,
@@ -471,7 +487,7 @@ export default function EnrollmentPage() {
             <div>
               <p className="text-muted-foreground text-xs">Student Number</p>
               <p className="font-semibold font-mono">
-                {enrolledResult.student_number}
+                {enrolledResult.student_number ?? "—"}
               </p>
             </div>
             <div>
@@ -480,8 +496,12 @@ export default function EnrollmentPage() {
             </div>
             {enrolledResult.subscription_period && (
               <div>
-                <p className="text-muted-foreground text-xs">Subscription Period</p>
-                <p className="font-semibold">{enrolledResult.subscription_period}</p>
+                <p className="text-muted-foreground text-xs">
+                  Subscription Period
+                </p>
+                <p className="font-semibold">
+                  {enrolledResult.subscription_period}
+                </p>
               </div>
             )}
           </div>
@@ -508,11 +528,7 @@ export default function EnrollmentPage() {
           </div>
         </div>
 
-        <Button
-          type="button"
-          className="w-full"
-          onClick={resetForm}
-        >
+        <Button type="button" className="w-full" onClick={resetForm}>
           <UserPlus className="mr-1.5 h-4 w-4" aria-hidden="true" />
           Enroll Another Student
         </Button>
@@ -556,7 +572,7 @@ export default function EnrollmentPage() {
                       "rounded-lg border p-3 text-left text-sm transition-colors",
                       branchId === branch.id
                         ? "border-primary bg-primary/5 font-semibold text-primary"
-                        : "border-border hover:bg-muted/40"
+                        : "border-border hover:bg-muted/40",
                     )}
                   >
                     {branch.name}
@@ -596,7 +612,7 @@ export default function EnrollmentPage() {
                     "rounded-lg border p-4 text-left transition-colors",
                     studentType === type.value
                       ? "border-primary bg-primary/5"
-                      : "border-border hover:bg-muted/40"
+                      : "border-border hover:bg-muted/40",
                   )}
                 >
                   <p
@@ -604,7 +620,7 @@ export default function EnrollmentPage() {
                       "text-sm font-semibold",
                       studentType === type.value
                         ? "text-primary"
-                        : "text-foreground"
+                        : "text-foreground",
                     )}
                   >
                     {type.label}
@@ -643,7 +659,7 @@ export default function EnrollmentPage() {
                       aria-invalid={!!errors.subscription_start_month?.length}
                       className={cn(
                         errors.subscription_start_month?.length &&
-                          "border-destructive"
+                          "border-destructive",
                       )}
                     >
                       <SelectValue placeholder="Select month…" />
@@ -676,7 +692,7 @@ export default function EnrollmentPage() {
                     aria-invalid={!!errors.subscription_start_year?.length}
                     className={cn(
                       errors.subscription_start_year?.length &&
-                        "border-destructive"
+                        "border-destructive",
                     )}
                   />
                 </FormField>
@@ -698,7 +714,7 @@ export default function EnrollmentPage() {
                       aria-invalid={!!errors.subscription_end_month?.length}
                       className={cn(
                         errors.subscription_end_month?.length &&
-                          "border-destructive"
+                          "border-destructive",
                       )}
                     >
                       <SelectValue placeholder="Select month…" />
@@ -731,44 +747,54 @@ export default function EnrollmentPage() {
                     aria-invalid={!!errors.subscription_end_year?.length}
                     className={cn(
                       errors.subscription_end_year?.length &&
-                        "border-destructive"
+                        "border-destructive",
                     )}
                   />
                 </FormField>
               </div>
 
-              {subscriptionStartMonth && subscriptionEndMonth && (() => {
-                const count = countSubscriptionMonths(
-                  subscriptionStartMonth as SchoolMonth,
-                  subscriptionStartYear,
-                  subscriptionEndMonth as SchoolMonth,
-                  subscriptionEndYear
-                );
-                if (count <= 0) {
-                  return (
-                    <p className="text-xs text-destructive">
-                      End date must be on or after start date.
-                    </p>
+              {subscriptionStartMonth &&
+                subscriptionEndMonth &&
+                (() => {
+                  const count = countSubscriptionMonths(
+                    subscriptionStartMonth as SchoolMonth,
+                    subscriptionStartYear,
+                    subscriptionEndMonth as SchoolMonth,
+                    subscriptionEndYear,
                   );
-                }
-                return (
-                  <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm">
-                    This will create{" "}
-                    <span className="font-bold">{count}</span>{" "}
-                    {count === 1 ? "month" : "months"} from{" "}
-                    <span className="font-semibold">
-                      {SCHOOL_MONTH_LABELS[subscriptionStartMonth as SchoolMonth]}{" "}
-                      {subscriptionStartYear}
-                    </span>{" "}
-                    to{" "}
-                    <span className="font-semibold">
-                      {SCHOOL_MONTH_LABELS[subscriptionEndMonth as SchoolMonth]}{" "}
-                      {subscriptionEndYear}
-                    </span>
-                    .
-                  </div>
-                );
-              })()}
+                  if (count <= 0) {
+                    return (
+                      <p className="text-xs text-destructive">
+                        End date must be on or after start date.
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm">
+                      This will create{" "}
+                      <span className="font-bold">{count}</span>{" "}
+                      {count === 1 ? "month" : "months"} from{" "}
+                      <span className="font-semibold">
+                        {
+                          SCHOOL_MONTH_LABELS[
+                            subscriptionStartMonth as SchoolMonth
+                          ]
+                        }{" "}
+                        {subscriptionStartYear}
+                      </span>{" "}
+                      to{" "}
+                      <span className="font-semibold">
+                        {
+                          SCHOOL_MONTH_LABELS[
+                            subscriptionEndMonth as SchoolMonth
+                          ]
+                        }{" "}
+                        {subscriptionEndYear}
+                      </span>
+                      .
+                    </div>
+                  );
+                })()}
             </SectionCard>
           )}
 
@@ -793,7 +819,9 @@ export default function EnrollmentPage() {
                   aria-describedby={
                     errors.first_name?.length ? "first-name-error" : undefined
                   }
-                  className={cn(errors.first_name?.length && "border-destructive")}
+                  className={cn(
+                    errors.first_name?.length && "border-destructive",
+                  )}
                 />
               </FormField>
 
@@ -808,14 +836,15 @@ export default function EnrollmentPage() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   aria-invalid={!!errors.last_name?.length}
-                  className={cn(errors.last_name?.length && "border-destructive")}
+                  className={cn(
+                    errors.last_name?.length && "border-destructive",
+                  )}
                 />
               </FormField>
 
               <FormField
-                label="Student Number"
+                label="Student No. (optional)"
                 htmlFor="student-number"
-                required
                 error={errors.student_number}
               >
                 <Input
@@ -824,7 +853,7 @@ export default function EnrollmentPage() {
                   onChange={(e) => setStudentNumber(e.target.value)}
                   aria-invalid={!!errors.student_number?.length}
                   className={cn(
-                    errors.student_number?.length && "border-destructive"
+                    errors.student_number?.length && "border-destructive",
                   )}
                 />
               </FormField>
@@ -835,12 +864,15 @@ export default function EnrollmentPage() {
                 required
                 error={errors.grade_level}
               >
-                <Select value={gradeLevel} onValueChange={(v) => setGradeLevel(v ?? "")}>
+                <Select
+                  value={gradeLevel}
+                  onValueChange={(v) => setGradeLevel(v ?? "")}
+                >
                   <SelectTrigger
                     id="grade-level"
                     aria-invalid={!!errors.grade_level?.length}
                     className={cn(
-                      errors.grade_level?.length && "border-destructive"
+                      errors.grade_level?.length && "border-destructive",
                     )}
                   >
                     <SelectValue placeholder="Select grade…" />
@@ -855,7 +887,11 @@ export default function EnrollmentPage() {
                 </Select>
               </FormField>
 
-              <FormField label="Section" htmlFor="section" error={errors.section}>
+              <FormField
+                label="Section"
+                htmlFor="section"
+                error={errors.section}
+              >
                 <Input
                   id="section"
                   value={section}
@@ -876,7 +912,9 @@ export default function EnrollmentPage() {
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
                   aria-invalid={!!errors.birthday?.length}
-                  className={cn(errors.birthday?.length && "border-destructive")}
+                  className={cn(
+                    errors.birthday?.length && "border-destructive",
+                  )}
                 />
               </FormField>
             </div>
@@ -936,9 +974,9 @@ export default function EnrollmentPage() {
                       htmlFor={`contact-${index}-full-name`}
                       required
                       error={
-                        (
-                          errors as Record<string, string[]>
-                        )[`contacts.${index}.full_name`]
+                        (errors as Record<string, string[]>)[
+                          `contacts.${index}.full_name`
+                        ]
                       }
                     >
                       <Input
@@ -1016,7 +1054,8 @@ export default function EnrollmentPage() {
                         }
                       />
                       <p className="text-xs text-muted-foreground">
-                        If provided, a portal activation email will be sent to this address.
+                        If provided, a portal activation email will be sent to
+                        this address.
                       </p>
                     </FormField>
                   </div>
@@ -1053,7 +1092,6 @@ export default function EnrollmentPage() {
                   + Add Another Contact
                 </Button>
               )}
-
             </div>
           </SectionCard>
 
@@ -1113,7 +1151,7 @@ export default function EnrollmentPage() {
                     placeholder="Type your full name as signature"
                     aria-invalid={!!errors.signature?.length}
                     className={cn(
-                      errors.signature?.length && "border-destructive"
+                      errors.signature?.length && "border-destructive",
                     )}
                   />
                 </FormField>

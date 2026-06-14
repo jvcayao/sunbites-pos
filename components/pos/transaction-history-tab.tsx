@@ -19,7 +19,11 @@ import { Button } from "@/components/ui/button";
 import { VoidModal } from "@/components/pos/void-modal";
 
 import type { ApiError } from "@/types/auth";
-import type { Order, OrderPaymentMethod, TransactionListParams } from "@/types/order";
+import type {
+  Order,
+  OrderPaymentMethod,
+  TransactionListParams,
+} from "@/types/order";
 
 const PAYMENT_BADGE_STYLES: Record<OrderPaymentMethod, string> = {
   cash: "bg-green-100 text-green-700",
@@ -28,12 +32,18 @@ const PAYMENT_BADGE_STYLES: Record<OrderPaymentMethod, string> = {
   subscription: "bg-amber-100 text-amber-700",
 };
 
-function PaymentBadge({ method, label }: { method: OrderPaymentMethod; label: string }) {
+function PaymentBadge({
+  method,
+  label,
+}: {
+  method: OrderPaymentMethod;
+  label: string;
+}) {
   return (
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-        PAYMENT_BADGE_STYLES[method]
+        PAYMENT_BADGE_STYLES[method],
       )}
     >
       {label}
@@ -103,15 +113,21 @@ export function TransactionHistoryTab({ className }: Props) {
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl border border-border bg-card p-3">
             <p className="text-xs text-muted-foreground">Transactions</p>
-            <p className="text-2xl font-bold text-foreground">{summary.total_transactions}</p>
+            <p className="text-2xl font-bold text-foreground">
+              {summary.total_transactions}
+            </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-3">
             <p className="text-xs text-muted-foreground">Revenue</p>
-            <p className="text-2xl font-bold text-foreground">₱{parseFloat(summary.total_revenue).toFixed(2)}</p>
+            <p className="text-2xl font-bold text-foreground">
+              ₱{parseFloat(summary.total_revenue).toFixed(2)}
+            </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-3">
             <p className="text-xs text-muted-foreground">Walk-ins</p>
-            <p className="text-2xl font-bold text-foreground">{summary.walk_in_count}</p>
+            <p className="text-2xl font-bold text-foreground">
+              {summary.walk_in_count}
+            </p>
           </div>
         </div>
       )}
@@ -126,7 +142,9 @@ export function TransactionHistoryTab({ className }: Props) {
         />
         <select
           value={filterMethod}
-          onChange={(e) => setFilterMethod(e.target.value as OrderPaymentMethod | "")}
+          onChange={(e) =>
+            setFilterMethod(e.target.value as OrderPaymentMethod | "")
+          }
           className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
         >
           <option value="">All Methods</option>
@@ -170,7 +188,10 @@ export function TransactionHistoryTab({ className }: Props) {
               ))
             ) : isError ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-sm text-destructive">
+                <TableCell
+                  colSpan={7}
+                  className="py-8 text-center text-sm text-destructive"
+                >
                   Failed to load transactions.
                 </TableCell>
               </TableRow>
@@ -191,11 +212,16 @@ export function TransactionHistoryTab({ className }: Props) {
                     key={order.id}
                     className={cn(isVoided && "opacity-50")}
                   >
-                    <TableCell className={cn("text-sm", isVoided && "line-through")}>
+                    <TableCell
+                      className={cn("text-sm", isVoided && "line-through")}
+                    >
                       {formatTime(order.created_at)}
                     </TableCell>
                     <TableCell
-                      className={cn("font-mono text-xs", isVoided && "line-through")}
+                      className={cn(
+                        "font-mono text-xs",
+                        isVoided && "line-through",
+                      )}
                     >
                       {order.receipt_number}
                       {isVoided && (
@@ -204,7 +230,9 @@ export function TransactionHistoryTab({ className }: Props) {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className={cn("text-sm", isVoided && "line-through")}>
+                    <TableCell
+                      className={cn("text-sm", isVoided && "line-through")}
+                    >
                       {order.student?.full_name ?? (
                         <span className="text-muted-foreground">Walk-in</span>
                       )}
@@ -233,7 +261,10 @@ export function TransactionHistoryTab({ className }: Props) {
                       />
                     </TableCell>
                     <TableCell
-                      className={cn("text-right text-sm font-medium", isVoided && "line-through")}
+                      className={cn(
+                        "text-right text-sm font-medium",
+                        isVoided && "line-through",
+                      )}
                     >
                       ₱{parseFloat(order.total).toFixed(2)}
                     </TableCell>

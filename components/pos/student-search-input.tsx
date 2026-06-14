@@ -46,7 +46,7 @@ function SelectedStudentCard({ student, onClear }: SelectedStudentCardProps) {
                   "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
                   student.enrollment_status === "enrolled"
                     ? "bg-green-100 text-green-700"
-                    : "bg-muted text-muted-foreground"
+                    : "bg-muted text-muted-foreground",
                 )}
               >
                 {student.enrollment_status_label}
@@ -80,46 +80,57 @@ function SelectedStudentCard({ student, onClear }: SelectedStudentCardProps) {
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Credit Owed</p>
-          <p className={cn("text-sm font-bold", hasCredit ? "text-destructive" : "text-foreground")}>
+          <p
+            className={cn(
+              "text-sm font-bold",
+              hasCredit ? "text-destructive" : "text-foreground",
+            )}
+          >
             ₱{creditBalance.toFixed(2)}
           </p>
         </div>
       </div>
 
-      {student.student_type === "subscription" && student.subscription_daily_status && (
-        <>
-          {Object.values(student.subscription_daily_status).some((s) => s.used >= s.limit && s.limit > 0) && (
-            <div className="mt-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-              ⚠{" "}
-              {student.first_name} has reached their daily{" "}
-              {Object.entries(student.subscription_daily_status)
-                .filter(([, s]) => s.used >= s.limit && s.limit > 0)
-                .map(([cat]) => cat)
-                .join(" and ")}{" "}
-              limit. Subscription payment is blocked for those categories.
+      {student.student_type === "subscription" &&
+        student.subscription_daily_status && (
+          <>
+            {Object.values(student.subscription_daily_status).some(
+              (s) => s.used >= s.limit && s.limit > 0,
+            ) && (
+              <div className="mt-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                ⚠ {student.first_name} has reached their daily{" "}
+                {Object.entries(student.subscription_daily_status)
+                  .filter(([, s]) => s.used >= s.limit && s.limit > 0)
+                  .map(([cat]) => cat)
+                  .join(" and ")}{" "}
+                limit. Subscription payment is blocked for those categories.
+              </div>
+            )}
+            <div className="mt-2 border-t border-border pt-2">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Daily Subscription
+              </p>
+              <div className="grid grid-cols-2 gap-1">
+                {Object.entries(student.subscription_daily_status).map(
+                  ([cat, s]) => (
+                    <span
+                      key={cat}
+                      className={cn(
+                        "text-xs font-medium capitalize",
+                        s.used >= s.limit && s.limit > 0
+                          ? "text-red-600"
+                          : "text-green-700",
+                      )}
+                    >
+                      {cat} {s.used}/{s.limit}{" "}
+                      {s.used >= s.limit && s.limit > 0 ? "✗" : "✓"}
+                    </span>
+                  ),
+                )}
+              </div>
             </div>
-          )}
-          <div className="mt-2 border-t border-border pt-2">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Daily Subscription
-            </p>
-            <div className="grid grid-cols-2 gap-1">
-              {Object.entries(student.subscription_daily_status).map(([cat, s]) => (
-                <span
-                  key={cat}
-                  className={cn(
-                    "text-xs font-medium capitalize",
-                    s.used >= s.limit && s.limit > 0 ? "text-red-600" : "text-green-700"
-                  )}
-                >
-                  {cat} {s.used}/{s.limit}{" "}
-                  {s.used >= s.limit && s.limit > 0 ? "✗" : "✓"}
-                </span>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
     </div>
   );
 }
@@ -129,7 +140,10 @@ interface SearchResultsDropdownProps {
   onSelect: (student: PosStudentSearchResult) => void;
 }
 
-function SearchResultsDropdown({ results, onSelect }: SearchResultsDropdownProps) {
+function SearchResultsDropdown({
+  results,
+  onSelect,
+}: SearchResultsDropdownProps) {
   if (!results.length) {
     return (
       <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-border bg-popover p-3 shadow-lg">
@@ -152,11 +166,13 @@ function SearchResultsDropdown({ results, onSelect }: SearchResultsDropdownProps
               "flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors",
               isEnrolled
                 ? "hover:bg-muted cursor-pointer"
-                : "cursor-not-allowed opacity-65"
+                : "cursor-not-allowed opacity-65",
             )}
           >
             <div>
-              <p className="text-sm font-medium text-foreground">{student.full_name}</p>
+              <p className="text-sm font-medium text-foreground">
+                {student.full_name}
+              </p>
               <p className="text-xs text-muted-foreground">
                 {student.grade_level}
                 {student.section ? ` — ${student.section}` : ""}
@@ -165,10 +181,14 @@ function SearchResultsDropdown({ results, onSelect }: SearchResultsDropdownProps
             <span
               className={cn(
                 "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
-                isEnrolled ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"
+                isEnrolled
+                  ? "bg-green-100 text-green-700"
+                  : "bg-muted text-muted-foreground",
               )}
             >
-              {isEnrolled ? student.enrollment_status_label : "⛔ " + student.enrollment_status_label}
+              {isEnrolled
+                ? student.enrollment_status_label
+                : "⛔ " + student.enrollment_status_label}
             </span>
           </button>
         );
@@ -184,23 +204,39 @@ interface ChangeStudentDialogProps {
   onCancel: () => void;
 }
 
-function ChangeStudentDialog({ currentStudent, newStudent, onConfirm, onCancel }: ChangeStudentDialogProps) {
+function ChangeStudentDialog({
+  currentStudent,
+  newStudent,
+  onConfirm,
+  onCancel,
+}: ChangeStudentDialogProps) {
   return (
-    <Dialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+    >
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Switch Student?</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Switch Student?</DialogTitle>
+        </DialogHeader>
         <div className="space-y-3 py-2 text-sm">
           <p className="text-muted-foreground">A new QR code was scanned.</p>
           <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-2">
             <div>
               <p className="text-xs text-muted-foreground">Current</p>
               <p className="font-medium">{currentStudent.full_name}</p>
-              <p className="text-xs text-muted-foreground">{currentStudent.grade_level}</p>
+              <p className="text-xs text-muted-foreground">
+                {currentStudent.grade_level}
+              </p>
             </div>
             <div className="border-t border-border pt-2">
               <p className="text-xs text-muted-foreground">New</p>
               <p className="font-medium">{newStudent.full_name}</p>
-              <p className="text-xs text-muted-foreground">{newStudent.grade_level}</p>
+              <p className="text-xs text-muted-foreground">
+                {newStudent.grade_level}
+              </p>
               <span className="mt-1 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                 Enrolled
               </span>
@@ -208,7 +244,9 @@ function ChangeStudentDialog({ currentStudent, newStudent, onConfirm, onCancel }
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-1">
-          <Button variant="outline" onClick={onCancel}>No, Keep Current</Button>
+          <Button variant="outline" onClick={onCancel}>
+            No, Keep Current
+          </Button>
           <Button onClick={onConfirm}>Yes, Switch</Button>
         </div>
       </DialogContent>
@@ -216,15 +254,26 @@ function ChangeStudentDialog({ currentStudent, newStudent, onConfirm, onCancel }
   );
 }
 
-interface StudentNotFoundDialogProps { open: boolean; onClose: () => void; }
+interface StudentNotFoundDialogProps {
+  open: boolean;
+  onClose: () => void;
+}
 
 function StudentNotFoundDialog({ open, onClose }: StudentNotFoundDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
+    >
       <DialogContent className="sm:max-w-sm">
-        <DialogHeader><DialogTitle>Student Not Found</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Student Not Found</DialogTitle>
+        </DialogHeader>
         <p className="py-2 text-sm text-muted-foreground">
-          No student was found matching this QR code. Please try scanning again or search by name.
+          No student was found matching this QR code. Please try scanning again
+          or search by name.
         </p>
         <div className="flex justify-end pt-1">
           <Button onClick={onClose}>Close</Button>
@@ -248,10 +297,14 @@ export function StudentSearchInput({
   isWalkIn,
 }: Props) {
   const [inputValue, setInputValue] = useState("");
-  const [searchResults, setSearchResults] = useState<PosStudentSearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<PosStudentSearchResult[]>(
+    [],
+  );
   const [showDropdown, setShowDropdown] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pendingQrStudent, setPendingQrStudent] = useState<PosStudent | null>(null);
+  const [pendingQrStudent, setPendingQrStudent] = useState<PosStudent | null>(
+    null,
+  );
   const [showNotFoundDialog, setShowNotFoundDialog] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -314,10 +367,15 @@ export function StudentSearchInput({
       setInputValue("");
       setShowDropdown(false);
       setSearchResults([]);
-      if (!result.student) { setShowNotFoundDialog(true); return; }
+      if (!result.student) {
+        setShowNotFoundDialog(true);
+        return;
+      }
       const incoming = result.student;
       if (incoming.enrollment_status !== "enrolled") {
-        setError(incoming.full_name + " is not enrolled and cannot make purchases.");
+        setError(
+          incoming.full_name + " is not enrolled and cannot make purchases.",
+        );
         return;
       }
       if (selectedStudentRef.current) {
@@ -327,11 +385,15 @@ export function StudentSearchInput({
         setTimeout(() => inputRef.current?.focus(), 50);
       }
     },
-    onError: () => { setShowNotFoundDialog(true); },
+    onError: () => {
+      setShowNotFoundDialog(true);
+    },
   });
 
   const globalQrLookupRef = useRef(globalQrLookupMutation);
-  useEffect(() => { globalQrLookupRef.current = globalQrLookupMutation; });
+  useEffect(() => {
+    globalQrLookupRef.current = globalQrLookupMutation;
+  });
 
   useEffect(() => {
     const SCAN_THRESHOLD_MS = 100;
@@ -392,7 +454,7 @@ export function StudentSearchInput({
       if (!value.trim()) return;
       lookupMutation.mutate({ type: "search", value: value.trim() });
     },
-    [lookupMutation]
+    [lookupMutation],
   );
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -437,8 +499,7 @@ export function StudentSearchInput({
     }, 50);
   }
 
-  const isPending =
-    lookupMutation.isPending || fullStudentMutation.isPending;
+  const isPending = lookupMutation.isPending || fullStudentMutation.isPending;
 
   return (
     <>
@@ -448,8 +509,12 @@ export function StudentSearchInput({
             <div className="flex items-center gap-2">
               <span className="text-lg">🚶</span>
               <div>
-                <p className="font-semibold text-foreground">Walk-in Customer</p>
-                <p className="text-sm text-muted-foreground">No student account attached</p>
+                <p className="font-semibold text-foreground">
+                  Walk-in Customer
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  No student account attached
+                </p>
               </div>
             </div>
             <button
@@ -462,7 +527,10 @@ export function StudentSearchInput({
           </div>
         </div>
       ) : selectedStudent ? (
-        <SelectedStudentCard student={selectedStudent} onClear={() => onStudentSelected(null)} />
+        <SelectedStudentCard
+          student={selectedStudent}
+          onClear={() => onStudentSelected(null)}
+        />
       ) : (
         <div ref={containerRef} className="relative">
           <div className="relative">
@@ -482,7 +550,7 @@ export function StudentSearchInput({
                 "placeholder:text-muted-foreground",
                 "focus:border-ring focus:ring-3 focus:ring-ring/30",
                 error ? "border-destructive" : "border-input",
-                isPending && "cursor-wait opacity-70"
+                isPending && "cursor-wait opacity-70",
               )}
             />
             {isPending && (
@@ -507,7 +575,11 @@ export function StudentSearchInput({
 
           <div className="mt-2 flex items-center gap-3">
             <p className="text-xs text-muted-foreground">
-              Press <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs">Enter</kbd> to search
+              Press{" "}
+              <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-mono text-xs">
+                Enter
+              </kbd>{" "}
+              to search
             </p>
             <span className="text-xs text-muted-foreground">—</span>
             <button
@@ -536,7 +608,10 @@ export function StudentSearchInput({
 
       <StudentNotFoundDialog
         open={showNotFoundDialog}
-        onClose={() => { setShowNotFoundDialog(false); setTimeout(() => inputRef.current?.focus(), 50); }}
+        onClose={() => {
+          setShowNotFoundDialog(false);
+          setTimeout(() => inputRef.current?.focus(), 50);
+        }}
       />
     </>
   );

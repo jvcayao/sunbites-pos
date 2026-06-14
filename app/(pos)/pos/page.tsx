@@ -23,7 +23,13 @@ import { useCartStore } from "@/lib/store/cart";
 import { usePosKeyboardShortcuts } from "@/hooks/use-pos-keyboard-shortcuts";
 import { AppLogo } from "@/components/app-logo";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { CartPanel } from "@/components/pos/cart-panel";
 import { MenuGrid } from "@/components/pos/menu-grid";
 import { ReceiptModal } from "@/components/pos/receipt-modal";
@@ -46,16 +52,41 @@ interface NavItem {
 }
 
 const MAIN_NAV: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-  { href: "/enrollment", label: "Enrollment", icon: <ClipboardList className="h-4 w-4" /> },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: <LayoutDashboard className="h-4 w-4" />,
+  },
+  {
+    href: "/enrollment",
+    label: "Enrollment",
+    icon: <ClipboardList className="h-4 w-4" />,
+  },
   { href: "/students", label: "Students", icon: <Users className="h-4 w-4" /> },
 ];
 
 const REFERENCES_NAV: NavItem[] = [
-  { href: "/references/inventory", label: "Inventory", icon: <Archive className="h-4 w-4" /> },
-  { href: "/references/meal-planner", label: "Meal Planner", icon: <CalendarDays className="h-4 w-4" /> },
-  { href: "/references/users", label: "Users", icon: <UserCog className="h-4 w-4" />, adminOnly: true },
-  { href: "/references/branches", label: "Branches", icon: <GitBranch className="h-4 w-4" /> },
+  {
+    href: "/references/inventory",
+    label: "Inventory",
+    icon: <Archive className="h-4 w-4" />,
+  },
+  {
+    href: "/references/meal-planner",
+    label: "Meal Planner",
+    icon: <CalendarDays className="h-4 w-4" />,
+  },
+  {
+    href: "/references/users",
+    label: "Users",
+    icon: <UserCog className="h-4 w-4" />,
+    adminOnly: true,
+  },
+  {
+    href: "/references/branches",
+    label: "Branches",
+    icon: <GitBranch className="h-4 w-4" />,
+  },
 ];
 
 type ActiveTab = "pos" | "transactions" | "menu-mgmt" | "inventory";
@@ -70,13 +101,18 @@ const TABS: TabConfig[] = [
   { id: "pos", label: "POS" },
   { id: "transactions", label: "Transactions" },
   { id: "menu-mgmt", label: "Menu Mgmt", requiresRole: ["admin", "manager"] },
-  { id: "inventory", label: "Inventory", requiresRole: ["admin", "manager", "supervisor"] },
+  {
+    id: "inventory",
+    label: "Inventory",
+    requiresRole: ["admin", "manager", "supervisor"],
+  },
 ];
 
 export default function PosPage() {
   const user = useAuthStore((s) => s.user);
   const activeBranch = useAuthStore((s) => s.activeBranch);
-  const { student, isWalkIn, setStudent, setWalkIn, clearCart } = useCartStore();
+  const { student, isWalkIn, setStudent, setWalkIn, clearCart } =
+    useCartStore();
   const [activeTab, setActiveTab] = useState<ActiveTab>("pos");
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -99,7 +135,7 @@ export default function PosPage() {
     (selected: PosStudent | null) => {
       setStudent(selected);
     },
-    [setStudent]
+    [setStudent],
   );
 
   const handleWalkIn = useCallback(() => {
@@ -120,7 +156,7 @@ export default function PosPage() {
     // Keyboard shortcut delegates to the CartPanel's internal submit.
     // Dispatch a synthetic click on the confirm button.
     const btn = document.querySelector<HTMLButtonElement>(
-      '[data-pos-checkout]'
+      "[data-pos-checkout]",
     );
     btn?.click();
   }, []);
@@ -162,7 +198,9 @@ export default function PosPage() {
         <div className="ml-auto flex items-center gap-2">
           {user && (
             <>
-              <span className="text-sm font-medium text-foreground">{user.first_name}</span>
+              <span className="text-sm font-medium text-foreground">
+                {user.first_name}
+              </span>
               {user.roles[0] && (
                 <Badge variant="secondary" className="capitalize">
                   {user.roles[0]}
@@ -203,7 +241,7 @@ export default function PosPage() {
                       "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                       pathname === item.href
                         ? "border-l-4 border-primary bg-primary/10 font-semibold text-primary"
-                        : "text-foreground hover:bg-muted"
+                        : "text-foreground hover:bg-muted",
                     )}
                     aria-current={pathname === item.href ? "page" : undefined}
                   >
@@ -219,7 +257,9 @@ export default function PosPage() {
                 References
               </p>
               <div className="space-y-0.5">
-                {REFERENCES_NAV.filter((item) => !item.adminOnly || isAdmin).map((item) => (
+                {REFERENCES_NAV.filter(
+                  (item) => !item.adminOnly || isAdmin,
+                ).map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
@@ -228,7 +268,7 @@ export default function PosPage() {
                       "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                       pathname === item.href
                         ? "border-l-4 border-primary bg-primary/10 font-semibold text-primary"
-                        : "text-foreground hover:bg-muted"
+                        : "text-foreground hover:bg-muted",
                     )}
                     aria-current={pathname === item.href ? "page" : undefined}
                   >
@@ -264,7 +304,7 @@ export default function PosPage() {
               "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
               activeTab === tab.id
                 ? "bg-primary text-primary-foreground"
-                : "border-2 border-border bg-background text-foreground hover:border-primary/50"
+                : "border-2 border-border bg-background text-foreground hover:border-primary/50",
             )}
           >
             {tab.label}

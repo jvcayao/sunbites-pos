@@ -1,6 +1,10 @@
 import { apiClient } from "./client";
 
-import type { CreateContactPayload, StudentContact, UpdateContactPayload } from "@/types/contact";
+import type {
+  CreateContactPayload,
+  StudentContact,
+  UpdateContactPayload,
+} from "@/types/contact";
 
 export const contactApi = {
   list: (studentId: number) =>
@@ -11,10 +15,14 @@ export const contactApi = {
   create: (studentId: number, payload: CreateContactPayload) =>
     apiClient.post<StudentContact>(`/students/${studentId}/contacts`, payload),
 
-  update: (studentId: number, contactId: number, payload: UpdateContactPayload) =>
+  update: (
+    studentId: number,
+    contactId: number,
+    payload: UpdateContactPayload,
+  ) =>
     apiClient.put<StudentContact>(
       `/students/${studentId}/contacts/${contactId}`,
-      payload
+      payload,
     ),
 
   remove: (studentId: number, contactId: number) =>
@@ -22,6 +30,6 @@ export const contactApi = {
 
   resendActivation: (studentId: number, contactId: number) =>
     apiClient.post<{ message: string }>(
-      `/students/${studentId}/contacts/${contactId}/resend-activation`
+      `/students/${studentId}/contacts/${contactId}/resend-activation`,
     ),
 };

@@ -10,7 +10,10 @@ export default function InventoryReportLoading() {
       </div>
       <div className="rounded-xl border border-border overflow-hidden">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex gap-4 border-b border-border px-4 py-3 last:border-0">
+          <div
+            key={i}
+            className="flex gap-4 border-b border-border px-4 py-3 last:border-0"
+          >
             <Skeleton className="h-4 flex-1" />
             <Skeleton className="h-4 w-12" />
             <Skeleton className="h-4 w-16" />

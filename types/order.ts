@@ -7,6 +7,23 @@ export interface SubscriptionCategoryStatus {
   remaining: number;
 }
 
+export interface SubscriptionMonthlyCategoryStatus {
+  allocated: number;
+  used: number;
+  remaining: number;
+}
+
+export interface SubscriptionMonthlyStatus {
+  month: string;
+  year: number;
+  categories: {
+    meal: SubscriptionMonthlyCategoryStatus;
+    snack: SubscriptionMonthlyCategoryStatus;
+    drink: SubscriptionMonthlyCategoryStatus;
+    extra: SubscriptionMonthlyCategoryStatus;
+  };
+}
+
 export interface PosStudent {
   id: number;
   full_name: string;
@@ -30,6 +47,7 @@ export interface PosStudent {
     drink: SubscriptionCategoryStatus;
     extra: SubscriptionCategoryStatus;
   } | null;
+  subscription_monthly_status: SubscriptionMonthlyStatus | null;
 }
 
 export interface PosStudentSearchResult {

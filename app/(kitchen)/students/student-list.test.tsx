@@ -12,8 +12,9 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/lib/store/auth", () => {
-  const actual =
-    jest.requireActual("@/lib/store/auth") as typeof import("@/lib/store/auth");
+  const actual = jest.requireActual(
+    "@/lib/store/auth",
+  ) as typeof import("@/lib/store/auth");
   return {
     ...actual,
     useAuthStore: Object.assign(jest.fn(), {
@@ -42,7 +43,7 @@ beforeEach(() => {
       user: adminUser,
       activeBranch: { id: 1, name: "Main Branch", slug: "main-branch" },
       token: "test-token",
-    } as AuthState)
+    } as AuthState),
   );
 });
 
@@ -114,7 +115,7 @@ describe("StudentsPage", () => {
   it("shows search input", async () => {
     render(<StudentsPage />);
     expect(
-      await screen.findByRole("textbox", { name: /search students/i })
+      await screen.findByRole("textbox", { name: /search students/i }),
     ).toBeInTheDocument();
   });
 
@@ -127,7 +128,7 @@ describe("StudentsPage", () => {
     await user.click(checkboxes[0]);
 
     expect(
-      screen.getByRole("button", { name: /print qr codes/i })
+      screen.getByRole("button", { name: /print qr codes/i }),
     ).toBeInTheDocument();
   });
 
