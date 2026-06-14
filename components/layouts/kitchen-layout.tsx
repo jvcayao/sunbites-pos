@@ -63,8 +63,9 @@ const reportsNav: NavItem[] = [
   { label: "Inventory", href: "/reports/inventory", icon: Package },
   { label: "Daily Summary", href: "/reports/daily-summary", icon: FileText },
   { label: "Billing", href: "/reports/billing", icon: ClipboardList },
-  { label: "Activity Log", href: "/reports/activity", icon: Activity },
   { label: "Credits", href: "/reports/credits", icon: CreditCard },
+  { label: "Subscription", href: "/reports/subscription", icon: CalendarDays },
+  { label: "Activity Log", href: "/reports/activity", icon: Activity },
 ];
 
 const referencesNav: NavItem[] = [
@@ -167,8 +168,8 @@ export function KitchenLayout({ children }: KitchenLayoutProps) {
     ? referencesNav
     : referencesNav.filter((item) => item.href !== "/references/system-settings");
 
-  // Supervisor can only see: Sales, Students, Inventory, Billing
-  const supervisorAllowedReports = ["/reports/sales", "/reports/students", "/reports/inventory", "/reports/billing"];
+  // Supervisor can only see: Sales, Students, Inventory, Billing, Subscription
+  const supervisorAllowedReports = ["/reports/sales", "/reports/students", "/reports/inventory", "/reports/billing", "/reports/subscription"];
   const reportsNavFiltered =
     isAdmin || isManager
       ? reportsNav

@@ -225,6 +225,25 @@ export interface BillingPayment {
   recorder: { id: number; first_name: string; last_name: string } | null;
 }
 
+export interface SubscriptionReportRow {
+  id: number;
+  full_name: string;
+  student_number: string | null;
+  grade_level: string;
+  section: string | null;
+  payment_status: "paid" | "unpaid" | "not_recorded";
+  subscription_monthly_status: {
+    month: string;
+    year: number;
+    categories: {
+      meal: { allocated: number; used: number; remaining: number };
+      snack: { allocated: number; used: number; remaining: number };
+      drink: { allocated: number; used: number; remaining: number };
+      extra: { allocated: number; used: number; remaining: number };
+    };
+  };
+}
+
 export interface DailySummaryData {
   date: string;
   total_orders: number;
@@ -306,5 +325,10 @@ export const reportApi = {
       "/reports/credits",
       { params: params as Record<string, string | number | boolean | undefined> }
     ),
+
+  subscriptionUsage: (params: { month: string; year: number; page?: number }) =>
+    apiClient.get<{ data: SubscriptionReportRow[]; meta: PaginatedMeta }>("/reports/subscription", {
+      params: params as Record<string, string | number | boolean | undefined>,
+    }),
 
 };
