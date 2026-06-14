@@ -43,17 +43,31 @@ function ParentTableSkeleton() {
   );
 }
 
-function ActivationBadge({ isActivated }: { isActivated: boolean }) {
+function StatusBadge({ parent }: { parent: Parent }) {
+  if (parent.deleted_at) {
+    return (
+      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-red-100 text-red-700 border-red-300">
+        Deleted
+      </span>
+    );
+  }
+  if (parent.is_disabled) {
+    return (
+      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-orange-100 text-orange-700 border-orange-300">
+        Disabled
+      </span>
+    );
+  }
   return (
     <span
       className={cn(
         "text-[11px] font-bold px-2 py-0.5 rounded-full border",
-        isActivated
+        parent.is_activated
           ? "bg-green-100 text-green-700 border-green-300"
           : "bg-muted text-muted-foreground border-border",
       )}
     >
-      {isActivated ? "Active" : "Pending"}
+      {parent.is_activated ? "Active" : "Pending"}
     </span>
   );
 }
@@ -67,7 +81,10 @@ function ParentRow({
 }) {
   return (
     <tr
-      className="border-b border-border transition-colors hover:bg-muted/30 cursor-pointer"
+      className={cn(
+        "border-b border-border transition-colors hover:bg-muted/30 cursor-pointer",
+        parent.deleted_at && "opacity-60",
+      )}
       onClick={onClick}
     >
       <td className="px-4 py-3">
@@ -83,7 +100,7 @@ function ParentRow({
       </td>
       <td className="px-4 py-3 text-sm text-center">{parent.students_count}</td>
       <td className="px-4 py-3">
-        <ActivationBadge isActivated={parent.is_activated} />
+        <StatusBadge parent={parent} />
       </td>
       <td className="px-4 py-3 text-right">
         <Button
@@ -110,6 +127,7 @@ export default function ParentsPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [includeDeleted, setIncludeDeleted] = useState(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -128,11 +146,12 @@ export default function ParentsPage() {
   }, []);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["parents", { search: debouncedSearch, page }],
+    queryKey: ["parents", { search: debouncedSearch, page, includeDeleted }],
     queryFn: () =>
       parentApi.list({
         search: debouncedSearch || undefined,
         page,
+        include_deleted: includeDeleted || undefined,
       }),
   });
 
@@ -148,13 +167,28 @@ export default function ParentsPage() {
             Parent Management
           </h1>
         </div>
-        <Input
-          placeholder="Search by name or email…"
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="max-w-xs"
-          aria-label="Search parents"
-        />
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={includeDeleted}
+              onChange={(e) => {
+                setIncludeDeleted(e.target.checked);
+                setPage(1);
+              }}
+              className="h-4 w-4 rounded border-border"
+              aria-label="Show deleted parents"
+            />
+            Show deleted
+          </label>
+          <Input
+            placeholder="Search by name or email…"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="max-w-xs"
+            aria-label="Search parents"
+          />
+        </div>
       </div>
 
       {/* Table */}
