@@ -128,6 +128,21 @@ export interface WalletSummary {
   students_below_100: number;
 }
 
+export interface WalletHistoryItem {
+  id: number;
+  date: string;
+  description: string;
+  amount: number;
+  added_by?: string; // top-ups only
+}
+
+export interface WalletHistoryParams {
+  type: "purchases" | "topups";
+  search?: string;
+  per_page?: number;
+  page?: number;
+}
+
 export type InventoryReportStatus = "out" | "low" | "ok" | "over";
 
 export interface InventoryReportRow {
@@ -301,6 +316,17 @@ export const reportApi = {
     }>("/reports/wallet", {
       params: params as Record<string, string | number | boolean | undefined>,
     }),
+
+  walletHistory: (studentId: number, params: WalletHistoryParams) =>
+    apiClient.get<{ data: WalletHistoryItem[]; meta: PaginatedMeta }>(
+      `/reports/wallet/${studentId}/history`,
+      {
+        params: params as unknown as Record<
+          string,
+          string | number | boolean | undefined
+        >,
+      },
+    ),
 
   inventory: (params?: Record<string, string | number | boolean | undefined>) =>
     apiClient.get<{
