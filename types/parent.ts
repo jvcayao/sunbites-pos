@@ -7,7 +7,7 @@ export interface Parent {
   is_disabled: boolean;
   deleted_at: string | null;
   students_count: number;
-  students: {
+  students?: {
     id: number;
     student_number: string;
     full_name: string;

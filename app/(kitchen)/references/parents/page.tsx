@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ParentStatusBadge } from "@/components/parents/parent-status-badge";
 import { parentApi } from "@/lib/api/parents";
 import { cn } from "@/lib/utils";
 
@@ -43,35 +44,6 @@ function ParentTableSkeleton() {
   );
 }
 
-function StatusBadge({ parent }: { parent: Parent }) {
-  if (parent.deleted_at) {
-    return (
-      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-red-100 text-red-700 border-red-300">
-        Deleted
-      </span>
-    );
-  }
-  if (parent.is_disabled) {
-    return (
-      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-orange-100 text-orange-700 border-orange-300">
-        Disabled
-      </span>
-    );
-  }
-  return (
-    <span
-      className={cn(
-        "text-[11px] font-bold px-2 py-0.5 rounded-full border",
-        parent.is_activated
-          ? "bg-green-100 text-green-700 border-green-300"
-          : "bg-muted text-muted-foreground border-border",
-      )}
-    >
-      {parent.is_activated ? "Active" : "Pending"}
-    </span>
-  );
-}
-
 function ParentRow({
   parent,
   onClick,
@@ -100,7 +72,11 @@ function ParentRow({
       </td>
       <td className="px-4 py-3 text-sm text-center">{parent.students_count}</td>
       <td className="px-4 py-3">
-        <StatusBadge parent={parent} />
+        <ParentStatusBadge
+          deletedAt={parent.deleted_at}
+          isDisabled={parent.is_disabled}
+          isActivated={parent.is_activated}
+        />
       </td>
       <td className="px-4 py-3 text-right">
         <Button

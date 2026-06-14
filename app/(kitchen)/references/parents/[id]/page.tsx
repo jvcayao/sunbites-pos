@@ -6,10 +6,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Mail } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ParentStatusBadge } from "@/components/parents/parent-status-badge";
 import { parentApi } from "@/lib/api/parents";
-import { cn } from "@/lib/utils";
 
 import type { ApiError } from "@/types/auth";
 
@@ -39,7 +50,7 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
     <div className="py-2">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-sm font-medium text-foreground">
-        {value || "—"}
+        {value ?? "—"}
       </p>
     </div>
   );
@@ -49,13 +60,8 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
 // Page
 // ---------------------------------------------------------------------------
 
-interface ParentDetailPageProps {
-  params: { id: string };
-}
-
-export default function ParentDetailPage({ params }: ParentDetailPageProps) {
-  const routerParams = useParams<{ id: string }>();
-  const rawId = routerParams?.id ?? params.id;
+export default function ParentDetailPage() {
+  const { id: rawId } = useParams<{ id: string }>();
   const parentId = parsePositiveInt(rawId);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -128,6 +134,13 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
       toast.error(err.message ?? "Failed to restore parent.");
     },
   });
+
+  const anyPending =
+    resendMutation.isPending ||
+    disableMutation.isPending ||
+    enableMutation.isPending ||
+    destroyMutation.isPending ||
+    restoreMutation.isPending;
 
   if (parentId === null) {
     return (
@@ -250,26 +263,11 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
               <h1 className="text-xl font-bold text-foreground">
                 {parent.full_name}
               </h1>
-              {parent.deleted_at ? (
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-red-100 text-red-700 border-red-300">
-                  Deleted
-                </span>
-              ) : parent.is_disabled ? (
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-orange-100 text-orange-700 border-orange-300">
-                  Disabled
-                </span>
-              ) : (
-                <span
-                  className={cn(
-                    "text-[11px] font-bold px-2 py-0.5 rounded-full border",
-                    parent.is_activated
-                      ? "bg-green-100 text-green-700 border-green-300"
-                      : "bg-muted text-muted-foreground border-border",
-                  )}
-                >
-                  {parent.is_activated ? "Active" : "Pending Activation"}
-                </span>
-              )}
+              <ParentStatusBadge
+                deletedAt={parent.deleted_at}
+                isDisabled={parent.is_disabled}
+                isActivated={parent.is_activated}
+              />
             </div>
             <p className="text-sm text-muted-foreground">{parent.email}</p>
           </div>
