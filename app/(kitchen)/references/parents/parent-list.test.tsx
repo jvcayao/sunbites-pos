@@ -4,7 +4,6 @@ import { http, HttpResponse } from "msw";
 
 import { server } from "@/__tests__/mocks/server";
 import {
-  disabledParentFixture,
   deletedParentFixture,
   paginatedParentsFixture,
 } from "@/__tests__/mocks/handlers";
@@ -60,13 +59,15 @@ describe("ParentsPage", () => {
   it("renders Active badge for an active parent", async () => {
     render(<ParentsPage />);
     await screen.findByText("Maria Dela Cruz");
-    expect(screen.getByText("Active")).toBeInTheDocument();
+    // "Active" appears in both the filter pill and the row badge
+    expect(screen.getAllByText("Active").length).toBeGreaterThanOrEqual(2);
   });
 
   it("renders Disabled badge for a disabled parent", async () => {
     render(<ParentsPage />);
     await screen.findByText("Disabled Parent");
-    expect(screen.getByText("Disabled")).toBeInTheDocument();
+    // "Disabled" appears in both the filter pill and the row badge
+    expect(screen.getAllByText("Disabled").length).toBeGreaterThanOrEqual(2);
   });
 
   it("renders Deleted badge when deleted_at is set", async () => {
@@ -81,13 +82,20 @@ describe("ParentsPage", () => {
 
     render(<ParentsPage />);
     await screen.findByText("Deleted Parent");
-    expect(screen.getByText("Deleted")).toBeInTheDocument();
+    // "Deleted" appears in both the filter pill and the row badge
+    expect(screen.getAllByText("Deleted").length).toBeGreaterThanOrEqual(2);
   });
 
-  it("shows 'Show deleted' checkbox", async () => {
+  it("renders status filter pills", async () => {
     render(<ParentsPage />);
+    expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Active" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pending" })).toBeInTheDocument();
     expect(
-      await screen.findByRole("checkbox", { name: /show deleted/i }),
+      screen.getByRole("button", { name: "Disabled" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Deleted" }),
     ).toBeInTheDocument();
   });
 

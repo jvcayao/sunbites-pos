@@ -38,6 +38,7 @@ function Input({
         type="button"
         disabled={disabled}
         aria-label={shown ? "Hide password" : "Show password"}
+        aria-pressed={shown}
         onClick={() => setShown((s) => !s)}
         className="absolute inset-y-0 right-0 flex items-center pr-2.5 text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
       >
