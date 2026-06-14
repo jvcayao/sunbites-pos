@@ -20,9 +20,12 @@ const mockAuthState = {
   activeBranch: null,
 };
 jest.mock("@/lib/store/auth", () => ({
-  useAuthStore: Object.assign((sel: (s: typeof mockAuthState) => unknown) => sel(mockAuthState), {
-    getState: () => mockAuthState,
-  }),
+  useAuthStore: Object.assign(
+    (sel: (s: typeof mockAuthState) => unknown) => sel(mockAuthState),
+    {
+      getState: () => mockAuthState,
+    },
+  ),
 }));
 
 // ---------------------------------------------------------------------------

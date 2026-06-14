@@ -53,10 +53,10 @@
     display: block !important;
   }
 
-  /* ID card sizing for print — exact CR80 portrait dimensions */
+  /* ID card sizing for print — CR80 portrait (53.98 × 85.6 mm) */
   #qr-print-root [data-qr-card] {
-    width: 54mm !important;
-    height: 86mm !important;
+    width: 53.98mm !important;
+    height: 85.6mm !important;
     page-break-inside: avoid;
     break-inside: avoid;
   }

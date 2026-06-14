@@ -6,10 +6,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Mail } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ParentStatusBadge } from "@/components/parents/parent-status-badge";
 import { parentApi } from "@/lib/api/parents";
-import { cn } from "@/lib/utils";
 
 import type { ApiError } from "@/types/auth";
 
@@ -39,7 +50,7 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
     <div className="py-2">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-sm font-medium text-foreground">
-        {value || "—"}
+        {value ?? "—"}
       </p>
     </div>
   );
@@ -49,13 +60,8 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
 // Page
 // ---------------------------------------------------------------------------
 
-interface ParentDetailPageProps {
-  params: { id: string };
-}
-
-export default function ParentDetailPage({ params }: ParentDetailPageProps) {
-  const routerParams = useParams<{ id: string }>();
-  const rawId = routerParams?.id ?? params.id;
+export default function ParentDetailPage() {
+  const { id: rawId } = useParams<{ id: string }>();
   const parentId = parsePositiveInt(rawId);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -80,6 +86,61 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
       toast.error(err.message ?? "Failed to resend activation email.");
     },
   });
+
+  const disableMutation = useMutation({
+    mutationFn: () => parentApi.disable(parentId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["parent", parentId] });
+      queryClient.invalidateQueries({ queryKey: ["parents"] });
+      toast.success("Parent access disabled.");
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to disable parent.");
+    },
+  });
+
+  const enableMutation = useMutation({
+    mutationFn: () => parentApi.enable(parentId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["parent", parentId] });
+      queryClient.invalidateQueries({ queryKey: ["parents"] });
+      toast.success("Parent access enabled. Activation email queued.");
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to enable parent.");
+    },
+  });
+
+  const destroyMutation = useMutation({
+    mutationFn: () => parentApi.destroy(parentId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["parents"] });
+      toast.success("Parent account deleted.");
+      router.push("/references/parents");
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to delete parent.");
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: () => parentApi.restore(parentId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["parent", parentId] });
+      queryClient.invalidateQueries({ queryKey: ["parents"] });
+      toast.success("Parent account restored. Activation email queued.");
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to restore parent.");
+    },
+  });
+
+  const anyPending =
+    resendMutation.isPending ||
+    disableMutation.isPending ||
+    enableMutation.isPending ||
+    destroyMutation.isPending ||
+    restoreMutation.isPending;
 
   if (parentId === null) {
     return (
@@ -125,18 +186,93 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
           Parents
         </Link>
 
-        {!parent.is_activated && (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => resendMutation.mutate()}
-            disabled={resendMutation.isPending}
-          >
-            <Mail className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            {resendMutation.isPending ? "Sending…" : "Resend Activation Email"}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {!parent.is_activated && !parent.deleted_at && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => resendMutation.mutate()}
+              disabled={anyPending}
+            >
+              <Mail className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              {resendMutation.isPending
+                ? "Sending…"
+                : "Resend Activation Email"}
+            </Button>
+          )}
+
+          {!parent.is_disabled && !parent.deleted_at && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => disableMutation.mutate()}
+              disabled={anyPending}
+            >
+              {disableMutation.isPending ? "Disabling…" : "Disable"}
+            </Button>
+          )}
+
+          {parent.is_disabled && !parent.deleted_at && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => enableMutation.mutate()}
+              disabled={anyPending}
+            >
+              {enableMutation.isPending ? "Enabling…" : "Enable"}
+            </Button>
+          )}
+
+          {!parent.deleted_at && (
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    disabled={anyPending}
+                  />
+                }
+              >
+                Delete
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete parent account?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will disable portal access and remove the account from
+                    active lists. The account can be restored later.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => destroyMutation.mutate()}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {destroyMutation.isPending ? "Deleting…" : "Delete"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+
+          {parent.deleted_at !== null && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => restoreMutation.mutate()}
+              disabled={anyPending}
+            >
+              {restoreMutation.isPending ? "Restoring…" : "Restore"}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Header card */}
@@ -150,16 +286,11 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
               <h1 className="text-xl font-bold text-foreground">
                 {parent.full_name}
               </h1>
-              <span
-                className={cn(
-                  "text-[11px] font-bold px-2 py-0.5 rounded-full border",
-                  parent.is_activated
-                    ? "bg-green-100 text-green-700 border-green-300"
-                    : "bg-muted text-muted-foreground border-border",
-                )}
-              >
-                {parent.is_activated ? "Active" : "Pending Activation"}
-              </span>
+              <ParentStatusBadge
+                deletedAt={parent.deleted_at}
+                isDisabled={parent.is_disabled}
+                isActivated={parent.is_activated}
+              />
             </div>
             <p className="text-sm text-muted-foreground">{parent.email}</p>
           </div>
@@ -176,6 +307,16 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
               day: "numeric",
             })}
           />
+          {parent.deleted_at && (
+            <InfoRow
+              label="Deleted At"
+              value={new Date(parent.deleted_at).toLocaleDateString("en-PH", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            />
+          )}
         </div>
       </div>
 
@@ -231,7 +372,7 @@ export default function ParentDetailPage({ params }: ParentDetailPageProps) {
                       {student.branch_name}
                     </td>
                     <td className="px-3 py-2">
-                      PHP {Number(student.wallet_alert_threshold).toFixed(2)}
+                      PHP {student.wallet_alert_threshold.toFixed(2)}
                     </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">
                       {new Date(student.linked_at).toLocaleDateString("en-PH", {

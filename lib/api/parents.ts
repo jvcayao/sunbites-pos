@@ -6,6 +6,7 @@ interface ParentListParams {
   search?: string;
   per_page?: number;
   page?: number;
+  status?: "active" | "pending" | "disabled" | "deleted";
 }
 
 export const parentApi = {
@@ -21,4 +22,16 @@ export const parentApi = {
     apiClient.post<{ message: string }>(
       `/references/parents/${id}/resend-activation`,
     ),
+
+  disable: (id: number) =>
+    apiClient.post<{ message: string }>(`/references/parents/${id}/disable`),
+
+  enable: (id: number) =>
+    apiClient.post<{ message: string }>(`/references/parents/${id}/enable`),
+
+  destroy: (id: number) =>
+    apiClient.delete<{ message: string }>(`/references/parents/${id}`),
+
+  restore: (id: number) =>
+    apiClient.post<{ message: string }>(`/references/parents/${id}/restore`),
 };
