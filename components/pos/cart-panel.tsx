@@ -459,6 +459,37 @@ export function CartPanel({ onOrderComplete, className }: Props) {
             Covered by monthly subscription
           </div>
         )}
+
+        {paymentMethod === "subscription" && student?.subscription_monthly_status && (
+          <div className="rounded-lg border border-border bg-muted/40 p-2.5 space-y-1.5">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Monthly Usage ({(() => {
+                const m = student.subscription_monthly_status.month;
+                return m.charAt(0).toUpperCase() + m.slice(1);
+              })()})
+            </p>
+            <div className="space-y-1">
+              {Object.entries(student.subscription_monthly_status.categories)
+                .filter(([, s]) => s.allocated > 0)
+                .map(([cat, s]) => (
+                  <div key={cat} className="flex items-center justify-between text-xs">
+                    <span className="capitalize text-muted-foreground w-12">{cat}</span>
+                    <span className="text-muted-foreground tabular-nums">{s.used} / {s.allocated}</span>
+                    <span className={cn(
+                      "font-medium tabular-nums w-14 text-right",
+                      s.remaining === 0
+                        ? "text-destructive"
+                        : s.remaining <= 5
+                          ? "text-amber-600"
+                          : "text-foreground"
+                    )}>
+                      {s.remaining} left
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Checkout button */}
