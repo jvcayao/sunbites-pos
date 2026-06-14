@@ -1,11 +1,12 @@
 "use client";
 
-import { useDeferredValue, useState } from "react";
+import { useState } from "react";
 import { Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useWalletHistory } from "@/hooks/use-wallet-history";
 import { cn } from "@/lib/utils";
 
@@ -46,14 +47,20 @@ function SectionSkeleton() {
 
 function PurchasesSection({ studentId }: { studentId: number }) {
   const [search, setSearch] = useState("");
-  const deferredSearch = useDeferredValue(search);
+  const debouncedSearch = useDebounce(search, 350);
 
-  const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage, isError } =
-    useWalletHistory(studentId, "purchases", deferredSearch);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isFetchingNextPage,
+    isError,
+  } = useWalletHistory(studentId, "purchases", debouncedSearch);
 
   const rows = data?.pages.flatMap((p) => p.data) ?? [];
   const total = data?.pages[0]?.meta.total ?? 0;
-  const remaining = total - rows.length;
+  const remaining = Math.max(0, total - rows.length);
 
   return (
     <div>
@@ -78,22 +85,31 @@ function PurchasesSection({ studentId }: { studentId: number }) {
         <p className="py-4 text-center text-xs text-red-500">
           Failed to load. Please try again.
         </p>
-      ) : rows.length === 0 ? (
+      ) : rows.length === 0 && !hasNextPage ? (
         <p className="py-4 text-center text-xs text-muted-foreground">
           No purchases found.
         </p>
       ) : (
         <>
-          <table className="w-full text-xs">
+          <table aria-label="Purchase history" className="w-full text-xs">
             <thead>
               <tr className="border-b border-border text-muted-foreground">
-                <th className="pb-1.5 text-left font-semibold uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="pb-1.5 text-left font-semibold uppercase tracking-wider"
+                >
                   Date
                 </th>
-                <th className="pb-1.5 text-left font-semibold uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="pb-1.5 text-left font-semibold uppercase tracking-wider"
+                >
                   Items
                 </th>
-                <th className="pb-1.5 text-right font-semibold uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="pb-1.5 text-right font-semibold uppercase tracking-wider"
+                >
                   Total
                 </th>
               </tr>
@@ -140,14 +156,20 @@ function PurchasesSection({ studentId }: { studentId: number }) {
 
 function TopUpsSection({ studentId }: { studentId: number }) {
   const [search, setSearch] = useState("");
-  const deferredSearch = useDeferredValue(search);
+  const debouncedSearch = useDebounce(search, 350);
 
-  const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage, isError } =
-    useWalletHistory(studentId, "topups", deferredSearch);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isFetchingNextPage,
+    isError,
+  } = useWalletHistory(studentId, "topups", debouncedSearch);
 
   const rows = data?.pages.flatMap((p) => p.data) ?? [];
   const total = data?.pages[0]?.meta.total ?? 0;
-  const remaining = total - rows.length;
+  const remaining = Math.max(0, total - rows.length);
 
   return (
     <div>
@@ -172,22 +194,31 @@ function TopUpsSection({ studentId }: { studentId: number }) {
         <p className="py-4 text-center text-xs text-red-500">
           Failed to load. Please try again.
         </p>
-      ) : rows.length === 0 ? (
+      ) : rows.length === 0 && !hasNextPage ? (
         <p className="py-4 text-center text-xs text-muted-foreground">
           No top-ups found.
         </p>
       ) : (
         <>
-          <table className="w-full text-xs">
+          <table aria-label="Top-up history" className="w-full text-xs">
             <thead>
               <tr className="border-b border-border text-muted-foreground">
-                <th className="pb-1.5 text-left font-semibold uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="pb-1.5 text-left font-semibold uppercase tracking-wider"
+                >
                   Date
                 </th>
-                <th className="pb-1.5 text-left font-semibold uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="pb-1.5 text-left font-semibold uppercase tracking-wider"
+                >
                   Added By
                 </th>
-                <th className="pb-1.5 text-right font-semibold uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="pb-1.5 text-right font-semibold uppercase tracking-wider"
+                >
                   Amount
                 </th>
               </tr>

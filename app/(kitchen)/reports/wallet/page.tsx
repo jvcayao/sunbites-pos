@@ -79,7 +79,9 @@ export default function WalletReportPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
-  const [expandedStudentId, setExpandedStudentId] = useState<number | null>(null);
+  const [expandedStudentId, setExpandedStudentId] = useState<number | null>(
+    null,
+  );
 
   function toggleExpand(id: number) {
     setExpandedStudentId((prev) => (prev === id ? null : id));
@@ -165,6 +167,7 @@ export default function WalletReportPage() {
             onChange={(e) => {
               setDateFrom(e.target.value);
               setPage(1);
+              setExpandedStudentId(null);
             }}
             className="rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
           />
@@ -180,6 +183,7 @@ export default function WalletReportPage() {
             onChange={(e) => {
               setDateTo(e.target.value);
               setPage(1);
+              setExpandedStudentId(null);
             }}
             className="rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
           />
@@ -239,7 +243,7 @@ export default function WalletReportPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className="w-8 px-4 py-2" /> {/* expand toggle */}
+                <th className="w-8 px-4 py-2" />
                 <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
                   Student Name
                 </th>
