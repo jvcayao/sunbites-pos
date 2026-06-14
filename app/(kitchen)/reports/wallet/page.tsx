@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { reportApi, exportReport } from "@/lib/api/reports";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
+import { WalletHistoryPanel } from "./wallet-history-panel";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -55,7 +56,7 @@ function SummaryCard({
 function TableRowSkeleton() {
   return (
     <tr>
-      {Array.from({ length: 7 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
           <Skeleton className="h-4 w-full" />
         </td>
@@ -78,6 +79,11 @@ export default function WalletReportPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
+  const [expandedStudentId, setExpandedStudentId] = useState<number | null>(null);
+
+  function toggleExpand(id: number) {
+    setExpandedStudentId((prev) => (prev === id ? null : id));
+  }
 
   const params = {
     date_from: dateFrom || undefined,
@@ -233,6 +239,7 @@ export default function WalletReportPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
+                <th className="w-8 px-4 py-2" /> {/* expand toggle */}
                 <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
                   Student Name
                 </th>
@@ -264,7 +271,7 @@ export default function WalletReportPage() {
               ) : !rows?.length ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-10 text-center text-muted-foreground"
                   >
                     No wallet data found.
@@ -272,36 +279,58 @@ export default function WalletReportPage() {
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-muted/20">
-                    <td className="px-4 py-2.5 font-medium text-foreground">
-                      {row.student_name}
-                    </td>
-                    <td className="px-4 py-2.5 text-muted-foreground">
-                      {row.grade_level}
-                    </td>
-                    <td
-                      className={cn(
-                        "px-4 py-2.5 text-right font-semibold",
-                        row.current_balance < 100 && "text-amber-600",
-                      )}
+                  <Fragment key={row.id}>
+                    <tr
+                      className="cursor-pointer hover:bg-muted/20"
+                      onClick={() => toggleExpand(row.id)}
                     >
-                      {formatPeso(row.current_balance)}
-                    </td>
-                    <td className="px-4 py-2.5 text-right text-red-600">
-                      {row.outstanding_credit > 0
-                        ? formatPeso(row.outstanding_credit)
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-2.5 text-right text-green-700">
-                      {formatPeso(row.total_credited)}
-                    </td>
-                    <td className="px-4 py-2.5 text-right text-muted-foreground">
-                      {formatPeso(row.total_debited)}
-                    </td>
-                    <td className="px-4 py-2.5 text-muted-foreground">
-                      {formatDate(row.last_transaction)}
-                    </td>
-                  </tr>
+                      <td className="w-8 px-4 py-2.5 text-center text-xs text-muted-foreground">
+                        {expandedStudentId === row.id ? "▼" : "▶"}
+                      </td>
+                      <td
+                        className={cn(
+                          "px-4 py-2.5 font-medium",
+                          row.current_balance < 100
+                            ? "text-red-600"
+                            : "text-foreground",
+                        )}
+                      >
+                        {row.student_name}
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground">
+                        {row.grade_level}
+                      </td>
+                      <td
+                        className={cn(
+                          "px-4 py-2.5 text-right font-semibold",
+                          row.current_balance < 100 && "text-amber-600",
+                        )}
+                      >
+                        {formatPeso(row.current_balance)}
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-red-600">
+                        {row.outstanding_credit > 0
+                          ? formatPeso(row.outstanding_credit)
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-green-700">
+                        {formatPeso(row.total_credited)}
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-muted-foreground">
+                        {formatPeso(row.total_debited)}
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground">
+                        {formatDate(row.last_transaction)}
+                      </td>
+                    </tr>
+                    {expandedStudentId === row.id && (
+                      <tr>
+                        <td colSpan={8} className="bg-blue-50/50 px-6 py-5">
+                          <WalletHistoryPanel studentId={row.id} />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))
               )}
             </tbody>
