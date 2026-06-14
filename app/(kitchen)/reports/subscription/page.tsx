@@ -105,25 +105,25 @@ export default function SubscriptionReportPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <Select
-          value={schoolMonth}
-          onValueChange={(v) => {
-            setSchoolMonth(v ?? resolveCurrentSchoolMonth());
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="h-8 w-[150px] text-xs" aria-label="School month filter">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SCHOOL_MONTHS.map((m) => (
-              <SelectItem key={m.value} value={m.value}>
-                {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap items-center gap-2">
+        {SCHOOL_MONTHS.map((m) => (
+          <button
+            key={m.value}
+            type="button"
+            onClick={() => {
+              setSchoolMonth(m.value);
+              setPage(1);
+            }}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
+              schoolMonth === m.value
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-foreground hover:bg-muted"
+            )}
+          >
+            {m.label}
+          </button>
+        ))}
 
         <Select
           value={year}
