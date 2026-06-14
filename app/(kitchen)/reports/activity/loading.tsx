@@ -13,7 +13,10 @@ export default function ActivityLogLoading() {
       </div>
       <div className="rounded-xl border border-border overflow-hidden">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex gap-4 border-b border-border px-4 py-3 last:border-0">
+          <div
+            key={i}
+            className="flex gap-4 border-b border-border px-4 py-3 last:border-0"
+          >
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-4 flex-1" />

@@ -56,8 +56,7 @@ export const studentApi = {
   destroy: (id: number) =>
     apiClient.delete<{ message: string }>(`/students/${id}`),
 
-  restore: (id: number) =>
-    apiClient.post<Student>(`/students/${id}/restore`),
+  restore: (id: number) => apiClient.post<Student>(`/students/${id}/restore`),
 
   regenerateQr: (id: number) =>
     apiClient.post<{ qr_code: string }>(`/students/${id}/regenerate-qr`),
@@ -66,12 +65,14 @@ export const studentApi = {
     apiClient.patch<Student>(`/students/${id}/status`, payload),
 
   updateType: (id: number, studentType: "subscription" | "non_subscription") =>
-    apiClient.patch<Student>(`/students/${id}/type`, { student_type: studentType }),
+    apiClient.patch<Student>(`/students/${id}/type`, {
+      student_type: studentType,
+    }),
 
   topUp: (id: number, payload: WalletTopUpPayload) =>
     apiClient.post<{ message: string; new_balance: number }>(
       `/students/${id}/wallet/top-up`,
-      payload
+      payload,
     ),
 
   /**
@@ -90,7 +91,7 @@ export const studentApi = {
    */
   settleCredit: (id: number) =>
     apiClient.post<{ message: string; amount_settled: number }>(
-      `/students/${id}/credit/settle`
+      `/students/${id}/credit/settle`,
     ),
 
   orders: (id: number, page = 1) =>
@@ -103,19 +104,22 @@ export const studentApi = {
 
   togglePayment: (studentId: number, paymentId: number) =>
     apiClient.patch<MonthlyPayment>(
-      `/students/${studentId}/payments/${paymentId}`
+      `/students/${studentId}/payments/${paymentId}`,
     ),
 
   updatePaymentAmount: (studentId: number, paymentId: number, amount: number) =>
     apiClient.patch<{ id: number; status: string; amount: string }>(
       `/students/${studentId}/payments/${paymentId}/amount`,
-      { amount }
+      { amount },
     ),
 
   recordPayment: (studentId: number, payload: RecordPaymentPayload) =>
     apiClient.post<MonthlyPayment>(`/students/${studentId}/payments`, payload),
 
-  addSubscriptionRange: (studentId: number, payload: SubscriptionPeriodPayload) =>
+  addSubscriptionRange: (
+    studentId: number,
+    payload: SubscriptionPeriodPayload,
+  ) =>
     apiClient.post<{
       created: number;
       skipped: string[];
@@ -132,12 +136,19 @@ export const studentApi = {
     year: number;
     days: number;
     amount?: number;
-  }) => apiClient.post<BranchMonthlyAmountConfig>("/branch-monthly-amounts", payload),
+  }) =>
+    apiClient.post<BranchMonthlyAmountConfig>(
+      "/branch-monthly-amounts",
+      payload,
+    ),
 
-  updateBranchMonthlyAmount: (id: number, payload: { days: number; amount?: number }) =>
+  updateBranchMonthlyAmount: (
+    id: number,
+    payload: { days: number; amount?: number },
+  ) =>
     apiClient.put<BranchMonthlyAmountConfig>(
       `/branch-monthly-amounts/${id}`,
-      payload
+      payload,
     ),
 
   deleteBranchMonthlyAmount: (id: number) =>
@@ -165,7 +176,9 @@ export const studentApi = {
     }
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: "Photo upload failed." }));
+      const error = await response
+        .json()
+        .catch(() => ({ message: "Photo upload failed." }));
       throw error as ApiError;
     }
 

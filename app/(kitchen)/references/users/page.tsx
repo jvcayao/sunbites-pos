@@ -29,7 +29,7 @@ function StatusDot({ isActive }: { isActive: boolean }) {
       <span
         className={cn(
           "inline-block h-2 w-2 rounded-full",
-          isActive ? "bg-green-500" : "bg-muted-foreground/40"
+          isActive ? "bg-green-500" : "bg-muted-foreground/40",
         )}
       />
       <span className={cn("text-sm", !isActive && "text-muted-foreground")}>
@@ -44,11 +44,21 @@ function UserTableSkeleton() {
     <>
       {Array.from({ length: 5 }).map((_, i) => (
         <tr key={i}>
-          <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
-          <td className="px-4 py-3"><Skeleton className="h-5 w-20 rounded-full" /></td>
-          <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
-          <td className="px-4 py-3"><Skeleton className="h-4 w-16" /></td>
-          <td className="px-4 py-3"><Skeleton className="h-8 w-16 rounded-md" /></td>
+          <td className="px-4 py-3">
+            <Skeleton className="h-4 w-40" />
+          </td>
+          <td className="px-4 py-3">
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </td>
+          <td className="px-4 py-3">
+            <Skeleton className="h-4 w-32" />
+          </td>
+          <td className="px-4 py-3">
+            <Skeleton className="h-4 w-16" />
+          </td>
+          <td className="px-4 py-3">
+            <Skeleton className="h-8 w-16 rounded-md" />
+          </td>
         </tr>
       ))}
     </>
@@ -58,7 +68,12 @@ function UserTableSkeleton() {
 function UserRow({ user }: { user: StaffUser }) {
   const role = user.roles[0] ?? "cashier";
   return (
-    <tr className={cn("border-b border-border transition-colors hover:bg-muted/30", !user.is_active && "opacity-60")}>
+    <tr
+      className={cn(
+        "border-b border-border transition-colors hover:bg-muted/30",
+        !user.is_active && "opacity-60",
+      )}
+    >
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
@@ -75,7 +90,9 @@ function UserRow({ user }: { user: StaffUser }) {
       </td>
       <td className="px-4 py-3">
         {user.branches.length === 0 ? (
-          <span className="text-xs text-muted-foreground">No branch assigned</span>
+          <span className="text-xs text-muted-foreground">
+            No branch assigned
+          </span>
         ) : user.roles.includes("admin") ? (
           <span className="text-xs font-medium text-primary">All Branches</span>
         ) : (
@@ -95,7 +112,10 @@ function UserRow({ user }: { user: StaffUser }) {
         <StatusDot isActive={user.is_active} />
       </td>
       <td className="px-4 py-3 text-right">
-        <Link href={`/references/users/${user.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+        <Link
+          href={`/references/users/${user.id}`}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
           View
         </Link>
       </td>
@@ -164,7 +184,10 @@ export default function UsersPage() {
         />
         <Select
           value={role}
-          onValueChange={(v) => { setRole(v === "all" ? "" : (v ?? "")); setPage(1); }}
+          onValueChange={(v) => {
+            setRole(v === "all" ? "" : (v ?? ""));
+            setPage(1);
+          }}
         >
           <SelectTrigger className="w-full sm:w-40" aria-label="Filter by role">
             <SelectValue placeholder="Role" />
@@ -172,15 +195,23 @@ export default function UsersPage() {
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
             {ROLES.map((r) => (
-              <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+              <SelectItem key={r} value={r} className="capitalize">
+                {r}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select
           value={status}
-          onValueChange={(v) => { setStatus(v === "all" ? "" : (v ?? "")); setPage(1); }}
+          onValueChange={(v) => {
+            setStatus(v === "all" ? "" : (v ?? ""));
+            setPage(1);
+          }}
         >
-          <SelectTrigger className="w-full sm:w-40" aria-label="Filter by status">
+          <SelectTrigger
+            className="w-full sm:w-40"
+            aria-label="Filter by status"
+          >
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -201,10 +232,18 @@ export default function UsersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40">
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Name</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Role</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Branch(es)</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                  Name
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                  Role
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                  Branch(es)
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                  Status
+                </th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -213,7 +252,10 @@ export default function UsersPage() {
                 <UserTableSkeleton />
               ) : !data?.data?.length ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-10 text-center text-muted-foreground"
+                  >
                     No users found.
                   </td>
                 </tr>

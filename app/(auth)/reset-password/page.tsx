@@ -43,13 +43,14 @@ export default function ResetPasswordPage() {
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      authApi.resetPassword({ token, email, ...values }),
+    mutationFn: () => authApi.resetPassword({ token, email, ...values }),
     onSuccess: () => {
       router.push("/login?reset=1");
     },
     onError: (error: ApiError) => {
-      setErrorBanner(error.message ?? "Unable to reset password. Please request a new link.");
+      setErrorBanner(
+        error.message ?? "Unable to reset password. Please request a new link.",
+      );
     },
   });
 
@@ -88,7 +89,9 @@ export default function ResetPasswordPage() {
   return (
     <AuthLayout>
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-foreground">Set a new password</h2>
+        <h2 className="text-xl font-bold text-foreground">
+          Set a new password
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Choose a new password for <span className="font-medium">{email}</span>
         </p>
@@ -103,13 +106,21 @@ export default function ResetPasswordPage() {
             autoComplete="new-password"
             placeholder="••••••••"
             value={values.password}
-            onChange={(e) => setValues((v) => ({ ...v, password: e.target.value }))}
+            onChange={(e) =>
+              setValues((v) => ({ ...v, password: e.target.value }))
+            }
             aria-invalid={!!fieldErrors.password}
-            aria-describedby={fieldErrors.password ? "password-error" : undefined}
+            aria-describedby={
+              fieldErrors.password ? "password-error" : undefined
+            }
             className={cn(fieldErrors.password && "border-destructive")}
           />
           {fieldErrors.password && (
-            <p id="password-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+            <p
+              id="password-error"
+              role="alert"
+              className="flex items-center gap-1 text-xs text-destructive"
+            >
               <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               {fieldErrors.password[0]}
             </p>
@@ -125,16 +136,25 @@ export default function ResetPasswordPage() {
             placeholder="••••••••"
             value={values.password_confirmation}
             onChange={(e) =>
-              setValues((v) => ({ ...v, password_confirmation: e.target.value }))
+              setValues((v) => ({
+                ...v,
+                password_confirmation: e.target.value,
+              }))
             }
             aria-invalid={!!fieldErrors.password_confirmation}
             aria-describedby={
               fieldErrors.password_confirmation ? "confirm-error" : undefined
             }
-            className={cn(fieldErrors.password_confirmation && "border-destructive")}
+            className={cn(
+              fieldErrors.password_confirmation && "border-destructive",
+            )}
           />
           {fieldErrors.password_confirmation && (
-            <p id="confirm-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+            <p
+              id="confirm-error"
+              role="alert"
+              className="flex items-center gap-1 text-xs text-destructive"
+            >
               <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               {fieldErrors.password_confirmation[0]}
             </p>

@@ -23,11 +23,9 @@ export const authApi = {
   login: (payload: LoginPayload) =>
     apiClient.post<LoginResponse>("/auth/login", payload),
 
-  logout: () =>
-    apiClient.post<void>("/auth/logout"),
+  logout: () => apiClient.post<void>("/auth/logout"),
 
-  user: () =>
-    apiClient.get<AuthUser>("/auth/user"),
+  user: () => apiClient.get<AuthUser>("/auth/user"),
 
   setBranch: (branchId: number, fromBranchId: number | null = null) =>
     apiClient.post<{ id: number; name: string; slug: string }>("/auth/branch", {

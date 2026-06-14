@@ -1,6 +1,12 @@
 "use client";
 
-import { startTransition, useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -34,28 +40,23 @@ const CATEGORY_CONFIG: Record<
 > = {
   FoodQuality: {
     label: "Food Quality",
-    className:
-      "bg-orange-100 text-orange-700 border-orange-300",
+    className: "bg-orange-100 text-orange-700 border-orange-300",
   },
   Service: {
     label: "Service",
-    className:
-      "bg-blue-100 text-blue-700 border-blue-300",
+    className: "bg-blue-100 text-blue-700 border-blue-300",
   },
   Pricing: {
     label: "Pricing",
-    className:
-      "bg-purple-100 text-purple-700 border-purple-300",
+    className: "bg-purple-100 text-purple-700 border-purple-300",
   },
   Cleanliness: {
     label: "Cleanliness",
-    className:
-      "bg-green-100 text-green-700 border-green-300",
+    className: "bg-green-100 text-green-700 border-green-300",
   },
   Other: {
     label: "Other",
-    className:
-      "bg-muted text-muted-foreground border-border",
+    className: "bg-muted text-muted-foreground border-border",
   },
 };
 
@@ -67,7 +68,10 @@ function FeedbackSkeleton() {
   return (
     <div className="flex flex-col gap-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border border-l-4 border-l-muted bg-card p-4">
+        <div
+          key={i}
+          className="rounded-xl border border-border border-l-4 border-l-muted bg-card p-4"
+        >
           <div className="flex items-start gap-3">
             <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
             <div className="flex-1 space-y-2">
@@ -92,7 +96,7 @@ function CategoryBadge({ category }: { category: FeedbackCategory }) {
     <span
       className={cn(
         "text-[11px] font-bold px-2 py-0.5 rounded-full border",
-        config.className
+        config.className,
       )}
     >
       {config.label}
@@ -158,7 +162,11 @@ function FeedbackDetailSheet({
                 )}
               </div>
               <SheetTitle className="text-left mt-2">
-                {(CATEGORY_CONFIG[feedback.category] ?? CATEGORY_CONFIG.Other).label} Feedback
+                {
+                  (CATEGORY_CONFIG[feedback.category] ?? CATEGORY_CONFIG.Other)
+                    .label
+                }{" "}
+                Feedback
               </SheetTitle>
               <SheetDescription className="text-left">
                 {feedback.student
@@ -179,7 +187,9 @@ function FeedbackDetailSheet({
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                   Message
                 </p>
-                <p className="text-sm text-foreground leading-relaxed">{feedback.message}</p>
+                <p className="text-sm text-foreground leading-relaxed">
+                  {feedback.message}
+                </p>
               </div>
 
               {/* Existing reply */}
@@ -189,11 +199,16 @@ function FeedbackDetailSheet({
                     Admin Reply
                     {feedback.replied_at && (
                       <span className="ml-2 normal-case font-normal text-muted-foreground">
-                        · {new Date(feedback.replied_at).toLocaleDateString("en-PH")}
+                        ·{" "}
+                        {new Date(feedback.replied_at).toLocaleDateString(
+                          "en-PH",
+                        )}
                       </span>
                     )}
                   </p>
-                  <p className="text-sm text-foreground leading-relaxed">{feedback.admin_reply}</p>
+                  <p className="text-sm text-foreground leading-relaxed">
+                    {feedback.admin_reply}
+                  </p>
                 </div>
               )}
 
@@ -213,7 +228,11 @@ function FeedbackDetailSheet({
               )}
 
               {/* Reply form */}
-              <form onSubmit={handleSubmitReply} noValidate className="space-y-3">
+              <form
+                onSubmit={handleSubmitReply}
+                noValidate
+                className="space-y-3"
+              >
                 <div className="space-y-1.5">
                   <Label htmlFor="feedback-reply">
                     {feedback.admin_reply ? "Update Reply" : "Write a Reply"}
@@ -228,7 +247,9 @@ function FeedbackDetailSheet({
                     className={cn(replyError && "border-destructive")}
                   />
                   {replyError && (
-                    <p role="alert" className="text-xs text-destructive">{replyError}</p>
+                    <p role="alert" className="text-xs text-destructive">
+                      {replyError}
+                    </p>
                   )}
                 </div>
                 <div className="flex justify-center">
@@ -255,7 +276,9 @@ export default function FeedbackPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [page, setPage] = useState(1);
-  const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
+  const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(
+    null,
+  );
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -273,7 +296,10 @@ export default function FeedbackPage() {
     }, 300);
   }, []);
 
-  const queryKey = ["feedback", { search: debouncedSearch, is_read: unreadOnly ? false : undefined, page }];
+  const queryKey = [
+    "feedback",
+    { search: debouncedSearch, is_read: unreadOnly ? false : undefined, page },
+  ];
 
   const { data, isLoading, isError } = useQuery({
     queryKey,
@@ -303,7 +329,7 @@ export default function FeedbackPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["feedback"] });
       toast.success("Marked as read.");
-      setSelectedFeedback((prev) => prev ? { ...prev, is_read: true } : null);
+      setSelectedFeedback((prev) => (prev ? { ...prev, is_read: true } : null));
     },
     onError: (err: ApiError) => {
       toast.error(err.message ?? "Failed to mark as read.");
@@ -363,13 +389,16 @@ export default function FeedbackPage() {
               type="button"
               className={cn(
                 "w-full text-left rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/30 border-l-4 border-l-destructive",
-                !item.is_read && "bg-primary/5"
+                !item.is_read && "bg-primary/5",
               )}
               onClick={() => setSelectedFeedback(item)}
             >
               <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10">
-                  <MessageSquare className="h-4 w-4 text-destructive" aria-hidden="true" />
+                  <MessageSquare
+                    className="h-4 w-4 text-destructive"
+                    aria-hidden="true"
+                  />
                 </span>
 
                 <div className="min-w-0 flex-1">

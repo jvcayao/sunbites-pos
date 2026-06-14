@@ -24,9 +24,13 @@ jest.mock("@/components/ui/select", () => ({
       {children}
     </select>
   ),
-  SelectTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  SelectTrigger: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
   SelectValue: () => null,
-  SelectContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  SelectContent: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
   SelectItem: ({
     value,
     children,
@@ -77,9 +81,14 @@ function setupHandlers(announcements: unknown[]) {
     http.get(`${API}/announcements`, () =>
       HttpResponse.json({
         data: announcements,
-        meta: { current_page: 1, last_page: 1, per_page: 50, total: announcements.length },
-      })
-    )
+        meta: {
+          current_page: 1,
+          last_page: 1,
+          per_page: 50,
+          total: announcements.length,
+        },
+      }),
+    ),
   );
 }
 
@@ -91,9 +100,11 @@ describe("AnnouncementsPage", () => {
   it("renders announcement title and message preview", async () => {
     setupHandlers([parentsFixture]);
     render(<AnnouncementsPage />);
-    expect(await screen.findByText("Canteen Closed Friday")).toBeInTheDocument();
     expect(
-      screen.getByText("The canteen will be closed on Friday for maintenance.")
+      await screen.findByText("Canteen Closed Friday"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("The canteen will be closed on Friday for maintenance."),
     ).toBeInTheDocument();
   });
 
@@ -135,10 +146,9 @@ describe("AnnouncementsPage", () => {
     setupHandlers([parentsFixture]);
     render(<AnnouncementsPage />);
     await screen.findByText("Canteen Closed Friday");
-    expect(screen.getByRole("link", { name: "Canteen Closed Friday" })).toHaveAttribute(
-      "href",
-      "/announcements/1"
-    );
+    expect(
+      screen.getByRole("link", { name: "Canteen Closed Friday" }),
+    ).toHaveAttribute("href", "/announcements/1");
   });
 
   it("search filters announcements by title", async () => {
@@ -148,7 +158,7 @@ describe("AnnouncementsPage", () => {
 
     await userEvent.type(
       screen.getByRole("textbox", { name: "Search announcements" }),
-      "canteen"
+      "canteen",
     );
 
     await waitFor(() => {
@@ -164,7 +174,7 @@ describe("AnnouncementsPage", () => {
 
     await userEvent.selectOptions(
       screen.getByRole("combobox", { name: "Filter by audience" }),
-      "parents"
+      "parents",
     );
 
     await waitFor(() => {
@@ -180,11 +190,11 @@ describe("AnnouncementsPage", () => {
 
     await userEvent.type(
       screen.getByRole("textbox", { name: "Search announcements" }),
-      "zzznomatch"
+      "zzznomatch",
     );
 
     expect(
-      await screen.findByText("No announcements match your filters")
+      await screen.findByText("No announcements match your filters"),
     ).toBeInTheDocument();
   });
 });

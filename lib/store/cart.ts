@@ -41,7 +41,7 @@ export const useCartStore = create<CartStore>()((set) => ({
       if (existing) {
         return {
           items: state.items.map((i) =>
-            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
           ),
         };
       }
@@ -60,7 +60,13 @@ export const useCartStore = create<CartStore>()((set) => ({
     set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
 
   clearCart: () =>
-    set({ items: [], student: null, isWalkIn: false, paymentMethod: "cash", notes: "" }),
+    set({
+      items: [],
+      student: null,
+      isWalkIn: false,
+      paymentMethod: "cash",
+      notes: "",
+    }),
 
   setStudent: (student) => set({ student, isWalkIn: false }),
 

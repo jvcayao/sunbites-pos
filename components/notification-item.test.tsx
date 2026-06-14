@@ -49,7 +49,7 @@ describe("NotificationItem (POS)", () => {
         onDelete={noop}
         isMarkingRead={false}
         isDeleting={false}
-      />
+      />,
     );
     expect(screen.getByText("School Holiday")).toHaveClass("font-semibold");
     expect(screen.getByText(/Classes are suspended/)).toBeInTheDocument();
@@ -63,9 +63,11 @@ describe("NotificationItem (POS)", () => {
         onDelete={noop}
         isMarkingRead={false}
         isDeleting={false}
-      />
+      />,
     );
-    expect(screen.getByText("New Pre-Registration")).toHaveClass("text-muted-foreground");
+    expect(screen.getByText("New Pre-Registration")).toHaveClass(
+      "text-muted-foreground",
+    );
   });
 
   it("clicking unread announcement calls onMarkRead, navigates, calls onNavigate", async () => {
@@ -79,9 +81,11 @@ describe("NotificationItem (POS)", () => {
         isMarkingRead={false}
         isDeleting={false}
         onNavigate={onNavigate}
-      />
+      />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /school holiday/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /school holiday/i }),
+    );
     expect(onMarkRead).toHaveBeenCalledWith("1");
     expect(mockPush).toHaveBeenCalledWith("/announcements/10");
     expect(onNavigate).toHaveBeenCalled();
@@ -96,9 +100,11 @@ describe("NotificationItem (POS)", () => {
         onDelete={noop}
         isMarkingRead={false}
         isDeleting={false}
-      />
+      />,
     );
-    await userEvent.click(screen.getByRole("button", { name: /new pre-registration/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /new pre-registration/i }),
+    );
     expect(onMarkRead).not.toHaveBeenCalled();
     expect(mockPush).toHaveBeenCalledWith("/pre-registrations/5");
   });
@@ -111,9 +117,11 @@ describe("NotificationItem (POS)", () => {
         onDelete={noop}
         isMarkingRead={false}
         isDeleting={false}
-      />
+      />,
     );
-    await userEvent.click(screen.getByRole("button", { name: "Notification actions" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Notification actions" }),
+    );
     await waitFor(() => {
       expect(screen.getByText("Mark as read")).toBeInTheDocument();
       expect(screen.getByText("Delete")).toBeInTheDocument();
@@ -128,9 +136,11 @@ describe("NotificationItem (POS)", () => {
         onDelete={noop}
         isMarkingRead={false}
         isDeleting={false}
-      />
+      />,
     );
-    await userEvent.click(screen.getByRole("button", { name: "Notification actions" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Notification actions" }),
+    );
     await waitFor(() => {
       expect(screen.queryByText("Mark as read")).not.toBeInTheDocument();
       expect(screen.getByText("Delete")).toBeInTheDocument();

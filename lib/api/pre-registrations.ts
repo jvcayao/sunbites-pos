@@ -18,7 +18,7 @@ export const preRegistrationApi = {
   update: (id: number, payload: Record<string, unknown>) =>
     apiClient.patch<{ message: string; data: PreRegistrationDetail }>(
       `/pre-registrations/${id}`,
-      payload
+      payload,
     ),
 
   approve: (id: number) =>

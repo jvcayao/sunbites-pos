@@ -84,7 +84,9 @@ export default function AnnouncementDetailPage({
   const recipientLabel =
     announcement.recipient_type === "parents" ? "Parents" : "Staff";
 
-  const readCount = announcement.recipients.filter((r) => r.read_at !== null).length;
+  const readCount = announcement.recipients.filter(
+    (r) => r.read_at !== null,
+  ).length;
 
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
@@ -128,16 +130,16 @@ export default function AnnouncementDetailPage({
       {/* Recipients */}
       <SectionCard title="Recipients">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Delivery report
-          </p>
+          <p className="text-sm text-muted-foreground">Delivery report</p>
           <span className="text-xs font-semibold text-muted-foreground">
             {readCount} read / {announcement.recipients.length} total
           </span>
         </div>
 
         {announcement.recipients.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No recipients recorded.</p>
+          <p className="text-sm text-muted-foreground">
+            No recipients recorded.
+          </p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-border">
             <table className="w-full text-sm">
@@ -156,7 +158,10 @@ export default function AnnouncementDetailPage({
               </thead>
               <tbody className="bg-card">
                 {announcement.recipients.map((r) => (
-                  <tr key={r.id} className="border-b border-border last:border-0">
+                  <tr
+                    key={r.id}
+                    className="border-b border-border last:border-0"
+                  >
                     <td className="px-4 py-3 font-medium">{r.name}</td>
                     <td className="px-4 py-3">
                       <span
@@ -164,7 +169,7 @@ export default function AnnouncementDetailPage({
                           "text-[11px] font-bold px-2.5 py-1 rounded-full border",
                           r.read_at
                             ? "bg-green-100 text-green-700 border-green-300"
-                            : "bg-muted text-muted-foreground border-border"
+                            : "bg-muted text-muted-foreground border-border",
                         )}
                       >
                         {r.read_at ? "Read ✓" : "Unread"}

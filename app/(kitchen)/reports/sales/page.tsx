@@ -23,7 +23,12 @@ import type { SalesOrder } from "@/lib/api/reports";
 // Helpers
 // ---------------------------------------------------------------------------
 
-type DatePreset = "today" | "this_week" | "this_month" | "last_month" | "custom";
+type DatePreset =
+  | "today"
+  | "this_week"
+  | "this_month"
+  | "last_month"
+  | "custom";
 
 function getDateRange(preset: DatePreset): { from: string; to: string } {
   const now = new Date();
@@ -85,9 +90,16 @@ function PaymentBadge({ method }: { method: string }) {
     wallet: "bg-purple-100 text-purple-700 border-purple-300",
     subscription: "bg-orange-100 text-orange-700 border-orange-300",
   };
-  const cls = map[method?.toLowerCase()] ?? "bg-muted text-muted-foreground border-border";
+  const cls =
+    map[method?.toLowerCase()] ??
+    "bg-muted text-muted-foreground border-border";
   return (
-    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize", cls)}>
+    <span
+      className={cn(
+        "text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize",
+        cls,
+      )}
+    >
       {method}
     </span>
   );
@@ -155,7 +167,10 @@ export default function SalesReportPage() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["reports-sales", params],
-    queryFn: () => reportApi.sales(params as Record<string, string | number | boolean | undefined>),
+    queryFn: () =>
+      reportApi.sales(
+        params as Record<string, string | number | boolean | undefined>,
+      ),
   });
 
   const summary = data?.summary;
@@ -177,8 +192,10 @@ export default function SalesReportPage() {
               void exportReport("reports/sales", {
                 date_from: from || undefined,
                 date_to: to || undefined,
-                payment_method: paymentMethod !== "all" ? paymentMethod : undefined,
-                customer_type: customerType !== "all" ? customerType : undefined,
+                payment_method:
+                  paymentMethod !== "all" ? paymentMethod : undefined,
+                customer_type:
+                  customerType !== "all" ? customerType : undefined,
               });
             }}
           >
@@ -202,7 +219,7 @@ export default function SalesReportPage() {
               "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
               preset === p.value
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:bg-muted"
+                : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
             {p.label}
@@ -242,7 +259,10 @@ export default function SalesReportPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="h-8 w-[140px] text-xs" aria-label="Payment method filter">
+          <SelectTrigger
+            className="h-8 w-[140px] text-xs"
+            aria-label="Payment method filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -261,7 +281,10 @@ export default function SalesReportPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="h-8 w-[140px] text-xs" aria-label="Customer type filter">
+          <SelectTrigger
+            className="h-8 w-[140px] text-xs"
+            aria-label="Customer type filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -275,11 +298,29 @@ export default function SalesReportPage() {
       {/* Summary cards */}
       {summary && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <SummaryCard label="Total Revenue" value={formatPeso(summary.total_revenue)} colorClass="border-green-200 bg-green-50" />
-          <SummaryCard label="Total Orders" value={String(summary.total_orders)} />
-          <SummaryCard label="Avg Order Value" value={formatPeso(summary.avg_order_value)} />
-          <SummaryCard label="Total Discounts" value={formatPeso(summary.total_discounts)} colorClass="border-red-200 bg-red-50" />
-          <SummaryCard label="Net Revenue" value={formatPeso(summary.net_revenue)} colorClass="border-blue-200 bg-blue-50" />
+          <SummaryCard
+            label="Total Revenue"
+            value={formatPeso(summary.total_revenue)}
+            colorClass="border-green-200 bg-green-50"
+          />
+          <SummaryCard
+            label="Total Orders"
+            value={String(summary.total_orders)}
+          />
+          <SummaryCard
+            label="Avg Order Value"
+            value={formatPeso(summary.avg_order_value)}
+          />
+          <SummaryCard
+            label="Total Discounts"
+            value={formatPeso(summary.total_discounts)}
+            colorClass="border-red-200 bg-red-50"
+          />
+          <SummaryCard
+            label="Net Revenue"
+            value={formatPeso(summary.net_revenue)}
+            colorClass="border-blue-200 bg-blue-50"
+          />
         </div>
       )}
 
@@ -293,30 +334,55 @@ export default function SalesReportPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Receipt #</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Date / Time</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Cashier</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Customer</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Items</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Payment</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Discount</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Total</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Receipt #
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Date / Time
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Cashier
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Customer
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Items
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Payment
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  Discount
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  Total
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => <TableRowSkeleton key={i} />)
+                Array.from({ length: 3 }).map((_, i) => (
+                  <TableRowSkeleton key={i} />
+                ))
               ) : !data?.data?.length ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
+                  <td
+                    colSpan={8}
+                    className="px-4 py-10 text-center text-muted-foreground"
+                  >
                     No sales records for this period.
                   </td>
                 </tr>
               ) : (
                 data.data.map((order: SalesOrder) => (
                   <tr key={order.id} className="hover:bg-muted/20">
-                    <td className="px-4 py-2.5 font-mono text-xs">{order.receipt_number}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{formatDateTime(order.created_at)}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs">
+                      {order.receipt_number}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {formatDateTime(order.created_at)}
+                    </td>
                     <td className="px-4 py-2.5">
                       {order.cashier.first_name} {order.cashier.last_name}
                     </td>
@@ -324,19 +390,27 @@ export default function SalesReportPage() {
                       {order.student ? (
                         order.student.full_name
                       ) : (
-                        <span className="italic text-muted-foreground">Walk-In</span>
+                        <span className="italic text-muted-foreground">
+                          Walk-In
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-2.5 max-w-[180px] truncate text-muted-foreground">
-                      {order.items.map((i) => `${i.name} ×${i.quantity}`).join(", ")}
+                      {order.items
+                        .map((i) => `${i.name} ×${i.quantity}`)
+                        .join(", ")}
                     </td>
                     <td className="px-4 py-2.5">
                       <PaymentBadge method={order.payment_method} />
                     </td>
                     <td className="px-4 py-2.5 text-right text-muted-foreground">
-                      {order.discount_amount > 0 ? `-${formatPeso(order.discount_amount)}` : "—"}
+                      {order.discount_amount > 0
+                        ? `-${formatPeso(order.discount_amount)}`
+                        : "—"}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-semibold">{formatPeso(order.total)}</td>
+                    <td className="px-4 py-2.5 text-right font-semibold">
+                      {formatPeso(order.total)}
+                    </td>
                   </tr>
                 ))
               )}

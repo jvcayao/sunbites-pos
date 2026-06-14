@@ -10,7 +10,10 @@ export default function SubscriptionReportLoading() {
       </div>
       <div className="rounded-xl border border-border overflow-hidden">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex gap-4 border-b border-border px-4 py-3 last:border-0">
+          <div
+            key={i}
+            className="flex gap-4 border-b border-border px-4 py-3 last:border-0"
+          >
             {Array.from({ length: 8 }).map((_, j) => (
               <Skeleton key={j} className="h-4 flex-1" />
             ))}

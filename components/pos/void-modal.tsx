@@ -42,7 +42,12 @@ export function VoidModal({ order, onConfirm, onCancel, isPending }: Props) {
   }
 
   return (
-    <Dialog open={order !== null} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
+    <Dialog
+      open={order !== null}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) handleClose();
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Void Transaction</DialogTitle>
@@ -51,11 +56,15 @@ export function VoidModal({ order, onConfirm, onCancel, isPending }: Props) {
         <div className="space-y-1 rounded-lg border border-border bg-muted/50 p-3 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Receipt No.</span>
-            <span className="font-mono font-medium">{order?.receipt_number}</span>
+            <span className="font-mono font-medium">
+              {order?.receipt_number}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Total</span>
-            <span className="font-medium">₱{parseFloat(order?.total ?? "0").toFixed(2)}</span>
+            <span className="font-medium">
+              ₱{parseFloat(order?.total ?? "0").toFixed(2)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Customer</span>
@@ -81,7 +90,11 @@ export function VoidModal({ order, onConfirm, onCancel, isPending }: Props) {
             rows={3}
           />
           {error && (
-            <p id="void-reason-error" role="alert" className="flex items-center gap-1 text-xs text-destructive">
+            <p
+              id="void-reason-error"
+              role="alert"
+              className="flex items-center gap-1 text-xs text-destructive"
+            >
               <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               {error}
             </p>
@@ -92,7 +105,11 @@ export function VoidModal({ order, onConfirm, onCancel, isPending }: Props) {
           <Button variant="outline" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={isPending}>
+          <Button
+            variant="destructive"
+            onClick={handleConfirm}
+            disabled={isPending}
+          >
             {isPending ? "Voiding…" : "Confirm Void"}
           </Button>
         </div>

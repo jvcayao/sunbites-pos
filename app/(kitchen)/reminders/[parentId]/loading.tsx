@@ -16,7 +16,9 @@ export default function ReminderParentDetailLoading() {
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <th key={i} className="px-4 py-3"><Skeleton className="h-4 w-20" /></th>
+                  <th key={i} className="px-4 py-3">
+                    <Skeleton className="h-4 w-20" />
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -24,7 +26,9 @@ export default function ReminderParentDetailLoading() {
               {Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="border-b border-border">
                   {Array.from({ length: 4 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                    <td key={j} className="px-4 py-3">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
                   ))}
                 </tr>
               ))}

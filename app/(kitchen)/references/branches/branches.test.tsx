@@ -16,7 +16,9 @@ jest.mock("next/navigation", () => ({
 
 // Preserve getState/setState so apiClient can read the store while mocking the hook
 jest.mock("@/lib/store/auth", () => {
-  const actual = jest.requireActual("@/lib/store/auth") as typeof import("@/lib/store/auth");
+  const actual = jest.requireActual(
+    "@/lib/store/auth",
+  ) as typeof import("@/lib/store/auth");
   return {
     ...actual,
     useAuthStore: Object.assign(jest.fn(), {
@@ -44,7 +46,10 @@ beforeEach(() => {
   mockReplace.mockClear();
   // Default: authenticated admin user
   mockUseAuthStore.mockImplementation((selector) =>
-    (selector as (state: AuthState) => unknown)({ user: adminUser, activeBranch: null } as AuthState)
+    (selector as (state: AuthState) => unknown)({
+      user: adminUser,
+      activeBranch: null,
+    } as AuthState),
   );
 });
 
@@ -74,13 +79,15 @@ describe("BranchesPage", () => {
   it("shows an error message when the API fails", async () => {
     server.use(
       http.get(`${API}/branches`, () =>
-        HttpResponse.json({ message: "Server error" }, { status: 500 })
-      )
+        HttpResponse.json({ message: "Server error" }, { status: 500 }),
+      ),
     );
 
     render(<BranchesPage />);
 
-    expect(await screen.findByText("Failed to load branches.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Failed to load branches."),
+    ).toBeInTheDocument();
   });
 
   it("opens the edit dialog with pre-filled branch name when Edit is clicked", async () => {
@@ -120,7 +127,9 @@ describe("BranchesPage", () => {
     await user.clear(nameInput);
     await user.click(screen.getByRole("button", { name: "Save Changes" }));
 
-    expect(await screen.findByText("Branch name is required")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Branch name is required"),
+    ).toBeInTheDocument();
   });
 
   it("submits the edit form and closes the dialog on success", async () => {
@@ -145,9 +154,9 @@ describe("BranchesPage", () => {
       http.post(`${API}/branches/:id/toggle`, () =>
         HttpResponse.json(
           { message: "At least one branch must remain active." },
-          { status: 422 }
-        )
-      )
+          { status: 422 },
+        ),
+      ),
     );
 
     const user = userEvent.setup();
@@ -158,11 +167,13 @@ describe("BranchesPage", () => {
 
     await screen.findByText("Main Branch");
 
-    const deactivateButtons = screen.getAllByRole("button", { name: "Deactivate" });
+    const deactivateButtons = screen.getAllByRole("button", {
+      name: "Deactivate",
+    });
     await user.click(deactivateButtons[0]);
 
     expect(
-      await screen.findByText("At least one branch must remain active.")
+      await screen.findByText("At least one branch must remain active."),
     ).toBeInTheDocument();
   });
 
@@ -171,7 +182,7 @@ describe("BranchesPage", () => {
       (selector as (state: AuthState) => unknown)({
         user: { ...adminUser, roles: ["manager"] },
         activeBranch: null,
-      } as AuthState)
+      } as AuthState),
     );
 
     render(<BranchesPage />);
@@ -186,7 +197,7 @@ describe("BranchesPage", () => {
       (selector as (state: AuthState) => unknown)({
         user: { ...adminUser, roles: ["cashier"] },
         activeBranch: null,
-      } as AuthState)
+      } as AuthState),
     );
 
     const { container } = render(<BranchesPage />);
@@ -195,9 +206,7 @@ describe("BranchesPage", () => {
   });
 
   it("shows an empty state message when no branches are returned", async () => {
-    server.use(
-      http.get(`${API}/branches`, () => HttpResponse.json([]))
-    );
+    server.use(http.get(`${API}/branches`, () => HttpResponse.json([])));
 
     render(<BranchesPage />);
 

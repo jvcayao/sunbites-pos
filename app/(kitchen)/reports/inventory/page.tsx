@@ -69,7 +69,12 @@ const STATUS_LABEL_MAP: Record<InventoryReportStatus, string> = {
 
 function StatusBadge({ status }: { status: InventoryReportStatus }) {
   return (
-    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border uppercase", STATUS_BADGE_MAP[status])}>
+    <span
+      className={cn(
+        "text-[11px] font-bold px-2 py-0.5 rounded-full border uppercase",
+        STATUS_BADGE_MAP[status],
+      )}
+    >
       {STATUS_LABEL_MAP[status]}
     </span>
   );
@@ -88,7 +93,12 @@ const LOG_TYPE_STYLES: Record<string, string> = {
 
 function LogTypeBadge({ type, label }: { type: string; label?: string }) {
   return (
-    <span className={cn("text-[11px] font-semibold px-2 py-0.5 rounded-full border capitalize", LOG_TYPE_STYLES[type] ?? "bg-muted text-muted-foreground border-border")}>
+    <span
+      className={cn(
+        "text-[11px] font-semibold px-2 py-0.5 rounded-full border capitalize",
+        LOG_TYPE_STYLES[type] ?? "bg-muted text-muted-foreground border-border",
+      )}
+    >
       {label ?? type}
     </span>
   );
@@ -104,10 +114,20 @@ function historyRowClass(type: string): string {
 // Summary Card
 // ---------------------------------------------------------------------------
 
-function SummaryCard({ label, value, colorClass }: { label: string; value: number; colorClass?: string }) {
+function SummaryCard({
+  label,
+  value,
+  colorClass,
+}: {
+  label: string;
+  value: number;
+  colorClass?: string;
+}) {
   return (
     <div className={cn("rounded-xl border bg-card p-4", colorClass)}>
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-1 text-3xl font-extrabold text-foreground">{value}</p>
     </div>
   );
@@ -122,7 +142,8 @@ type DatePreset = "today" | "week" | "month" | "custom";
 function getPresetDates(preset: DatePreset): { from: string; to: string } {
   const today = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
-  const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
   if (preset === "today") {
     const t = fmt(today);
@@ -174,10 +195,11 @@ export default function InventoryReportPage() {
     const dates = getPresetDates("today");
     return { from: dates.from, to: dates.to, type: "", item_id: undefined };
   });
-  const [appliedHistFilters, setAppliedHistFilters] = useState<InventoryHistoryState>(() => {
-    const dates = getPresetDates("today");
-    return { from: dates.from, to: dates.to, type: "", item_id: undefined };
-  });
+  const [appliedHistFilters, setAppliedHistFilters] =
+    useState<InventoryHistoryState>(() => {
+      const dates = getPresetDates("today");
+      return { from: dates.from, to: dates.to, type: "", item_id: undefined };
+    });
   const [histPage, setHistPage] = useState(1);
 
   // Snapshot query
@@ -193,7 +215,11 @@ export default function InventoryReportPage() {
   });
 
   // History query
-  const { data: histData, isLoading: histLoading, isError: histError } = useQuery({
+  const {
+    data: histData,
+    isLoading: histLoading,
+    isError: histError,
+  } = useQuery({
     queryKey: ["reports-inventory-history", appliedHistFilters, histPage],
     queryFn: () =>
       reportApi.inventory({
@@ -237,7 +263,9 @@ export default function InventoryReportPage() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-muted-foreground">Reports</p>
-          <h1 className="text-xl font-bold text-foreground">Inventory Report</h1>
+          <h1 className="text-xl font-bold text-foreground">
+            Inventory Report
+          </h1>
         </div>
         {(isAdmin || isManager) && (
           <Button
@@ -277,14 +305,21 @@ export default function InventoryReportPage() {
       {/* Stock Snapshot Table */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Stock Snapshot</h2>
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "")}>
+          <h2 className="text-base font-semibold text-foreground">
+            Stock Snapshot
+          </h2>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v ?? "")}
+          >
             <SelectTrigger className="w-36 h-8 text-xs">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
               {STATUS_FILTERS.map((s) => (
-                <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
+                <SelectItem key={s.value} value={s.value} className="text-xs">
+                  {s.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -299,14 +334,30 @@ export default function InventoryReportPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/40">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Item Name</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Unit</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Current Stock</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Alert Threshold</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Overstock</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Cost/Unit</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Status</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Last Updated</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                    Item Name
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                    Unit
+                  </th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                    Current Stock
+                  </th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                    Alert Threshold
+                  </th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                    Overstock
+                  </th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                    Cost/Unit
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                    Status
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                    Last Updated
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -322,31 +373,50 @@ export default function InventoryReportPage() {
                   ))
                 ) : !filteredRows.length ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
+                    <td
+                      colSpan={8}
+                      className="px-4 py-10 text-center text-muted-foreground"
+                    >
                       No inventory data found.
                     </td>
                   </tr>
                 ) : (
                   filteredRows.map((row: InventoryReportRow) => (
                     <tr key={row.id} className="hover:bg-muted/20">
-                      <td className="px-4 py-2.5 font-medium text-foreground">{row.name}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground">{row.unit}</td>
-                      <td className={cn(
-                        "px-4 py-2.5 text-right font-semibold",
-                        row.status === "out" && "text-red-600",
-                        row.status === "low" && "text-amber-600"
-                      )}>
+                      <td className="px-4 py-2.5 font-medium text-foreground">
+                        {row.name}
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground">
+                        {row.unit}
+                      </td>
+                      <td
+                        className={cn(
+                          "px-4 py-2.5 text-right font-semibold",
+                          row.status === "out" && "text-red-600",
+                          row.status === "low" && "text-amber-600",
+                        )}
+                      >
                         {row.quantity}
                       </td>
-                      <td className="px-4 py-2.5 text-right text-muted-foreground">{row.restock_threshold}</td>
                       <td className="px-4 py-2.5 text-right text-muted-foreground">
-                        {row.overstock_threshold ?? <span className="text-muted-foreground">—</span>}
+                        {row.restock_threshold}
                       </td>
                       <td className="px-4 py-2.5 text-right text-muted-foreground">
-                        {row.cost_per_unit != null ? `₱${row.cost_per_unit.toFixed(2)}` : "—"}
+                        {row.overstock_threshold ?? (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </td>
-                      <td className="px-4 py-2.5"><StatusBadge status={row.status} /></td>
-                      <td className="px-4 py-2.5 text-muted-foreground">{formatDate(row.updated_at)}</td>
+                      <td className="px-4 py-2.5 text-right text-muted-foreground">
+                        {row.cost_per_unit != null
+                          ? `₱${row.cost_per_unit.toFixed(2)}`
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <StatusBadge status={row.status} />
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground">
+                        {formatDate(row.updated_at)}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -371,76 +441,120 @@ export default function InventoryReportPage() {
                 "rounded-full px-3 py-1 text-xs font-medium transition-colors capitalize",
                 preset === p
                   ? "bg-primary text-primary-foreground"
-                  : "border border-border bg-background hover:border-primary/50"
+                  : "border border-border bg-background hover:border-primary/50",
               )}
             >
-              {p === "today" ? "Today" : p === "week" ? "This Week" : p === "month" ? "This Month" : "Custom Range"}
+              {p === "today"
+                ? "Today"
+                : p === "week"
+                  ? "This Week"
+                  : p === "month"
+                    ? "This Month"
+                    : "Custom Range"}
             </button>
           ))}
         </div>
 
         {/* Filters row */}
         <div className="flex flex-wrap items-end gap-3">
-          {(preset === "custom") && (
+          {preset === "custom" && (
             <>
               <div className="space-y-1">
-                <Label htmlFor="hist-from" className="text-xs">From</Label>
+                <Label htmlFor="hist-from" className="text-xs">
+                  From
+                </Label>
                 <Input
                   id="hist-from"
                   type="date"
                   className="h-8 w-36 text-xs"
                   value={histFilters.from}
-                  onChange={(e) => setHistFilters((p) => ({ ...p, from: e.target.value }))}
+                  onChange={(e) =>
+                    setHistFilters((p) => ({ ...p, from: e.target.value }))
+                  }
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="hist-to" className="text-xs">To</Label>
+                <Label htmlFor="hist-to" className="text-xs">
+                  To
+                </Label>
                 <Input
                   id="hist-to"
                   type="date"
                   className="h-8 w-36 text-xs"
                   value={histFilters.to}
-                  onChange={(e) => setHistFilters((p) => ({ ...p, to: e.target.value }))}
+                  onChange={(e) =>
+                    setHistFilters((p) => ({ ...p, to: e.target.value }))
+                  }
                 />
               </div>
             </>
           )}
           <div className="space-y-1">
-            <Label htmlFor="hist-type" className="text-xs">Type</Label>
+            <Label htmlFor="hist-type" className="text-xs">
+              Type
+            </Label>
             <Select
               value={histFilters.type}
-              onValueChange={(v) => setHistFilters((p) => ({ ...p, type: v ?? "" }))}
+              onValueChange={(v) =>
+                setHistFilters((p) => ({ ...p, type: v ?? "" }))
+              }
             >
               <SelectTrigger id="hist-type" className="h-8 w-36 text-xs">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
                 {LOG_TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value} className="text-xs">{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="hist-item" className="text-xs">Item</Label>
-            <Select
-              value={histFilters.item_id !== undefined ? String(histFilters.item_id) : ""}
-              onValueChange={(v) => setHistFilters((p) => ({ ...p, item_id: v ? Number(v) : undefined }))}
-            >
-              <SelectTrigger id="hist-item" className="h-8 w-44 text-xs">
-                <SelectValue placeholder="All Items" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="" className="text-xs">All Items</SelectItem>
-                {(inventoryItems ?? []).filter((i) => !i.is_archived).map((inv) => (
-                  <SelectItem key={inv.id} value={String(inv.id)} className="text-xs">
-                    {inv.name}
+                  <SelectItem key={t.value} value={t.value} className="text-xs">
+                    {t.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={applyHistFilters}>
+          <div className="space-y-1">
+            <Label htmlFor="hist-item" className="text-xs">
+              Item
+            </Label>
+            <Select
+              value={
+                histFilters.item_id !== undefined
+                  ? String(histFilters.item_id)
+                  : ""
+              }
+              onValueChange={(v) =>
+                setHistFilters((p) => ({
+                  ...p,
+                  item_id: v ? Number(v) : undefined,
+                }))
+              }
+            >
+              <SelectTrigger id="hist-item" className="h-8 w-44 text-xs">
+                <SelectValue placeholder="All Items" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="" className="text-xs">
+                  All Items
+                </SelectItem>
+                {(inventoryItems ?? [])
+                  .filter((i) => !i.is_archived)
+                  .map((inv) => (
+                    <SelectItem
+                      key={inv.id}
+                      value={String(inv.id)}
+                      className="text-xs"
+                    >
+                      {inv.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={applyHistFilters}
+          >
             Apply
           </Button>
         </div>
@@ -450,14 +564,30 @@ export default function InventoryReportPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Date/Time</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Item Name</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Type</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Change</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">After</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Reason</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Adjusted By</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Order #</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Date/Time
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Item Name
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Type
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  Change
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  After
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Reason
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Adjusted By
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Order #
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -473,35 +603,64 @@ export default function InventoryReportPage() {
                 ))
               ) : histError ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-sm text-destructive">
+                  <td
+                    colSpan={8}
+                    className="px-4 py-8 text-center text-sm text-destructive"
+                  >
                     Failed to load history.
                   </td>
                 </tr>
               ) : !histLogs.length ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={8}
+                    className="px-4 py-8 text-center text-sm text-muted-foreground"
+                  >
                     No history records for this period.
                   </td>
                 </tr>
               ) : (
                 histLogs.map((log: InventoryReportLog) => (
-                  <tr key={log.id} className={cn("hover:brightness-95", historyRowClass(log.type))}>
+                  <tr
+                    key={log.id}
+                    className={cn(
+                      "hover:brightness-95",
+                      historyRowClass(log.type),
+                    )}
+                  >
                     <td className="px-4 py-2.5 text-xs whitespace-nowrap text-muted-foreground">
                       {formatDateTime(log.created_at)}
                     </td>
-                    <td className="px-4 py-2.5 font-medium">{log.item_name_snapshot}</td>
+                    <td className="px-4 py-2.5 font-medium">
+                      {log.item_name_snapshot}
+                    </td>
                     <td className="px-4 py-2.5">
                       <LogTypeBadge type={log.type} label={log.type_label} />
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono">
-                      <span className={parseFloat(log.quantity_change) >= 0 ? "text-green-600" : "text-destructive"}>
-                        {parseFloat(log.quantity_change) >= 0 ? "+" : ""}{log.quantity_change}
+                      <span
+                        className={
+                          parseFloat(log.quantity_change) >= 0
+                            ? "text-green-600"
+                            : "text-destructive"
+                        }
+                      >
+                        {parseFloat(log.quantity_change) >= 0 ? "+" : ""}
+                        {log.quantity_change}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-mono">{log.stock_after}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{log.reason}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{log.adjusted_by ?? "—"}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{log.order_id ?? "—"}</td>
+                    <td className="px-4 py-2.5 text-right font-mono">
+                      {log.stock_after}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {log.reason}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {log.adjusted_by ?? "—"}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {log.order_id ?? "—"}
+                    </td>
                   </tr>
                 ))
               )}
@@ -513,13 +672,25 @@ export default function InventoryReportPage() {
         {histMeta && histMeta.last_page > 1 && (
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              Showing {(histPage - 1) * histMeta.per_page + 1}–{Math.min(histPage * histMeta.per_page, histMeta.total)} of {histMeta.total}
+              Showing {(histPage - 1) * histMeta.per_page + 1}–
+              {Math.min(histPage * histMeta.per_page, histMeta.total)} of{" "}
+              {histMeta.total}
             </span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={histPage <= 1} onClick={() => setHistPage((p) => p - 1)}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={histPage <= 1}
+                onClick={() => setHistPage((p) => p - 1)}
+              >
                 Prev
               </Button>
-              <Button variant="outline" size="sm" disabled={histPage >= histMeta.last_page} onClick={() => setHistPage((p) => p + 1)}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={histPage >= histMeta.last_page}
+                onClick={() => setHistPage((p) => p + 1)}
+              >
                 Next
               </Button>
             </div>
@@ -531,9 +702,13 @@ export default function InventoryReportPage() {
       <div className="space-y-3">
         <div className="flex items-start gap-2">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Discrepancy Summary</h2>
+            <h2 className="text-base font-semibold text-foreground">
+              Discrepancy Summary
+            </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Manual adjustments may indicate inventory counting errors or unrecorded losses. Items with frequent adjustments should be reviewed.
+              Manual adjustments may indicate inventory counting errors or
+              unrecorded losses. Items with frequent adjustments should be
+              reviewed.
             </p>
           </div>
         </div>
@@ -542,10 +717,18 @@ export default function InventoryReportPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Item</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground"># Adjustments</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Net Change</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Last Adjusted</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Item
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  # Adjustments
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  Net Change
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Last Adjusted
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -561,7 +744,10 @@ export default function InventoryReportPage() {
                 ))
               ) : !discrepancy.length ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={4}
+                    className="px-4 py-8 text-center text-sm text-muted-foreground"
+                  >
                     No manual adjustments recorded for this period.
                   </td>
                 </tr>
@@ -569,18 +755,36 @@ export default function InventoryReportPage() {
                 discrepancy.map((row: InventoryDiscrepancyRow) => {
                   const net = parseFloat(row.net_change);
                   const isHighCount = row.adjustment_count >= 3;
-                  const rowClass = net < 0 ? "bg-red-50" : net > 0 ? "bg-green-50" : "";
+                  const rowClass =
+                    net < 0 ? "bg-red-50" : net > 0 ? "bg-green-50" : "";
                   return (
-                    <tr key={row.inventory_item_id} className={cn("hover:brightness-95", rowClass)}>
-                      <td className="px-4 py-2.5 font-medium">{row.item_name}</td>
-                      <td className={cn("px-4 py-2.5 text-right", isHighCount && "font-semibold text-amber-700")}>
+                    <tr
+                      key={row.inventory_item_id}
+                      className={cn("hover:brightness-95", rowClass)}
+                    >
+                      <td className="px-4 py-2.5 font-medium">
+                        {row.item_name}
+                      </td>
+                      <td
+                        className={cn(
+                          "px-4 py-2.5 text-right",
+                          isHighCount && "font-semibold text-amber-700",
+                        )}
+                      >
                         {row.adjustment_count}
                       </td>
-                      <td className={cn(
-                        "px-4 py-2.5 text-right font-mono font-semibold",
-                        net < 0 ? "text-destructive" : net > 0 ? "text-green-700" : "text-muted-foreground"
-                      )}>
-                        {net >= 0 ? "+" : ""}{row.net_change}
+                      <td
+                        className={cn(
+                          "px-4 py-2.5 text-right font-mono font-semibold",
+                          net < 0
+                            ? "text-destructive"
+                            : net > 0
+                              ? "text-green-700"
+                              : "text-muted-foreground",
+                        )}
+                      >
+                        {net >= 0 ? "+" : ""}
+                        {row.net_change}
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground">
                         {formatDate(row.last_adjusted_at)}

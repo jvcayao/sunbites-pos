@@ -16,7 +16,10 @@ export default function MealPlannerLoading() {
       </div>
       <div className="mt-4 overflow-hidden rounded-xl border border-border">
         {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="flex gap-4 border-b border-border px-4 py-3 last:border-0">
+          <div
+            key={i}
+            className="flex gap-4 border-b border-border px-4 py-3 last:border-0"
+          >
             <Skeleton className="h-5 w-24" />
             {Array.from({ length: 4 }, (_, j) => (
               <Skeleton key={j} className="h-5 flex-1" />

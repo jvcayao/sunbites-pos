@@ -24,11 +24,15 @@ export function ReminderBell({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      aria-label={count > 0 ? `${count} parents pending payment reminder` : "Payment reminders"}
+      aria-label={
+        count > 0
+          ? `${count} parents pending payment reminder`
+          : "Payment reminders"
+      }
       onClick={() => router.push("/reminders")}
       className={cn(
         "relative flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-muted",
-        className
+        className,
       )}
     >
       <Bell className="h-4 w-4" aria-hidden="true" />

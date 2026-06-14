@@ -22,5 +22,7 @@ export const feedbackApi = {
     }),
 
   markRead: (id: number) =>
-    apiClient.patch<{ message: string }>(`/references/feedback/${id}/mark-read`),
+    apiClient.patch<{ message: string }>(
+      `/references/feedback/${id}/mark-read`,
+    ),
 };

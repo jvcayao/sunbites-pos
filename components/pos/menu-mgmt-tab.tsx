@@ -27,7 +27,11 @@ import {
 } from "@/components/ui/select";
 
 import type { ApiError } from "@/types/auth";
-import type { MenuCategory, PosMenuItem, UpdateMenuItemPayload } from "@/types/pos-menu-item";
+import type {
+  MenuCategory,
+  PosMenuItem,
+  UpdateMenuItemPayload,
+} from "@/types/pos-menu-item";
 import type { InventoryIngredient, InventoryItem } from "@/types/inventory";
 
 const CATEGORIES: MenuCategory[] = ["meal", "snack", "drink", "extra"];
@@ -44,7 +48,7 @@ function CategoryBadge({ category }: { category: MenuCategory }) {
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize",
-        CATEGORY_BADGE_STYLES[category]
+        CATEGORY_BADGE_STYLES[category],
       )}
     >
       {category}
@@ -59,7 +63,7 @@ const menuItemSchema = z.object({
     .min(1, "Price is required")
     .refine(
       (v) => !isNaN(parseFloat(v)) && parseFloat(v) >= 0,
-      "Must be a valid price"
+      "Must be a valid price",
     ),
   category: z.enum(["meal", "snack", "drink", "extra"] as const, {
     error: "Category is required",
@@ -89,37 +93,56 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
   });
 
   const attachMutation = useMutation({
-    mutationFn: ({ inventoryItemId, quantity }: { inventoryItemId: number; quantity: number }) =>
-      inventoryApi.attachIngredient(menuItem.id, { inventory_item_id: inventoryItemId, quantity_used: quantity }),
+    mutationFn: ({
+      inventoryItemId,
+      quantity,
+    }: {
+      inventoryItemId: number;
+      quantity: number;
+    }) =>
+      inventoryApi.attachIngredient(menuItem.id, {
+        inventory_item_id: inventoryItemId,
+        quantity_used: quantity,
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["menu-item-ingredients", menuItem.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["menu-item-ingredients", menuItem.id],
+      });
       queryClient.invalidateQueries({ queryKey: ["pos-menu-items"] });
       setSelectedItemId("");
       setQtyUsed("1");
       setAddError(null);
       toast.success("Stock link added.");
     },
-    onError: (err: ApiError) => setAddError(err.message ?? "Failed to add ingredient."),
+    onError: (err: ApiError) =>
+      setAddError(err.message ?? "Failed to add ingredient."),
   });
 
   const detachMutation = useMutation({
     mutationFn: (inventoryItemId: number) =>
       inventoryApi.detachIngredient(menuItem.id, inventoryItemId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["menu-item-ingredients", menuItem.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["menu-item-ingredients", menuItem.id],
+      });
       queryClient.invalidateQueries({ queryKey: ["pos-menu-items"] });
       toast.success("Stock link removed.");
     },
-    onError: (err: ApiError) => toast.error(err.message ?? "Failed to remove ingredient."),
+    onError: (err: ApiError) =>
+      toast.error(err.message ?? "Failed to remove ingredient."),
   });
 
-  const mappedIds = new Set((ingredients ?? []).map((i: InventoryIngredient) => i.inventory_item_id));
+  const mappedIds = new Set(
+    (ingredients ?? []).map((i: InventoryIngredient) => i.inventory_item_id),
+  );
   const unmappedItems = inventoryItems.filter((inv) => !mappedIds.has(inv.id));
 
   // Derive the display item from state. If the selected ID is no longer in unmappedItems
   // (item was just linked), treat the selection as empty — avoids both the stale-value
   // display bug and any setState-in-effect lint violation.
-  const selectedInvItem = unmappedItems.find((inv) => String(inv.id) === selectedItemId);
+  const selectedInvItem = unmappedItems.find(
+    (inv) => String(inv.id) === selectedItemId,
+  );
   const effectiveSelectedItemId = selectedInvItem ? selectedItemId : "";
 
   function handleAdd(e: React.FormEvent) {
@@ -134,7 +157,10 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
       setAddError("Quantity must be greater than 0.");
       return;
     }
-    attachMutation.mutate({ inventoryItemId: Number(effectiveSelectedItemId), quantity: qty });
+    attachMutation.mutate({
+      inventoryItemId: Number(effectiveSelectedItemId),
+      quantity: qty,
+    });
   }
 
   return (
@@ -156,7 +182,10 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
           </thead>
           <tbody>
             {ingredients.map((ing: InventoryIngredient) => (
-              <tr key={ing.inventory_item_id} className="border-t border-border/50">
+              <tr
+                key={ing.inventory_item_id}
+                className="border-t border-border/50"
+              >
                 <td className="py-1">{ing.name}</td>
                 <td className="py-1 text-muted-foreground">
                   {ing.quantity_used} {ing.unit}
@@ -165,7 +194,10 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
                   <button
                     type="button"
                     className="text-xs text-destructive hover:underline disabled:opacity-50"
-                    disabled={detachMutation.isPending && detachMutation.variables === ing.inventory_item_id}
+                    disabled={
+                      detachMutation.isPending &&
+                      detachMutation.variables === ing.inventory_item_id
+                    }
                     onClick={() => detachMutation.mutate(ing.inventory_item_id)}
                   >
                     Remove
@@ -178,9 +210,15 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
       )}
 
       {/* Add ingredient form */}
-      <form onSubmit={handleAdd} className="mt-2 flex flex-wrap items-end gap-2">
+      <form
+        onSubmit={handleAdd}
+        className="mt-2 flex flex-wrap items-end gap-2"
+      >
         <div className="flex-1 min-w-[120px]">
-          <Select value={effectiveSelectedItemId} onValueChange={(v) => setSelectedItemId(v ?? "")}>
+          <Select
+            value={effectiveSelectedItemId}
+            onValueChange={(v) => setSelectedItemId(v ?? "")}
+          >
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Select inventory item">
                 {selectedInvItem
@@ -190,12 +228,18 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
             </SelectTrigger>
             <SelectContent>
               {unmappedItems.map((inv) => (
-                <SelectItem key={inv.id} value={String(inv.id)} className="text-xs">
+                <SelectItem
+                  key={inv.id}
+                  value={String(inv.id)}
+                  className="text-xs"
+                >
                   {inv.name} ({inv.unit})
                 </SelectItem>
               ))}
               {unmappedItems.length === 0 && (
-                <div className="px-3 py-2 text-xs text-muted-foreground">All items linked</div>
+                <div className="px-3 py-2 text-xs text-muted-foreground">
+                  All items linked
+                </div>
               )}
             </SelectContent>
           </Select>
@@ -211,12 +255,20 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
             aria-label="Quantity used per sale"
           />
         </div>
-        <Button type="submit" size="sm" className="h-8" disabled={attachMutation.isPending}>
+        <Button
+          type="submit"
+          size="sm"
+          className="h-8"
+          disabled={attachMutation.isPending}
+        >
           {attachMutation.isPending ? "Linking…" : "Add Link"}
         </Button>
       </form>
       {addError && (
-        <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive">
+        <p
+          role="alert"
+          className="mt-1 flex items-center gap-1 text-xs text-destructive"
+        >
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           {addError}
         </p>
@@ -224,7 +276,8 @@ function IngredientsPanel({ menuItem, inventoryItems }: IngredientsPanelProps) {
 
       <p className="mt-3 flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2 py-1.5 text-xs text-amber-700">
         <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-        All menu items must have at least one stock item linked before they can be sold at checkout.
+        All menu items must have at least one stock item linked before they can
+        be sold at checkout.
       </p>
     </div>
   );
@@ -243,15 +296,29 @@ interface MenuItemCardProps {
   isToggling: boolean;
 }
 
-function MenuItemCard({ item, inventoryItems, onToggle, onEdit, onDelete, isToggling }: MenuItemCardProps) {
+function MenuItemCard({
+  item,
+  inventoryItems,
+  onToggle,
+  onEdit,
+  onDelete,
+  isToggling,
+}: MenuItemCardProps) {
   const [showIngredients, setShowIngredients] = useState(false);
 
   return (
-    <div className={cn("flex flex-col justify-between rounded-lg border border-border bg-card p-4", !item.is_available && "opacity-50")}>
+    <div
+      className={cn(
+        "flex flex-col justify-between rounded-lg border border-border bg-card p-4",
+        !item.is_available && "opacity-50",
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-medium text-foreground">{item.name}</p>
-          <p className="text-xl font-extrabold text-primary">₱{parseFloat(item.price).toFixed(2)}</p>
+          <p className="text-xl font-extrabold text-primary">
+            ₱{parseFloat(item.price).toFixed(2)}
+          </p>
         </div>
         <CategoryBadge category={item.category} />
       </div>
@@ -274,13 +341,13 @@ function MenuItemCard({ item, inventoryItems, onToggle, onEdit, onDelete, isTogg
           disabled={isToggling}
           className={cn(
             "relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-50",
-            item.is_available ? "bg-primary" : "bg-muted"
+            item.is_available ? "bg-primary" : "bg-muted",
           )}
         >
           <span
             className={cn(
               "inline-block h-3 w-3 translate-x-1 rounded-full bg-white transition-transform",
-              item.is_available && "translate-x-5"
+              item.is_available && "translate-x-5",
             )}
           />
         </button>
@@ -327,15 +394,27 @@ export function MenuMgmtTab() {
     name: "",
     price: "",
   });
-  const [formErrors, setFormErrors] = useState<Partial<Record<string, string[]>>>({});
-  const [addSubscriptionItem, setAddSubscriptionItem] = useState<boolean | null>(null);
+  const [formErrors, setFormErrors] = useState<
+    Partial<Record<string, string[]>>
+  >({});
+  const [addSubscriptionItem, setAddSubscriptionItem] = useState<
+    boolean | null
+  >(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<PosMenuItem | null>(null);
   const [editForm, setEditForm] = useState<Partial<MenuItemForm>>({});
-  const [editErrors, setEditErrors] = useState<Partial<Record<string, string[]>>>({});
-  const [editSubscriptionItem, setEditSubscriptionItem] = useState<boolean | null>(null);
+  const [editErrors, setEditErrors] = useState<
+    Partial<Record<string, string[]>>
+  >({});
+  const [editSubscriptionItem, setEditSubscriptionItem] = useState<
+    boolean | null
+  >(null);
 
-  const { data: items, isLoading, isError } = useQuery({
+  const {
+    data: items,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["pos-menu-items"],
     queryFn: posMenuItemApi.list,
   });
@@ -345,7 +424,8 @@ export function MenuMgmtTab() {
     queryFn: inventoryApi.list,
   });
 
-  const activeInventoryItems = inventoryItems?.filter((i) => !i.is_archived) ?? [];
+  const activeInventoryItems =
+    inventoryItems?.filter((i) => !i.is_archived) ?? [];
 
   const addMutation = useMutation({
     mutationFn: posMenuItemApi.create,
@@ -355,25 +435,33 @@ export function MenuMgmtTab() {
       setAddSubscriptionItem(null);
       toast.success("Menu item added.");
     },
-    onError: (err: ApiError) => toast.error(err.message ?? "Failed to add item."),
+    onError: (err: ApiError) =>
+      toast.error(err.message ?? "Failed to add item."),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: UpdateMenuItemPayload }) =>
-      posMenuItemApi.update(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: UpdateMenuItemPayload;
+    }) => posMenuItemApi.update(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pos-menu-items"] });
       setEditingItem(null);
       toast.success("Menu item updated.");
     },
-    onError: (err: ApiError) => toast.error(err.message ?? "Failed to update item."),
+    onError: (err: ApiError) =>
+      toast.error(err.message ?? "Failed to update item."),
   });
 
   const toggleMutation = useMutation({
     mutationFn: (id: number) => posMenuItemApi.toggle(id),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["pos-menu-items"] }),
-    onError: (err: ApiError) => toast.error(err.message ?? "Failed to toggle item."),
+    onError: (err: ApiError) =>
+      toast.error(err.message ?? "Failed to toggle item."),
   });
 
   const deleteMutation = useMutation({
@@ -398,12 +486,19 @@ export function MenuMgmtTab() {
       return;
     }
     setFormErrors({});
-    addMutation.mutate({ ...result.data, is_subscription_item: addSubscriptionItem });
+    addMutation.mutate({
+      ...result.data,
+      is_subscription_item: addSubscriptionItem,
+    });
   }
 
   function openEdit(item: PosMenuItem) {
     setEditingItem(item);
-    setEditForm({ name: item.name, price: item.price, category: item.category });
+    setEditForm({
+      name: item.name,
+      price: item.price,
+      category: item.category,
+    });
     setEditSubscriptionItem(item.is_subscription_item);
     setEditErrors({});
   }
@@ -418,17 +513,24 @@ export function MenuMgmtTab() {
       return;
     }
     setEditErrors({});
-    updateMutation.mutate({ id: editingItem.id, payload: { ...result.data, is_subscription_item: editSubscriptionItem } });
+    updateMutation.mutate({
+      id: editingItem.id,
+      payload: { ...result.data, is_subscription_item: editSubscriptionItem },
+    });
   }
 
   if (isError) {
-    return <p className="text-sm text-destructive">Failed to load menu items.</p>;
+    return (
+      <p className="text-sm text-destructive">Failed to load menu items.</p>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-border bg-card p-4">
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Add New Item</h3>
+        <h3 className="mb-3 text-sm font-semibold text-foreground">
+          Add New Item
+        </h3>
         <form onSubmit={handleAdd} noValidate className="flex flex-wrap gap-3">
           <div className="min-w-[160px] flex-1 space-y-1">
             <Label htmlFor="new-name">Name</Label>
@@ -439,7 +541,10 @@ export function MenuMgmtTab() {
               aria-invalid={!!formErrors.name}
             />
             {formErrors.name && (
-              <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+              <p
+                role="alert"
+                className="flex items-center gap-1 text-xs text-destructive"
+              >
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {formErrors.name[0]}
               </p>
@@ -453,11 +558,16 @@ export function MenuMgmtTab() {
               min="0"
               step="0.01"
               value={form.price ?? ""}
-              onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, price: e.target.value }))
+              }
               aria-invalid={!!formErrors.price}
             />
             {formErrors.price && (
-              <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+              <p
+                role="alert"
+                className="flex items-center gap-1 text-xs text-destructive"
+              >
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {formErrors.price[0]}
               </p>
@@ -471,7 +581,10 @@ export function MenuMgmtTab() {
                 setForm((p) => ({ ...p, category: v as MenuCategory }))
               }
             >
-              <SelectTrigger id="new-category" aria-invalid={!!formErrors.category}>
+              <SelectTrigger
+                id="new-category"
+                aria-invalid={!!formErrors.category}
+              >
                 <SelectValue placeholder="Select…" />
               </SelectTrigger>
               <SelectContent>
@@ -483,7 +596,10 @@ export function MenuMgmtTab() {
               </SelectContent>
             </Select>
             {formErrors.category && (
-              <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+              <p
+                role="alert"
+                className="flex items-center gap-1 text-xs text-destructive"
+              >
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {formErrors.category[0]}
               </p>
@@ -492,9 +608,17 @@ export function MenuMgmtTab() {
           <div className="w-44 space-y-1">
             <Label htmlFor="new-subscription-item">Subscription Eligible</Label>
             <Select
-              value={addSubscriptionItem === true ? "true" : addSubscriptionItem === false ? "false" : "unset"}
+              value={
+                addSubscriptionItem === true
+                  ? "true"
+                  : addSubscriptionItem === false
+                    ? "false"
+                    : "unset"
+              }
               onValueChange={(v) =>
-                setAddSubscriptionItem(v === "true" ? true : v === "false" ? false : null)
+                setAddSubscriptionItem(
+                  v === "true" ? true : v === "false" ? false : null,
+                )
               }
             >
               <SelectTrigger id="new-subscription-item">
@@ -545,7 +669,12 @@ export function MenuMgmtTab() {
       )}
 
       {/* Edit dialog */}
-      <Dialog open={editingItem !== null} onOpenChange={(open) => { if (!open) setEditingItem(null); }}>
+      <Dialog
+        open={editingItem !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingItem(null);
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Menu Item</DialogTitle>
@@ -556,11 +685,16 @@ export function MenuMgmtTab() {
               <Input
                 id="edit-name"
                 value={editForm.name ?? ""}
-                onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, name: e.target.value }))
+                }
                 aria-invalid={!!editErrors.name}
               />
               {editErrors.name && (
-                <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                <p
+                  role="alert"
+                  className="flex items-center gap-1 text-xs text-destructive"
+                >
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   {editErrors.name[0]}
                 </p>
@@ -574,11 +708,16 @@ export function MenuMgmtTab() {
                 min="0"
                 step="0.01"
                 value={editForm.price ?? ""}
-                onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((p) => ({ ...p, price: e.target.value }))
+                }
                 aria-invalid={!!editErrors.price}
               />
               {editErrors.price && (
-                <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                <p
+                  role="alert"
+                  className="flex items-center gap-1 text-xs text-destructive"
+                >
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   {editErrors.price[0]}
                 </p>
@@ -588,30 +727,50 @@ export function MenuMgmtTab() {
               <Label htmlFor="edit-category">Category</Label>
               <Select
                 value={editForm.category ?? ""}
-                onValueChange={(v) => setEditForm((p) => ({ ...p, category: v as MenuCategory }))}
+                onValueChange={(v) =>
+                  setEditForm((p) => ({ ...p, category: v as MenuCategory }))
+                }
               >
-                <SelectTrigger id="edit-category" aria-invalid={!!editErrors.category}>
+                <SelectTrigger
+                  id="edit-category"
+                  aria-invalid={!!editErrors.category}
+                >
                   <SelectValue placeholder="Select…" />
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+                    <SelectItem key={c} value={c} className="capitalize">
+                      {c}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {editErrors.category && (
-                <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                <p
+                  role="alert"
+                  className="flex items-center gap-1 text-xs text-destructive"
+                >
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   {editErrors.category[0]}
                 </p>
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="edit-subscription-item">Subscription Eligible</Label>
+              <Label htmlFor="edit-subscription-item">
+                Subscription Eligible
+              </Label>
               <Select
-                value={editSubscriptionItem === true ? "true" : editSubscriptionItem === false ? "false" : "unset"}
+                value={
+                  editSubscriptionItem === true
+                    ? "true"
+                    : editSubscriptionItem === false
+                      ? "false"
+                      : "unset"
+                }
                 onValueChange={(v) =>
-                  setEditSubscriptionItem(v === "true" ? true : v === "false" ? false : null)
+                  setEditSubscriptionItem(
+                    v === "true" ? true : v === "false" ? false : null,
+                  )
                 }
               >
                 <SelectTrigger id="edit-subscription-item">
@@ -619,13 +778,19 @@ export function MenuMgmtTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unset">Not configured</SelectItem>
-                  <SelectItem value="true">Yes — subscription covered</SelectItem>
+                  <SelectItem value="true">
+                    Yes — subscription covered
+                  </SelectItem>
                   <SelectItem value="false">No — regular only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex justify-end gap-2 pt-1">
-              <Button type="button" variant="outline" onClick={() => setEditingItem(null)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditingItem(null)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={updateMutation.isPending}>
@@ -648,7 +813,8 @@ export function MenuMgmtTab() {
             <DialogTitle>Delete Menu Item</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete this menu item? This action cannot be undone.
+            Are you sure you want to delete this menu item? This action cannot
+            be undone.
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setDeletingId(null)}>

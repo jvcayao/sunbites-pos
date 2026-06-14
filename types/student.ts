@@ -1,5 +1,10 @@
 export type StudentType = "subscription" | "non_subscription";
-export type EnrollmentStatus = "enrolled" | "paused" | "unenrolled" | "banned" | "graduated";
+export type EnrollmentStatus =
+  | "enrolled"
+  | "paused"
+  | "unenrolled"
+  | "banned"
+  | "graduated";
 export type SchoolMonth =
   | "june"
   | "july"

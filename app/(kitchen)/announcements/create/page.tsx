@@ -44,7 +44,10 @@ function SectionCard({
 function FieldError({ error }: { error?: string }) {
   if (!error) return null;
   return (
-    <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive">
+    <p
+      role="alert"
+      className="mt-1 flex items-center gap-1 text-xs text-destructive"
+    >
       <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       {error}
     </p>
@@ -72,11 +75,15 @@ function FormField({
         {label}
         {required && <span className="ml-0.5 text-destructive">*</span>}
         {!required && (
-          <span className="ml-1 font-normal text-muted-foreground">(optional)</span>
+          <span className="ml-1 font-normal text-muted-foreground">
+            (optional)
+          </span>
         )}
       </Label>
       {children}
-      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {hint && !error && (
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      )}
       <FieldError error={error} />
     </div>
   );
@@ -112,7 +119,10 @@ export default function CreateAnnouncementPage() {
 
   const allRecipients: { id: number; name: string }[] = useMemo(() => {
     if (recipientType === "parents") {
-      return (parentsData?.data ?? []).map((p) => ({ id: p.id, name: p.full_name }));
+      return (parentsData?.data ?? []).map((p) => ({
+        id: p.id,
+        name: p.full_name,
+      }));
     }
     return (usersData?.data ?? [])
       .filter((u) => u.id !== currentUser?.id)
@@ -165,7 +175,7 @@ export default function CreateAnnouncementPage() {
       }),
     onSuccess: () => {
       toast.success(
-        `Announcement sent to ${selectedIds.size} recipient${selectedIds.size !== 1 ? "s" : ""}.`
+        `Announcement sent to ${selectedIds.size} recipient${selectedIds.size !== 1 ? "s" : ""}.`,
       );
       queryClient.invalidateQueries({ queryKey: ["announcements"] });
       router.push("/announcements");
@@ -179,7 +189,8 @@ export default function CreateAnnouncementPage() {
     e.preventDefault();
     const next: Record<string, string> = {};
     if (!message.trim()) next.message = "Message is required.";
-    if (selectedIds.size === 0) next.recipients = "Select at least one recipient.";
+    if (selectedIds.size === 0)
+      next.recipients = "Select at least one recipient.";
     if (Object.keys(next).length) {
       setErrors(next);
       toast.error("Please fix the highlighted fields before continuing.");
@@ -238,7 +249,10 @@ export default function CreateAnnouncementPage() {
                 onChange={(e) => setMessage(e.target.value)}
                 maxLength={1000}
                 aria-invalid={!!errors.message}
-                className={cn("resize-none pb-6", errors.message && "border-destructive")}
+                className={cn(
+                  "resize-none pb-6",
+                  errors.message && "border-destructive",
+                )}
               />
               <span className="pointer-events-none absolute bottom-2 right-3 text-[11px] text-muted-foreground">
                 {message.length}/1000
@@ -260,13 +274,13 @@ export default function CreateAnnouncementPage() {
                   "rounded-lg border p-4 text-left transition-colors",
                   recipientType === type
                     ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-muted/40"
+                    : "border-border hover:bg-muted/40",
                 )}
               >
                 <p
                   className={cn(
                     "text-sm font-semibold capitalize",
-                    recipientType === type ? "text-primary" : "text-foreground"
+                    recipientType === type ? "text-primary" : "text-foreground",
                   )}
                 >
                   {type}
@@ -312,7 +326,7 @@ export default function CreateAnnouncementPage() {
           <div
             className={cn(
               "max-h-72 overflow-y-auto rounded-lg border border-border",
-              errors.recipients && "border-destructive"
+              errors.recipients && "border-destructive",
             )}
           >
             {isLoading ? (
@@ -331,7 +345,7 @@ export default function CreateAnnouncementPage() {
                   key={r.id}
                   className={cn(
                     "flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-muted/50",
-                    selectedIds.has(r.id) && "bg-primary/5"
+                    selectedIds.has(r.id) && "bg-primary/5",
                   )}
                 >
                   <input
@@ -357,9 +371,15 @@ export default function CreateAnnouncementPage() {
           </Button>
           <Button
             type="submit"
-            disabled={createMutation.isPending || message.trim().length === 0 || selectedIds.size === 0}
+            disabled={
+              createMutation.isPending ||
+              message.trim().length === 0 ||
+              selectedIds.size === 0
+            }
           >
-            {createMutation.isPending ? "Sending…" : `Send (${selectedIds.size})`}
+            {createMutation.isPending
+              ? "Sending…"
+              : `Send (${selectedIds.size})`}
           </Button>
         </div>
       </form>

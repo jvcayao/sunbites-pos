@@ -25,7 +25,12 @@ import type { PreRegistrationSummary } from "@/types/pre-registration";
 // ---------------------------------------------------------------------------
 
 type Status = "pending" | "approved" | "rejected" | "expired";
-type DatePreset = "today" | "this_week" | "this_month" | "last_month" | "custom";
+type DatePreset =
+  | "today"
+  | "this_week"
+  | "this_month"
+  | "last_month"
+  | "custom";
 
 const STATUS_PILLS: { value: Status; label: string }[] = [
   { value: "pending", label: "Pending" },
@@ -178,7 +183,7 @@ export default function PreRegistrationsPage() {
               "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
               preset === p.value
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:bg-muted"
+                : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
             {p.label}
@@ -220,7 +225,10 @@ export default function PreRegistrationsPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="h-8 w-[160px] text-xs" aria-label="Enrollment type filter">
+          <SelectTrigger
+            className="h-8 w-[160px] text-xs"
+            aria-label="Enrollment type filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -254,7 +262,7 @@ export default function PreRegistrationsPage() {
               "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
               status === s.value
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:bg-muted"
+                : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
             {s.label}
@@ -272,20 +280,37 @@ export default function PreRegistrationsPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Student</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Contact</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Type</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Status</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Submitted</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Expires</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Student
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Contact
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Type
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Submitted
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Expires
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} />)
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRowSkeleton key={i} />
+                ))
               ) : !data?.data?.length ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                  <td
+                    colSpan={6}
+                    className="px-4 py-10 text-center text-muted-foreground"
+                  >
                     No {status} pre-registrations found.
                   </td>
                 </tr>
@@ -303,13 +328,15 @@ export default function PreRegistrationsPage() {
                       {item.contact_name ?? "—"}
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground capitalize">
-                      {item.enrollment_type === "subscription" ? "Subscription" : "Non-Subscription"}
+                      {item.enrollment_type === "subscription"
+                        ? "Subscription"
+                        : "Non-Subscription"}
                     </td>
                     <td className="px-4 py-2.5">
                       <span
                         className={cn(
                           "text-[11px] font-bold px-2.5 py-0.5 rounded-full border capitalize",
-                          STATUS_BADGE[item.status]
+                          STATUS_BADGE[item.status],
                         )}
                       >
                         {item.status}

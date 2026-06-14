@@ -22,11 +22,21 @@ function ParentTableSkeleton() {
     <>
       {Array.from({ length: 5 }).map((_, i) => (
         <tr key={i}>
-          <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
-          <td className="px-4 py-3"><Skeleton className="h-4 w-48" /></td>
-          <td className="px-4 py-3"><Skeleton className="h-4 w-12" /></td>
-          <td className="px-4 py-3"><Skeleton className="h-5 w-20 rounded-full" /></td>
-          <td className="px-4 py-3"><Skeleton className="h-8 w-16 rounded-md" /></td>
+          <td className="px-4 py-3">
+            <Skeleton className="h-4 w-40" />
+          </td>
+          <td className="px-4 py-3">
+            <Skeleton className="h-4 w-48" />
+          </td>
+          <td className="px-4 py-3">
+            <Skeleton className="h-4 w-12" />
+          </td>
+          <td className="px-4 py-3">
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </td>
+          <td className="px-4 py-3">
+            <Skeleton className="h-8 w-16 rounded-md" />
+          </td>
         </tr>
       ))}
     </>
@@ -40,7 +50,7 @@ function ActivationBadge({ isActivated }: { isActivated: boolean }) {
         "text-[11px] font-bold px-2 py-0.5 rounded-full border",
         isActivated
           ? "bg-green-100 text-green-700 border-green-300"
-          : "bg-muted text-muted-foreground border-border"
+          : "bg-muted text-muted-foreground border-border",
       )}
     >
       {isActivated ? "Active" : "Pending"}
@@ -48,7 +58,13 @@ function ActivationBadge({ isActivated }: { isActivated: boolean }) {
   );
 }
 
-function ParentRow({ parent, onClick }: { parent: Parent; onClick: () => void }) {
+function ParentRow({
+  parent,
+  onClick,
+}: {
+  parent: Parent;
+  onClick: () => void;
+}) {
   return (
     <tr
       className="border-b border-border transition-colors hover:bg-muted/30 cursor-pointer"
@@ -62,13 +78,22 @@ function ParentRow({ parent, onClick }: { parent: Parent; onClick: () => void })
           <p className="font-medium text-foreground">{parent.full_name}</p>
         </div>
       </td>
-      <td className="px-4 py-3 text-sm text-muted-foreground">{parent.email}</td>
+      <td className="px-4 py-3 text-sm text-muted-foreground">
+        {parent.email}
+      </td>
       <td className="px-4 py-3 text-sm text-center">{parent.students_count}</td>
       <td className="px-4 py-3">
         <ActivationBadge isActivated={parent.is_activated} />
       </td>
       <td className="px-4 py-3 text-right">
-        <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onClick(); }}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+        >
           View
         </Button>
       </td>
@@ -119,7 +144,9 @@ export default function ParentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-muted-foreground">References</p>
-          <h1 className="text-xl font-bold text-foreground">Parent Management</h1>
+          <h1 className="text-xl font-bold text-foreground">
+            Parent Management
+          </h1>
         </div>
         <Input
           placeholder="Search by name or email…"
@@ -140,10 +167,18 @@ export default function ParentsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40">
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Name</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Email</th>
-                <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Students</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                  Name
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                  Email
+                </th>
+                <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
+                  Students
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                  Status
+                </th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -152,7 +187,10 @@ export default function ParentsPage() {
                 <ParentTableSkeleton />
               ) : !data?.data?.length ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
+                  <td
+                    colSpan={5}
+                    className="px-4 py-10 text-center text-muted-foreground"
+                  >
                     No parents found.
                   </td>
                 </tr>
@@ -161,7 +199,9 @@ export default function ParentsPage() {
                   <ParentRow
                     key={parent.id}
                     parent={parent}
-                    onClick={() => router.push(`/references/parents/${parent.id}`)}
+                    onClick={() =>
+                      router.push(`/references/parents/${parent.id}`)
+                    }
                   />
                 ))
               )}

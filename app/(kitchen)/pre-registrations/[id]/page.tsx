@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  Clock,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -237,7 +243,9 @@ export default function PreRegistrationDetailPage() {
     onSuccess: (res) => {
       toast.success("Changes saved.");
       setFields(buildEditableFields(res.data));
-      void queryClient.invalidateQueries({ queryKey: ["pre-registration", id] });
+      void queryClient.invalidateQueries({
+        queryKey: ["pre-registration", id],
+      });
     },
     onError: (err: ApiError) => {
       toast.error(err.message ?? "Failed to save changes.");
@@ -261,7 +269,9 @@ export default function PreRegistrationDetailPage() {
       toast.success("Pre-registration rejected.");
       setRejectDialogOpen(false);
       setRejectionReason("");
-      void queryClient.invalidateQueries({ queryKey: ["pre-registration", id] });
+      void queryClient.invalidateQueries({
+        queryKey: ["pre-registration", id],
+      });
       void queryClient.invalidateQueries({ queryKey: ["pre-registrations"] });
     },
     onError: (err: ApiError) => {
@@ -273,7 +283,9 @@ export default function PreRegistrationDetailPage() {
     mutationFn: () => preRegistrationApi.reactivate(id),
     onSuccess: () => {
       toast.success("Pre-registration reactivated.");
-      void queryClient.invalidateQueries({ queryKey: ["pre-registration", id] });
+      void queryClient.invalidateQueries({
+        queryKey: ["pre-registration", id],
+      });
       void queryClient.invalidateQueries({ queryKey: ["pre-registrations"] });
     },
     onError: (err: ApiError) => {
@@ -290,7 +302,10 @@ export default function PreRegistrationDetailPage() {
     updateMutation.mutate(payload);
   }
 
-  function setField<K extends keyof EditableFields>(key: K, value: EditableFields[K]) {
+  function setField<K extends keyof EditableFields>(
+    key: K,
+    value: EditableFields[K],
+  ) {
     setFields((prev) => (prev ? { ...prev, [key]: value } : prev));
   }
 
@@ -357,7 +372,7 @@ export default function PreRegistrationDetailPage() {
           <span
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold capitalize",
-              statusConfig.className
+              statusConfig.className,
             )}
           >
             <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -378,8 +393,9 @@ export default function PreRegistrationDetailPage() {
               </p>
               {detail.existing_student_name && (
                 <p className="mt-0.5 text-sm text-amber-700 dark:text-amber-400">
-                  An existing student named &ldquo;{detail.existing_student_name}&rdquo; was
-                  found. Review carefully before approving.
+                  An existing student named &ldquo;
+                  {detail.existing_student_name}&rdquo; was found. Review
+                  carefully before approving.
                 </p>
               )}
             </div>
@@ -398,7 +414,9 @@ export default function PreRegistrationDetailPage() {
             {detail.rejected_by && (
               <p className="mt-1 text-xs text-red-600/70 dark:text-red-500/70">
                 Rejected by {detail.rejected_by}
-                {detail.processed_at ? ` on ${formatDate(detail.processed_at)}` : ""}
+                {detail.processed_at
+                  ? ` on ${formatDate(detail.processed_at)}`
+                  : ""}
               </p>
             )}
           </div>
@@ -409,7 +427,9 @@ export default function PreRegistrationDetailPage() {
           <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
             <p className="text-sm font-semibold text-green-800 dark:text-green-300">
               Approved by {detail.approved_by}
-              {detail.processed_at ? ` on ${formatDate(detail.processed_at)}` : ""}
+              {detail.processed_at
+                ? ` on ${formatDate(detail.processed_at)}`
+                : ""}
             </p>
             {detail.student_number && (
               <p className="mt-0.5 text-sm text-green-700 dark:text-green-400">
@@ -553,7 +573,7 @@ export default function PreRegistrationDetailPage() {
                       onChange={(e) =>
                         setField(
                           "subscription_start_year",
-                          e.target.value ? Number(e.target.value) : null
+                          e.target.value ? Number(e.target.value) : null,
                         )
                       }
                       disabled={!isEditable}
@@ -588,7 +608,7 @@ export default function PreRegistrationDetailPage() {
                       onChange={(e) =>
                         setField(
                           "subscription_end_year",
-                          e.target.value ? Number(e.target.value) : null
+                          e.target.value ? Number(e.target.value) : null,
                         )
                       }
                       disabled={!isEditable}
@@ -612,10 +632,7 @@ export default function PreRegistrationDetailPage() {
               ) : (
                 <div className="space-y-3">
                   {detail.contacts.map((contact, index) => (
-                    <ContactCard
-                      key={contact.id ?? index}
-                      contact={contact}
-                    />
+                    <ContactCard key={contact.id ?? index} contact={contact} />
                   ))}
                 </div>
               )}
@@ -656,7 +673,7 @@ export default function PreRegistrationDetailPage() {
                         "text-right font-medium",
                         Number(detail.recaptcha_score) >= 0.7
                           ? "text-green-700 dark:text-green-400"
-                          : "text-amber-700 dark:text-amber-400"
+                          : "text-amber-700 dark:text-amber-400",
                       )}
                     >
                       {detail.recaptcha_score}
@@ -725,7 +742,7 @@ export default function PreRegistrationDetailPage() {
                 )}
 
                 {/* Reactivate */}
-                {isExpired && (canEdit) && (
+                {isExpired && canEdit && (
                   <Button
                     className="w-full"
                     variant="outline"

@@ -21,22 +21,49 @@ import { cn } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 const SCHOOL_MONTHS = [
-  "June", "July", "August", "September", "October", "November",
-  "December", "January", "February", "March",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+  "January",
+  "February",
+  "March",
 ];
 
 const GRADE_LEVELS = [
-  "Nursery", "Kinder 1", "Kinder 2",
-  "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6",
-  "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
+  "Nursery",
+  "Kinder 1",
+  "Kinder 2",
+  "Grade 1",
+  "Grade 2",
+  "Grade 3",
+  "Grade 4",
+  "Grade 5",
+  "Grade 6",
+  "Grade 7",
+  "Grade 8",
+  "Grade 9",
+  "Grade 10",
+  "Grade 11",
+  "Grade 12",
 ];
 
 function getDefaultSchoolMonth(): string {
   const month = new Date().getMonth();
   const map: Record<number, string> = {
-    0: "January", 1: "February", 2: "March",
-    5: "June", 6: "July", 7: "August",
-    8: "September", 9: "October", 10: "November", 11: "December",
+    0: "January",
+    1: "February",
+    2: "March",
+    5: "June",
+    6: "July",
+    7: "August",
+    8: "September",
+    9: "October",
+    10: "November",
+    11: "December",
   };
   return map[month] ?? "June";
 }
@@ -52,15 +79,27 @@ function usageCellClass(remaining: number): string {
   return "text-foreground";
 }
 
-function PaymentStatusBadge({ status }: { status: "paid" | "unpaid" | "not_recorded" }) {
+function PaymentStatusBadge({
+  status,
+}: {
+  status: "paid" | "unpaid" | "not_recorded";
+}) {
   const map = {
     paid: "bg-green-100 text-green-700 border-green-300",
     unpaid: "bg-red-100 text-red-700 border-red-300",
     not_recorded: "bg-muted text-muted-foreground border-border",
   };
-  const label = status === "not_recorded" ? "Not Recorded" : status.charAt(0).toUpperCase() + status.slice(1);
+  const label =
+    status === "not_recorded"
+      ? "Not Recorded"
+      : status.charAt(0).toUpperCase() + status.slice(1);
   return (
-    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border", map[status])}>
+    <span
+      className={cn(
+        "text-[11px] font-bold px-2 py-0.5 rounded-full border",
+        map[status],
+      )}
+    >
       {label}
     </span>
   );
@@ -112,7 +151,9 @@ export default function SubscriptionReportPage() {
       {/* Header */}
       <div>
         <p className="text-xs text-muted-foreground">Reports</p>
-        <h1 className="text-xl font-bold text-foreground">Subscription Usage Report</h1>
+        <h1 className="text-xl font-bold text-foreground">
+          Subscription Usage Report
+        </h1>
       </div>
 
       {/* Month pill filters */}
@@ -121,12 +162,15 @@ export default function SubscriptionReportPage() {
           <button
             key={m}
             type="button"
-            onClick={() => { setSchoolMonth(m); setPage(1); }}
+            onClick={() => {
+              setSchoolMonth(m);
+              setPage(1);
+            }}
             className={cn(
               "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
               schoolMonth === m
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground hover:bg-muted"
+                : "border-border bg-card text-foreground hover:bg-muted",
             )}
           >
             {m}
@@ -136,19 +180,39 @@ export default function SubscriptionReportPage() {
 
       {/* Secondary filters */}
       <div className="flex flex-wrap items-center gap-2">
-        <Select value={year} onValueChange={(v) => { setYear(v ?? String(getDefaultSchoolYear())); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[100px] text-xs" aria-label="Year filter">
+        <Select
+          value={year}
+          onValueChange={(v) => {
+            setYear(v ?? String(getDefaultSchoolYear()));
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[100px] text-xs"
+            aria-label="Year filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {[2024, 2025, 2026, 2027].map((y) => (
-              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+              <SelectItem key={y} value={String(y)}>
+                {y}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={status} onValueChange={(v) => { setStatus(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[150px] text-xs" aria-label="Payment status filter">
+        <Select
+          value={status}
+          onValueChange={(v) => {
+            setStatus(v ?? "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[150px] text-xs"
+            aria-label="Payment status filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -159,14 +223,25 @@ export default function SubscriptionReportPage() {
           </SelectContent>
         </Select>
 
-        <Select value={gradeLevel} onValueChange={(v) => { setGradeLevel(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[140px] text-xs" aria-label="Grade level filter">
+        <Select
+          value={gradeLevel}
+          onValueChange={(v) => {
+            setGradeLevel(v ?? "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[140px] text-xs"
+            aria-label="Grade level filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Grades</SelectItem>
             {GRADE_LEVELS.map((g) => (
-              <SelectItem key={g} value={g}>{g}</SelectItem>
+              <SelectItem key={g} value={g}>
+                {g}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -174,7 +249,10 @@ export default function SubscriptionReportPage() {
         <input
           type="text"
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           placeholder="Search student..."
           aria-label="Search student by name or number"
           className="h-8 w-[160px] rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
@@ -191,22 +269,43 @@ export default function SubscriptionReportPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Student</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Grade</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Payment</th>
-                <th className="px-4 py-2 text-center text-xs font-semibold text-muted-foreground">Meal</th>
-                <th className="px-4 py-2 text-center text-xs font-semibold text-muted-foreground">Snack</th>
-                <th className="px-4 py-2 text-center text-xs font-semibold text-muted-foreground">Drink</th>
-                <th className="px-4 py-2 text-center text-xs font-semibold text-muted-foreground">Extra</th>
-                <th className="px-4 py-2 text-center text-xs font-semibold text-muted-foreground">Total Remaining</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Student
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Grade
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Payment
+                </th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-muted-foreground">
+                  Meal
+                </th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-muted-foreground">
+                  Snack
+                </th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-muted-foreground">
+                  Drink
+                </th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-muted-foreground">
+                  Extra
+                </th>
+                <th className="px-4 py-2 text-center text-xs font-semibold text-muted-foreground">
+                  Total Remaining
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} />)
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRowSkeleton key={i} />
+                ))
               ) : !rows?.length ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
+                  <td
+                    colSpan={8}
+                    className="px-4 py-10 text-center text-muted-foreground"
+                  >
                     No subscription students found for the selected filters.
                   </td>
                 </tr>
@@ -222,33 +321,64 @@ export default function SubscriptionReportPage() {
                   return (
                     <tr key={row.id} className="hover:bg-muted/20">
                       <td className="px-4 py-2.5">
-                        <p className="font-medium text-foreground">{row.full_name}</p>
+                        <p className="font-medium text-foreground">
+                          {row.full_name}
+                        </p>
                         {row.student_number && (
-                          <p className="text-xs font-mono text-muted-foreground">{row.student_number}</p>
+                          <p className="text-xs font-mono text-muted-foreground">
+                            {row.student_number}
+                          </p>
                         )}
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground">
                         <p>{row.grade_level}</p>
                         {row.section && (
-                          <p className="text-xs text-muted-foreground">{row.section}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {row.section}
+                          </p>
                         )}
                       </td>
                       <td className="px-4 py-2.5">
                         <PaymentStatusBadge status={row.payment_status} />
                       </td>
-                      <td className={cn("px-4 py-2.5 text-center", usageCellClass(cats.meal.remaining))}>
+                      <td
+                        className={cn(
+                          "px-4 py-2.5 text-center",
+                          usageCellClass(cats.meal.remaining),
+                        )}
+                      >
                         {cats.meal.used}/{cats.meal.allocated}
                       </td>
-                      <td className={cn("px-4 py-2.5 text-center", usageCellClass(cats.snack.remaining))}>
+                      <td
+                        className={cn(
+                          "px-4 py-2.5 text-center",
+                          usageCellClass(cats.snack.remaining),
+                        )}
+                      >
                         {cats.snack.used}/{cats.snack.allocated}
                       </td>
-                      <td className={cn("px-4 py-2.5 text-center", usageCellClass(cats.drink.remaining))}>
+                      <td
+                        className={cn(
+                          "px-4 py-2.5 text-center",
+                          usageCellClass(cats.drink.remaining),
+                        )}
+                      >
                         {cats.drink.used}/{cats.drink.allocated}
                       </td>
-                      <td className={cn("px-4 py-2.5 text-center", usageCellClass(cats.extra.remaining))}>
+                      <td
+                        className={cn(
+                          "px-4 py-2.5 text-center",
+                          usageCellClass(cats.extra.remaining),
+                        )}
+                      >
                         {cats.extra.used}/{cats.extra.allocated}
                       </td>
-                      <td className={cn("px-4 py-2.5 text-center font-semibold", usageCellClass(totalRemaining))}>
+                      <td
+                        className={cn(
+                          "px-4 py-2.5 text-center font-semibold",
+                          usageCellClass(totalRemaining),
+                        )}
+                      >
                         {totalRemaining}
                       </td>
                     </tr>
@@ -263,7 +393,9 @@ export default function SubscriptionReportPage() {
       {/* Pagination */}
       {meta && meta.last_page > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Page {meta.current_page} of {meta.last_page} ({meta.total} records)</span>
+          <span>
+            Page {meta.current_page} of {meta.last_page} ({meta.total} records)
+          </span>
           <div className="flex gap-1">
             <Button
               variant="outline"

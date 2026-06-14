@@ -25,13 +25,23 @@ import type { Announcement } from "@/types/announcement";
 type AudienceFilter = "all" | "parents" | "staff";
 
 function groupByDate(
-  items: Announcement[]
+  items: Announcement[],
 ): { label: string; items: Announcement[] }[] {
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
   return [
-    { label: "Today", items: items.filter((a) => new Date(a.created_at) >= startOfToday) },
-    { label: "Earlier", items: items.filter((a) => new Date(a.created_at) < startOfToday) },
+    {
+      label: "Today",
+      items: items.filter((a) => new Date(a.created_at) >= startOfToday),
+    },
+    {
+      label: "Earlier",
+      items: items.filter((a) => new Date(a.created_at) < startOfToday),
+    },
   ].filter((g) => g.items.length > 0);
 }
 
@@ -43,7 +53,10 @@ function AnnouncementSkeleton() {
   return (
     <div className="flex flex-col gap-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border border-l-4 border-l-muted bg-card p-4">
+        <div
+          key={i}
+          className="rounded-xl border border-border border-l-4 border-l-muted bg-card p-4"
+        >
           <div className="flex items-start gap-3">
             <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
             <div className="flex-1 space-y-2">
@@ -79,7 +92,7 @@ function AnnouncementCard({ item }: { item: Announcement }) {
       aria-label={item.title ?? "Announcement"}
       className={cn(
         "block rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/30 border-l-4",
-        isParents ? "border-l-orange-400" : "border-l-indigo-400"
+        isParents ? "border-l-orange-400" : "border-l-indigo-400",
       )}
     >
       {/* Header */}
@@ -87,11 +100,14 @@ function AnnouncementCard({ item }: { item: Announcement }) {
         <span
           className={cn(
             "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-            isParents ? "bg-orange-100" : "bg-indigo-100"
+            isParents ? "bg-orange-100" : "bg-indigo-100",
           )}
         >
           <Megaphone
-            className={cn("h-4 w-4", isParents ? "text-orange-600" : "text-indigo-500")}
+            className={cn(
+              "h-4 w-4",
+              isParents ? "text-orange-600" : "text-indigo-500",
+            )}
             aria-hidden="true"
           />
         </span>
@@ -106,7 +122,7 @@ function AnnouncementCard({ item }: { item: Announcement }) {
                 "text-[11px] font-bold px-2.5 py-0.5 rounded-full border",
                 isParents
                   ? "bg-orange-100 text-orange-700 border-orange-300"
-                  : "bg-indigo-100 text-indigo-700 border-indigo-300"
+                  : "bg-indigo-100 text-indigo-700 border-indigo-300",
               )}
             >
               {audienceLabel(item.recipient_type)}
@@ -131,13 +147,15 @@ function AnnouncementCard({ item }: { item: Announcement }) {
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Read receipt
               </span>
-              <span className="text-xs text-muted-foreground">{readPercent}%</span>
+              <span className="text-xs text-muted-foreground">
+                {readPercent}%
+              </span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
                 className={cn(
                   "h-full rounded-full transition-all",
-                  isParents ? "bg-orange-400" : "bg-indigo-400"
+                  isParents ? "bg-orange-400" : "bg-indigo-400",
                 )}
                 style={{ width: `${readPercent}%` }}
               />
@@ -145,7 +163,11 @@ function AnnouncementCard({ item }: { item: Announcement }) {
           </div>
           <div className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
             <span>{item.recipient_count} sent</span>
-            <span className={cn(item.read_count > 0 && "font-medium text-foreground")}>
+            <span
+              className={cn(
+                item.read_count > 0 && "font-medium text-foreground",
+              )}
+            >
               {item.read_count} read
             </span>
           </div>
@@ -167,7 +189,9 @@ export default function AnnouncementsPage() {
   const announcements = data?.data ?? [];
 
   const filtered = announcements
-    .filter((a) => audienceFilter === "all" || a.recipient_type === audienceFilter)
+    .filter(
+      (a) => audienceFilter === "all" || a.recipient_type === audienceFilter,
+    )
     .filter((a) => {
       if (!search) return true;
       const q = search.toLowerCase();
@@ -209,7 +233,10 @@ export default function AnnouncementsPage() {
           value={audienceFilter}
           onValueChange={(v) => setAudienceFilter(v as AudienceFilter)}
         >
-          <SelectTrigger className="w-full sm:w-40" aria-label="Filter by audience">
+          <SelectTrigger
+            className="w-full sm:w-40"
+            aria-label="Filter by audience"
+          >
             <SelectValue placeholder="Audience" />
           </SelectTrigger>
           <SelectContent>
@@ -226,7 +253,10 @@ export default function AnnouncementsPage() {
       {/* Empty state */}
       {!isLoading && filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Megaphone className="mb-3 h-10 w-10 text-muted-foreground" aria-hidden="true" />
+          <Megaphone
+            className="mb-3 h-10 w-10 text-muted-foreground"
+            aria-hidden="true"
+          />
           <p className="text-sm font-medium text-muted-foreground">
             {search || audienceFilter !== "all"
               ? "No announcements match your filters"

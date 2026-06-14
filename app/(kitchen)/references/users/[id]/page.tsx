@@ -55,7 +55,9 @@ const updateUserSchema = z.object({
   nickname: z.string().optional(),
   birthday: z.string().optional(),
   gender: z.enum(["male", "female", "other", ""]).optional(),
-  civil_status: z.enum(["single", "married", "widowed", "separated", ""]).optional(),
+  civil_status: z
+    .enum(["single", "married", "widowed", "separated", ""])
+    .optional(),
   phone: z.string().optional(),
   emergency_contact_name: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
@@ -65,7 +67,9 @@ const updateUserSchema = z.object({
   province: z.string().optional(),
   zip_code: z.string().optional(),
   position: z.string().optional(),
-  employment_type: z.enum(["full_time", "part_time", "contractual", ""]).optional(),
+  employment_type: z
+    .enum(["full_time", "part_time", "contractual", ""])
+    .optional(),
   date_hired: z.string().optional(),
   daily_rate: z.string().optional(),
   email: z.string().email("Enter a valid email address"),
@@ -97,7 +101,8 @@ function userToFormData(user: StaffUser): EditFormData {
     province: user.province ?? "",
     zip_code: user.zip_code ?? "",
     position: user.position ?? "",
-    employment_type: (user.employment_type ?? "") as EditFormData["employment_type"],
+    employment_type: (user.employment_type ??
+      "") as EditFormData["employment_type"],
     date_hired: user.date_hired ?? "",
     daily_rate: user.daily_rate ?? "",
     email: user.email,
@@ -156,7 +161,7 @@ function StatusDot({ isActive }: { isActive: boolean }) {
       <span
         className={cn(
           "inline-block h-2 w-2 rounded-full",
-          isActive ? "bg-green-500" : "bg-muted-foreground/40"
+          isActive ? "bg-green-500" : "bg-muted-foreground/40",
         )}
       />
       <span className={cn("text-sm", !isActive && "text-muted-foreground")}>
@@ -170,7 +175,9 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="py-2">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-medium text-foreground">{value || "—"}</p>
+      <p className="mt-0.5 text-sm font-medium text-foreground">
+        {value || "—"}
+      </p>
     </div>
   );
 }
@@ -215,7 +222,11 @@ export default function UserDetailPage() {
   const [editValues, setEditValues] = useState<Partial<EditFormData>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
-  const { data: user, isLoading, isError } = useQuery({
+  const {
+    data: user,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["user", userId],
     queryFn: () => userApi.show(userId),
   });
@@ -260,7 +271,10 @@ export default function UserDetailPage() {
     onSuccess: () => setResetEmailSent(true),
   });
 
-  function setField<K extends keyof EditFormData>(key: K, value: EditFormData[K]) {
+  function setField<K extends keyof EditFormData>(
+    key: K,
+    value: EditFormData[K],
+  ) {
     setEditValues((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -269,7 +283,9 @@ export default function UserDetailPage() {
       const ids = prev.branch_ids ?? [];
       return {
         ...prev,
-        branch_ids: checked ? [...ids, branchId] : ids.filter((id) => id !== branchId),
+        branch_ids: checked
+          ? [...ids, branchId]
+          : ids.filter((id) => id !== branchId),
       };
     });
   }
@@ -291,7 +307,9 @@ export default function UserDetailPage() {
     };
     const result = updateUserSchema.safeParse(normalized);
     if (!result.success) {
-      setFieldErrors(result.error.flatten().fieldErrors as Record<string, string[]>);
+      setFieldErrors(
+        result.error.flatten().fieldErrors as Record<string, string[]>,
+      );
       return;
     }
     setFieldErrors({});
@@ -314,330 +332,429 @@ export default function UserDetailPage() {
     );
   }
 
-  if (isLoading) return <div className="p-6"><DetailSkeleton /></div>;
+  if (isLoading)
+    return (
+      <div className="p-6">
+        <DetailSkeleton />
+      </div>
+    );
 
   if (isError || !user) {
     return (
       <div className="p-6">
         <div className="rounded-lg border border-border bg-card px-6 py-10 text-center">
-          <p className="text-sm text-destructive">Failed to load user. Please try again.</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-4"
-          onClick={() => router.push("/references/users")}
-        >
-          Back to Users
-        </Button>
+          <p className="text-sm text-destructive">
+            Failed to load user. Please try again.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onClick={() => router.push("/references/users")}
+          >
+            Back to Users
+          </Button>
         </div>
       </div>
     );
   }
 
   const role = user.roles[0] ?? "cashier";
-  const inputClass = (field: string) => cn(fieldErrors[field] && "border-destructive");
+  const inputClass = (field: string) =>
+    cn(fieldErrors[field] && "border-destructive");
 
   // ---- Edit mode ----
   if (mode === "edit") {
     return (
       <div className="p-6">
-      <div className="mx-auto max-w-[720px] space-y-6">
-        <div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setMode("view")}
-          >
-            ← Back to Profile
-          </Button>
-        </div>
-        <h1 className="text-xl font-bold text-foreground">Edit {user.full_name}</h1>
-
-        <form onSubmit={handleEditSubmit} noValidate className="space-y-8">
-          {/* Personal Information */}
-          <section>
-            <SectionHeading>Personal Information</SectionHeading>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="First Name" required error={fieldErrors.first_name}>
-                <Input
-                  value={editValues.first_name ?? ""}
-                  onChange={(e) => setField("first_name", e.target.value)}
-                  className={inputClass("first_name")}
-                />
-              </FormField>
-              <FormField label="Last Name" required error={fieldErrors.last_name}>
-                <Input
-                  value={editValues.last_name ?? ""}
-                  onChange={(e) => setField("last_name", e.target.value)}
-                  className={inputClass("last_name")}
-                />
-              </FormField>
-              <FormField label="Middle Name" error={fieldErrors.middle_name}>
-                <Input
-                  value={editValues.middle_name ?? ""}
-                  onChange={(e) => setField("middle_name", e.target.value)}
-                />
-              </FormField>
-              <FormField label="Nickname" error={fieldErrors.nickname}>
-                <Input
-                  value={editValues.nickname ?? ""}
-                  onChange={(e) => setField("nickname", e.target.value)}
-                />
-              </FormField>
-              <FormField label="Birthday" error={fieldErrors.birthday}>
-                <Input
-                  type="date"
-                  value={editValues.birthday ?? ""}
-                  onChange={(e) => setField("birthday", e.target.value)}
-                />
-              </FormField>
-              <FormField label="Gender" error={fieldErrors.gender}>
-                <Select
-                  value={editValues.gender ?? ""}
-                  onValueChange={(v) => setField("gender", v as EditFormData["gender"])}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormField>
-              <FormField label="Civil Status" error={fieldErrors.civil_status}>
-                <Select
-                  value={editValues.civil_status ?? ""}
-                  onValueChange={(v) => setField("civil_status", v as EditFormData["civil_status"])}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="single">Single</SelectItem>
-                    <SelectItem value="married">Married</SelectItem>
-                    <SelectItem value="widowed">Widowed</SelectItem>
-                    <SelectItem value="separated">Separated</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormField>
-            </div>
-          </section>
-
-          {/* Contact Information */}
-          <section>
-            <SectionHeading>Contact Information</SectionHeading>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="Phone" error={fieldErrors.phone}>
-                <Input
-                  type="tel"
-                  value={editValues.phone ?? ""}
-                  onChange={(e) => setField("phone", e.target.value)}
-                />
-              </FormField>
-              <FormField label="Emergency Contact Name" error={fieldErrors.emergency_contact_name}>
-                <Input
-                  value={editValues.emergency_contact_name ?? ""}
-                  onChange={(e) => setField("emergency_contact_name", e.target.value)}
-                />
-              </FormField>
-              <FormField label="Emergency Contact Phone" error={fieldErrors.emergency_contact_phone}>
-                <Input
-                  type="tel"
-                  value={editValues.emergency_contact_phone ?? ""}
-                  onChange={(e) => setField("emergency_contact_phone", e.target.value)}
-                />
-              </FormField>
-              <FormField label="Relationship" error={fieldErrors.emergency_contact_relationship}>
-                <Input
-                  value={editValues.emergency_contact_relationship ?? ""}
-                  onChange={(e) => setField("emergency_contact_relationship", e.target.value)}
-                />
-              </FormField>
-            </div>
-          </section>
-
-          {/* Address */}
-          <section>
-            <SectionHeading>Address</SectionHeading>
-            <div className="grid grid-cols-1 gap-4">
-              <FormField label="Address Line" error={fieldErrors.address_line}>
-                <Textarea
-                  rows={2}
-                  value={editValues.address_line ?? ""}
-                  onChange={(e) => setField("address_line", e.target.value)}
-                />
-              </FormField>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <FormField label="City" error={fieldErrors.city}>
-                  <Input
-                    value={editValues.city ?? ""}
-                    onChange={(e) => setField("city", e.target.value)}
-                  />
-                </FormField>
-                <FormField label="Province" error={fieldErrors.province}>
-                  <Input
-                    value={editValues.province ?? ""}
-                    onChange={(e) => setField("province", e.target.value)}
-                  />
-                </FormField>
-                <FormField label="Zip Code" error={fieldErrors.zip_code}>
-                  <Input
-                    value={editValues.zip_code ?? ""}
-                    onChange={(e) => setField("zip_code", e.target.value)}
-                  />
-                </FormField>
-              </div>
-            </div>
-          </section>
-
-          {/* Employment */}
-          <section>
-            <SectionHeading>Employment</SectionHeading>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="Position (Job Title)" error={fieldErrors.position}>
-                <Input
-                  value={editValues.position ?? ""}
-                  onChange={(e) => setField("position", e.target.value)}
-                />
-              </FormField>
-              <FormField label="Employment Type" error={fieldErrors.employment_type}>
-                <Select
-                  value={editValues.employment_type ?? ""}
-                  onValueChange={(v) => setField("employment_type", v as EditFormData["employment_type"])}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full_time">Full Time</SelectItem>
-                    <SelectItem value="part_time">Part Time</SelectItem>
-                    <SelectItem value="contractual">Contractual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormField>
-              <FormField label="Date Hired" error={fieldErrors.date_hired}>
-                <Input
-                  type="date"
-                  value={editValues.date_hired ?? ""}
-                  onChange={(e) => setField("date_hired", e.target.value)}
-                />
-              </FormField>
-              <FormField label="Daily Rate (₱)" error={fieldErrors.daily_rate}>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={editValues.daily_rate ?? ""}
-                  onChange={(e) => setField("daily_rate", e.target.value)}
-                />
-              </FormField>
-            </div>
-          </section>
-
-          {/* Account */}
-          <section>
-            <SectionHeading>Account</SectionHeading>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="Email Address" required error={fieldErrors.email}>
-                <Input
-                  type="email"
-                  value={editValues.email ?? ""}
-                  onChange={(e) => setField("email", e.target.value)}
-                  className={inputClass("email")}
-                />
-              </FormField>
-              <FormField label="Role" required error={fieldErrors.role}>
-                <Select
-                  value={editValues.role ?? ""}
-                  onValueChange={(v) => setField("role", v ?? "")}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {isAdmin && <SelectItem value="admin">Admin</SelectItem>}
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="supervisor">Supervisor</SelectItem>
-                    <SelectItem value="cashier">Cashier</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormField>
-            </div>
-          </section>
-
-          {/* Government IDs */}
-          <section>
-            <SectionHeading>Government IDs</SectionHeading>
-            <div className="mb-4 flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-              <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>These fields are optional. Fill in when documents are available.</span>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="SSS Number" error={fieldErrors.sss_number}>
-                <Input
-                  value={editValues.sss_number ?? ""}
-                  onChange={(e) => setField("sss_number", e.target.value)}
-                />
-              </FormField>
-              <FormField label="Pag-IBIG Number" error={fieldErrors.pagibig_number}>
-                <Input
-                  value={editValues.pagibig_number ?? ""}
-                  onChange={(e) => setField("pagibig_number", e.target.value)}
-                />
-              </FormField>
-              <FormField label="PhilHealth Number" error={fieldErrors.philhealth_number}>
-                <Input
-                  value={editValues.philhealth_number ?? ""}
-                  onChange={(e) => setField("philhealth_number", e.target.value)}
-                />
-              </FormField>
-              <FormField label="TIN Number (BIR)" error={fieldErrors.tin_number}>
-                <Input
-                  value={editValues.tin_number ?? ""}
-                  onChange={(e) => setField("tin_number", e.target.value)}
-                />
-              </FormField>
-            </div>
-          </section>
-
-          {/* Branch Assignment */}
-          <section>
-            <SectionHeading>Branch Assignment</SectionHeading>
-            {isBranchError ? (
-              <p className="text-sm text-destructive">Failed to load branches.</p>
-            ) : branches.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Loading branches…</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {branches.map((branch) => (
-                  <label
-                    key={branch.id}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/30"
-                  >
-                    <Checkbox
-                      checked={(editValues.branch_ids ?? []).includes(branch.id)}
-                      onCheckedChange={(checked) => toggleBranch(branch.id, !!checked)}
-                    />
-                    <span className="text-sm font-medium text-foreground">{branch.name}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Submit */}
-          {updateMutation.isError && !Object.keys(fieldErrors).length && (
-            <p className="text-sm text-destructive">
-              {(updateMutation.error as ApiError)?.message ?? "An error occurred. Please try again."}
-            </p>
-          )}
-          <div className="flex items-center justify-between border-t border-border pt-4">
-            <Button type="button" variant="outline" onClick={() => setMode("view")}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Saving…" : "Save Changes"}
+        <div className="mx-auto max-w-[720px] space-y-6">
+          <div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setMode("view")}
+            >
+              ← Back to Profile
             </Button>
           </div>
-        </form>
-      </div>
+          <h1 className="text-xl font-bold text-foreground">
+            Edit {user.full_name}
+          </h1>
+
+          <form onSubmit={handleEditSubmit} noValidate className="space-y-8">
+            {/* Personal Information */}
+            <section>
+              <SectionHeading>Personal Information</SectionHeading>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  label="First Name"
+                  required
+                  error={fieldErrors.first_name}
+                >
+                  <Input
+                    value={editValues.first_name ?? ""}
+                    onChange={(e) => setField("first_name", e.target.value)}
+                    className={inputClass("first_name")}
+                  />
+                </FormField>
+                <FormField
+                  label="Last Name"
+                  required
+                  error={fieldErrors.last_name}
+                >
+                  <Input
+                    value={editValues.last_name ?? ""}
+                    onChange={(e) => setField("last_name", e.target.value)}
+                    className={inputClass("last_name")}
+                  />
+                </FormField>
+                <FormField label="Middle Name" error={fieldErrors.middle_name}>
+                  <Input
+                    value={editValues.middle_name ?? ""}
+                    onChange={(e) => setField("middle_name", e.target.value)}
+                  />
+                </FormField>
+                <FormField label="Nickname" error={fieldErrors.nickname}>
+                  <Input
+                    value={editValues.nickname ?? ""}
+                    onChange={(e) => setField("nickname", e.target.value)}
+                  />
+                </FormField>
+                <FormField label="Birthday" error={fieldErrors.birthday}>
+                  <Input
+                    type="date"
+                    value={editValues.birthday ?? ""}
+                    onChange={(e) => setField("birthday", e.target.value)}
+                  />
+                </FormField>
+                <FormField label="Gender" error={fieldErrors.gender}>
+                  <Select
+                    value={editValues.gender ?? ""}
+                    onValueChange={(v) =>
+                      setField("gender", v as EditFormData["gender"])
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+                <FormField
+                  label="Civil Status"
+                  error={fieldErrors.civil_status}
+                >
+                  <Select
+                    value={editValues.civil_status ?? ""}
+                    onValueChange={(v) =>
+                      setField(
+                        "civil_status",
+                        v as EditFormData["civil_status"],
+                      )
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Single</SelectItem>
+                      <SelectItem value="married">Married</SelectItem>
+                      <SelectItem value="widowed">Widowed</SelectItem>
+                      <SelectItem value="separated">Separated</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+              </div>
+            </section>
+
+            {/* Contact Information */}
+            <section>
+              <SectionHeading>Contact Information</SectionHeading>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField label="Phone" error={fieldErrors.phone}>
+                  <Input
+                    type="tel"
+                    value={editValues.phone ?? ""}
+                    onChange={(e) => setField("phone", e.target.value)}
+                  />
+                </FormField>
+                <FormField
+                  label="Emergency Contact Name"
+                  error={fieldErrors.emergency_contact_name}
+                >
+                  <Input
+                    value={editValues.emergency_contact_name ?? ""}
+                    onChange={(e) =>
+                      setField("emergency_contact_name", e.target.value)
+                    }
+                  />
+                </FormField>
+                <FormField
+                  label="Emergency Contact Phone"
+                  error={fieldErrors.emergency_contact_phone}
+                >
+                  <Input
+                    type="tel"
+                    value={editValues.emergency_contact_phone ?? ""}
+                    onChange={(e) =>
+                      setField("emergency_contact_phone", e.target.value)
+                    }
+                  />
+                </FormField>
+                <FormField
+                  label="Relationship"
+                  error={fieldErrors.emergency_contact_relationship}
+                >
+                  <Input
+                    value={editValues.emergency_contact_relationship ?? ""}
+                    onChange={(e) =>
+                      setField("emergency_contact_relationship", e.target.value)
+                    }
+                  />
+                </FormField>
+              </div>
+            </section>
+
+            {/* Address */}
+            <section>
+              <SectionHeading>Address</SectionHeading>
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  label="Address Line"
+                  error={fieldErrors.address_line}
+                >
+                  <Textarea
+                    rows={2}
+                    value={editValues.address_line ?? ""}
+                    onChange={(e) => setField("address_line", e.target.value)}
+                  />
+                </FormField>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <FormField label="City" error={fieldErrors.city}>
+                    <Input
+                      value={editValues.city ?? ""}
+                      onChange={(e) => setField("city", e.target.value)}
+                    />
+                  </FormField>
+                  <FormField label="Province" error={fieldErrors.province}>
+                    <Input
+                      value={editValues.province ?? ""}
+                      onChange={(e) => setField("province", e.target.value)}
+                    />
+                  </FormField>
+                  <FormField label="Zip Code" error={fieldErrors.zip_code}>
+                    <Input
+                      value={editValues.zip_code ?? ""}
+                      onChange={(e) => setField("zip_code", e.target.value)}
+                    />
+                  </FormField>
+                </div>
+              </div>
+            </section>
+
+            {/* Employment */}
+            <section>
+              <SectionHeading>Employment</SectionHeading>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  label="Position (Job Title)"
+                  error={fieldErrors.position}
+                >
+                  <Input
+                    value={editValues.position ?? ""}
+                    onChange={(e) => setField("position", e.target.value)}
+                  />
+                </FormField>
+                <FormField
+                  label="Employment Type"
+                  error={fieldErrors.employment_type}
+                >
+                  <Select
+                    value={editValues.employment_type ?? ""}
+                    onValueChange={(v) =>
+                      setField(
+                        "employment_type",
+                        v as EditFormData["employment_type"],
+                      )
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full_time">Full Time</SelectItem>
+                      <SelectItem value="part_time">Part Time</SelectItem>
+                      <SelectItem value="contractual">Contractual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+                <FormField label="Date Hired" error={fieldErrors.date_hired}>
+                  <Input
+                    type="date"
+                    value={editValues.date_hired ?? ""}
+                    onChange={(e) => setField("date_hired", e.target.value)}
+                  />
+                </FormField>
+                <FormField
+                  label="Daily Rate (₱)"
+                  error={fieldErrors.daily_rate}
+                >
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editValues.daily_rate ?? ""}
+                    onChange={(e) => setField("daily_rate", e.target.value)}
+                  />
+                </FormField>
+              </div>
+            </section>
+
+            {/* Account */}
+            <section>
+              <SectionHeading>Account</SectionHeading>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  label="Email Address"
+                  required
+                  error={fieldErrors.email}
+                >
+                  <Input
+                    type="email"
+                    value={editValues.email ?? ""}
+                    onChange={(e) => setField("email", e.target.value)}
+                    className={inputClass("email")}
+                  />
+                </FormField>
+                <FormField label="Role" required error={fieldErrors.role}>
+                  <Select
+                    value={editValues.role ?? ""}
+                    onValueChange={(v) => setField("role", v ?? "")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isAdmin && <SelectItem value="admin">Admin</SelectItem>}
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      <SelectItem value="cashier">Cashier</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+              </div>
+            </section>
+
+            {/* Government IDs */}
+            <section>
+              <SectionHeading>Government IDs</SectionHeading>
+              <div className="mb-4 flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>
+                  These fields are optional. Fill in when documents are
+                  available.
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField label="SSS Number" error={fieldErrors.sss_number}>
+                  <Input
+                    value={editValues.sss_number ?? ""}
+                    onChange={(e) => setField("sss_number", e.target.value)}
+                  />
+                </FormField>
+                <FormField
+                  label="Pag-IBIG Number"
+                  error={fieldErrors.pagibig_number}
+                >
+                  <Input
+                    value={editValues.pagibig_number ?? ""}
+                    onChange={(e) => setField("pagibig_number", e.target.value)}
+                  />
+                </FormField>
+                <FormField
+                  label="PhilHealth Number"
+                  error={fieldErrors.philhealth_number}
+                >
+                  <Input
+                    value={editValues.philhealth_number ?? ""}
+                    onChange={(e) =>
+                      setField("philhealth_number", e.target.value)
+                    }
+                  />
+                </FormField>
+                <FormField
+                  label="TIN Number (BIR)"
+                  error={fieldErrors.tin_number}
+                >
+                  <Input
+                    value={editValues.tin_number ?? ""}
+                    onChange={(e) => setField("tin_number", e.target.value)}
+                  />
+                </FormField>
+              </div>
+            </section>
+
+            {/* Branch Assignment */}
+            <section>
+              <SectionHeading>Branch Assignment</SectionHeading>
+              {isBranchError ? (
+                <p className="text-sm text-destructive">
+                  Failed to load branches.
+                </p>
+              ) : branches.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Loading branches…
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {branches.map((branch) => (
+                    <label
+                      key={branch.id}
+                      className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/30"
+                    >
+                      <Checkbox
+                        checked={(editValues.branch_ids ?? []).includes(
+                          branch.id,
+                        )}
+                        onCheckedChange={(checked) =>
+                          toggleBranch(branch.id, !!checked)
+                        }
+                      />
+                      <span className="text-sm font-medium text-foreground">
+                        {branch.name}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Submit */}
+            {updateMutation.isError && !Object.keys(fieldErrors).length && (
+              <p className="text-sm text-destructive">
+                {(updateMutation.error as ApiError)?.message ??
+                  "An error occurred. Please try again."}
+              </p>
+            )}
+            <div className="flex items-center justify-between border-t border-border pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setMode("view")}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Saving…" : "Save Changes"}
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     );
   }
@@ -646,7 +763,11 @@ export default function UserDetailPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <Button variant="ghost" size="sm" onClick={() => router.push("/references/users")}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push("/references/users")}
+        >
           ← Back to Users
         </Button>
       </div>
@@ -658,7 +779,9 @@ export default function UserDetailPage() {
             {user.first_name.charAt(0).toUpperCase()}
           </div>
           <div className="space-y-1">
-            <h1 className="text-xl font-bold text-foreground">{user.full_name}</h1>
+            <h1 className="text-xl font-bold text-foreground">
+              {user.full_name}
+            </h1>
             <div className="flex flex-wrap items-center gap-2">
               <RoleBadge role={role} />
               <StatusDot isActive={user.is_active} />
@@ -671,7 +794,9 @@ export default function UserDetailPage() {
               <p className="text-sm text-muted-foreground">{user.phone}</p>
             )}
             {user.date_hired && (
-              <p className="text-xs text-muted-foreground">Hired {user.date_hired}</p>
+              <p className="text-xs text-muted-foreground">
+                Hired {user.date_hired}
+              </p>
             )}
           </div>
         </div>
@@ -679,38 +804,50 @@ export default function UserDetailPage() {
         <div className="flex shrink-0 items-center gap-2">
           {isAdmin && <Button onClick={enterEditMode}>Edit</Button>}
 
-          {isAdmin && <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="outline" size="icon" aria-label="More actions" />}>
-              <MoreHorizontal className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setResetEmailSent(false);
-                  resetEmailMutation.mutate();
-                }}
-                disabled={resetEmailMutation.isPending}
+          {isAdmin && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="More actions"
+                  />
+                }
               >
-                {resetEmailSent ? "Reset email sent!" : "Send Reset Email"}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {user.is_active ? (
+                <MoreHorizontal className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => setDeactivateOpen(true)}
+                  onClick={() => {
+                    setResetEmailSent(false);
+                    resetEmailMutation.mutate();
+                  }}
+                  disabled={resetEmailMutation.isPending}
                 >
-                  Deactivate
+                  {resetEmailSent ? "Reset email sent!" : "Send Reset Email"}
                 </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem
-                  onClick={() => reactivateMutation.mutate()}
-                  disabled={reactivateMutation.isPending}
-                >
-                  {reactivateMutation.isPending ? "Reactivating…" : "Reactivate"}
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>}
+                <DropdownMenuSeparator />
+                {user.is_active ? (
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => setDeactivateOpen(true)}
+                  >
+                    Deactivate
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => reactivateMutation.mutate()}
+                    disabled={reactivateMutation.isPending}
+                  >
+                    {reactivateMutation.isPending
+                      ? "Reactivating…"
+                      : "Reactivate"}
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
@@ -720,7 +857,8 @@ export default function UserDetailPage() {
           <DialogHeader>
             <DialogTitle>Deactivate {user.full_name}?</DialogTitle>
             <DialogDescription>
-              This user will no longer be able to log in. You can reactivate them at any time.
+              This user will no longer be able to log in. You can reactivate
+              them at any time.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -764,8 +902,14 @@ export default function UserDetailPage() {
                   value={user.civil_status?.replace(/_/g, " ")}
                 />
                 <InfoRow label="Phone" value={user.phone} />
-                <InfoRow label="Emergency Contact" value={user.emergency_contact_name} />
-                <InfoRow label="Emergency Phone" value={user.emergency_contact_phone} />
+                <InfoRow
+                  label="Emergency Contact"
+                  value={user.emergency_contact_name}
+                />
+                <InfoRow
+                  label="Emergency Phone"
+                  value={user.emergency_contact_phone}
+                />
               </div>
             </div>
             <div className="mt-2 border-t border-border pt-2">
@@ -810,7 +954,10 @@ export default function UserDetailPage() {
                 <InfoRow label="Pag-IBIG Number" value={user.pagibig_number} />
               </div>
               <div className="divide-y divide-border">
-                <InfoRow label="PhilHealth Number" value={user.philhealth_number} />
+                <InfoRow
+                  label="PhilHealth Number"
+                  value={user.philhealth_number}
+                />
                 <InfoRow label="TIN Number (BIR)" value={user.tin_number} />
               </div>
             </div>
@@ -820,9 +967,13 @@ export default function UserDetailPage() {
         <TabsContent value="branches">
           <div className="mt-4 rounded-xl border border-border bg-card p-6">
             {user.branches.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No branches assigned.</p>
+              <p className="text-sm text-muted-foreground">
+                No branches assigned.
+              </p>
             ) : user.roles.includes("admin") ? (
-              <p className="text-sm font-medium text-primary">All Branches (Admin)</p>
+              <p className="text-sm font-medium text-primary">
+                All Branches (Admin)
+              </p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {user.branches.map((b) => (

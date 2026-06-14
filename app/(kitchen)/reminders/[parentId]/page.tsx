@@ -10,20 +10,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { reminderApi } from "@/lib/api/reminders";
 import { cn } from "@/lib/utils";
 
-import type { ReminderPaymentHistory, ReminderStudentDetail } from "@/types/reminder";
+import type {
+  ReminderPaymentHistory,
+  ReminderStudentDetail,
+} from "@/types/reminder";
 
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function PaymentStatusBadge({ status }: { status: ReminderPaymentHistory["status"] }) {
+function PaymentStatusBadge({
+  status,
+}: {
+  status: ReminderPaymentHistory["status"];
+}) {
   return (
     <span
       className={cn(
         "text-[11px] font-bold px-2 py-0.5 rounded-full border",
         status === "paid"
           ? "bg-green-100 text-green-700 border-green-300"
-          : "bg-muted text-muted-foreground border-border"
+          : "bg-muted text-muted-foreground border-border",
       )}
     >
       {status === "paid" ? "Paid" : "Unpaid"}
@@ -58,18 +65,32 @@ function StudentPaymentTable({ student }: { student: ReminderStudentDetail }) {
           <tbody>
             {student.payment_history.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                <td
+                  colSpan={4}
+                  className="px-4 py-6 text-center text-sm text-muted-foreground"
+                >
                   No payment records.
                 </td>
               </tr>
             ) : (
               student.payment_history.map((p) => (
                 <tr key={p.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 capitalize">{p.school_month} {p.year}</td>
-                  <td className="px-4 py-3">₱{p.amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</td>
-                  <td className="px-4 py-3"><PaymentStatusBadge status={p.status} /></td>
+                  <td className="px-4 py-3 capitalize">
+                    {p.school_month} {p.year}
+                  </td>
+                  <td className="px-4 py-3">
+                    ₱
+                    {p.amount.toLocaleString("en-PH", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td className="px-4 py-3">
+                    <PaymentStatusBadge status={p.status} />
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {p.paid_at ? new Date(p.paid_at).toLocaleDateString("en-PH") : "—"}
+                    {p.paid_at
+                      ? new Date(p.paid_at).toLocaleDateString("en-PH")
+                      : "—"}
                   </td>
                 </tr>
               ))
@@ -93,7 +114,11 @@ export default function ReminderParentDetailPage({ params }: PageProps) {
   const { parentId } = use(params);
   const router = useRouter();
 
-  const { data: parent, isLoading, isError } = useQuery({
+  const {
+    data: parent,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["reminder-parent", parentId],
     queryFn: () => reminderApi.parentDetail(Number(parentId)),
   });
@@ -113,14 +138,21 @@ export default function ReminderParentDetailPage({ params }: PageProps) {
   if (isError || !parent) {
     return (
       <div className="p-6">
-        <p className="text-sm text-muted-foreground">Failed to load parent details.</p>
+        <p className="text-sm text-muted-foreground">
+          Failed to load parent details.
+        </p>
       </div>
     );
   }
 
   return (
     <div className="p-6 space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-1 -ml-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.back()}
+        className="gap-1 -ml-2"
+      >
         <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         Back
       </Button>
@@ -145,7 +177,9 @@ export default function ReminderParentDetailPage({ params }: PageProps) {
       <div className="space-y-6">
         <h2 className="text-base font-semibold">Payment History</h2>
         {parent.students.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No subscription students linked.</p>
+          <p className="text-sm text-muted-foreground">
+            No subscription students linked.
+          </p>
         ) : (
           parent.students.map((student) => (
             <StudentPaymentTable key={student.id} student={student} />

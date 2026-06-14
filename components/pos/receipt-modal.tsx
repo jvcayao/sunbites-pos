@@ -1,6 +1,11 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 import type { Order } from "@/types/order";
@@ -26,13 +31,22 @@ export function ReceiptModal({ order, onNewOrder }: Props) {
   const subtotal = parseFloat(order.subtotal);
   const discount = parseFloat(order.discount_amount);
   const total = parseFloat(order.total);
-  const amountTendered = order.amount_tendered ? parseFloat(order.amount_tendered) : null;
-  const changeAmount = order.change_amount ? parseFloat(order.change_amount) : null;
+  const amountTendered = order.amount_tendered
+    ? parseFloat(order.amount_tendered)
+    : null;
+  const changeAmount = order.change_amount
+    ? parseFloat(order.change_amount)
+    : null;
   const creditAmount = parseFloat(order.credit_amount);
   const hasDiscount = discount > 0;
 
   return (
-    <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onNewOrder(); }}>
+    <Dialog
+      open
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onNewOrder();
+      }}
+    >
       <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle className="text-center text-base font-bold">
@@ -44,7 +58,9 @@ export function ReceiptModal({ order, onNewOrder }: Props) {
         <div className="space-y-1 border-b border-dashed border-border pb-3 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Receipt No.</span>
-            <span className="font-mono font-medium">{order.receipt_number}</span>
+            <span className="font-mono font-medium">
+              {order.receipt_number}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Date & Time</span>
@@ -65,14 +81,23 @@ export function ReceiptModal({ order, onNewOrder }: Props) {
         {/* Items */}
         {order.items && order.items.length > 0 && (
           <div className="space-y-1.5 border-b border-dashed border-border pb-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Items</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Items
+            </p>
             {order.items.map((item) => (
-              <div key={item.id} className="flex items-start justify-between gap-2 text-sm">
+              <div
+                key={item.id}
+                className="flex items-start justify-between gap-2 text-sm"
+              >
                 <div className="flex-1">
                   <span>{item.name}</span>
-                  <span className="ml-1 text-xs text-muted-foreground">x{item.quantity}</span>
+                  <span className="ml-1 text-xs text-muted-foreground">
+                    x{item.quantity}
+                  </span>
                 </div>
-                <span className="font-medium">₱{parseFloat(item.line_total).toFixed(2)}</span>
+                <span className="font-medium">
+                  ₱{parseFloat(item.line_total).toFixed(2)}
+                </span>
               </div>
             ))}
           </div>
@@ -132,7 +157,9 @@ export function ReceiptModal({ order, onNewOrder }: Props) {
             </div>
           )}
           {order.payment_method === "subscription" && (
-            <p className="text-xs text-muted-foreground">Covered by monthly subscription</p>
+            <p className="text-xs text-muted-foreground">
+              Covered by monthly subscription
+            </p>
           )}
         </div>
 
@@ -148,7 +175,9 @@ export function ReceiptModal({ order, onNewOrder }: Props) {
                 {order.student && (
                   <div className="flex justify-between text-destructive">
                     <span>Outstanding Credit</span>
-                    <span>₱{parseFloat(order.student.credit_balance).toFixed(2)}</span>
+                    <span>
+                      ₱{parseFloat(order.student.credit_balance).toFixed(2)}
+                    </span>
                   </div>
                 )}
               </>

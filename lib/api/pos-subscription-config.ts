@@ -8,7 +8,8 @@ export interface BranchSubscriptionConfig {
 }
 
 export const subscriptionConfigApi = {
-  show: () => apiClient.get<BranchSubscriptionConfig>("/pos/subscription-config"),
+  show: () =>
+    apiClient.get<BranchSubscriptionConfig>("/pos/subscription-config"),
 
   update: (data: BranchSubscriptionConfig) =>
     apiClient.put<BranchSubscriptionConfig>("/pos/subscription-config", data),

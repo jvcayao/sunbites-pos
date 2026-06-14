@@ -70,7 +70,10 @@ function getSchoolYearOptions(): { value: string; label: string }[] {
 // ---------------------------------------------------------------------------
 
 function isAllSent(parent: EligibleParent): boolean {
-  return parent.unpaid_periods.length > 0 && parent.unpaid_periods.every((p) => p.was_sent);
+  return (
+    parent.unpaid_periods.length > 0 &&
+    parent.unpaid_periods.every((p) => p.was_sent)
+  );
 }
 
 function uniqueStudentNames(parent: EligibleParent): string {
@@ -187,7 +190,8 @@ export default function RemindersPage() {
   const selectableParents = parents.filter((p) => !isAllSent(p));
 
   const isAllSelected =
-    selectableParents.length > 0 && selectableParents.every((p) => selectedIds.has(p.id));
+    selectableParents.length > 0 &&
+    selectableParents.every((p) => selectedIds.has(p.id));
 
   function toggleSelectAll() {
     if (isAllSelected) {
@@ -214,10 +218,14 @@ export default function RemindersPage() {
     mutationFn: ({ ids, force }: { ids: number[]; force?: boolean }) =>
       reminderApi.send(ids, force),
     onSuccess: (result) => {
-      toast.success(`Reminders sent to ${result.sent} parent${result.sent !== 1 ? "s" : ""}.`);
+      toast.success(
+        `Reminders sent to ${result.sent} parent${result.sent !== 1 ? "s" : ""}.`,
+      );
       setSelectedIds(new Set());
       setDuplicateDialog(false);
-      queryClient.invalidateQueries({ queryKey: ["eligible-parents", activeBranch?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["eligible-parents", activeBranch?.id],
+      });
       queryClient.invalidateQueries({ queryKey: ["reminder-bell-count"] });
     },
     onError: () => {
@@ -228,7 +236,7 @@ export default function RemindersPage() {
   function handleSendClick() {
     const ids = Array.from(selectedIds);
     const partialOrSent = parents.filter(
-      (p) => ids.includes(p.id) && p.total_send_count > 0
+      (p) => ids.includes(p.id) && p.total_send_count > 0,
     );
 
     if (partialOrSent.length > 0) {
@@ -279,7 +287,7 @@ export default function RemindersPage() {
                 "rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
                 status === pill.value
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground hover:bg-muted"
+                  : "border-border bg-card text-foreground hover:bg-muted",
               )}
             >
               {pill.label}
@@ -296,7 +304,10 @@ export default function RemindersPage() {
               setSelectedIds(new Set());
             }}
           >
-            <SelectTrigger className="h-8 w-[150px] text-xs" aria-label="School month filter">
+            <SelectTrigger
+              className="h-8 w-[150px] text-xs"
+              aria-label="School month filter"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -316,7 +327,10 @@ export default function RemindersPage() {
               setSelectedIds(new Set());
             }}
           >
-            <SelectTrigger className="h-8 w-[160px] text-xs" aria-label="School year filter">
+            <SelectTrigger
+              className="h-8 w-[160px] text-xs"
+              aria-label="School year filter"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -397,7 +411,7 @@ export default function RemindersPage() {
                     className={cn(
                       "border-b border-border transition-colors",
                       allSent ? "opacity-50" : "hover:bg-muted/30",
-                      isSelected && "bg-primary/5"
+                      isSelected && "bg-primary/5",
                     )}
                   >
                     {canSend && (
@@ -413,11 +427,14 @@ export default function RemindersPage() {
                           disabled={allSent}
                           className={cn(
                             "text-primary",
-                            allSent && "cursor-not-allowed opacity-40"
+                            allSent && "cursor-not-allowed opacity-40",
                           )}
                         >
                           {isSelected ? (
-                            <CheckSquare className="h-4 w-4" aria-hidden="true" />
+                            <CheckSquare
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            />
                           ) : (
                             <Square className="h-4 w-4" aria-hidden="true" />
                           )}
@@ -435,7 +452,9 @@ export default function RemindersPage() {
                         {parent.full_name}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{parent.email}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {parent.email}
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {uniqueStudentNames(parent)}
                     </td>
@@ -482,7 +501,10 @@ export default function RemindersPage() {
             </Button>
             <Button
               onClick={() =>
-                sendMutation.mutate({ ids: Array.from(selectedIds), force: true })
+                sendMutation.mutate({
+                  ids: Array.from(selectedIds),
+                  force: true,
+                })
               }
               disabled={sendMutation.isPending}
             >

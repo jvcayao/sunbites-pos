@@ -17,7 +17,6 @@ import { reportApi, exportReport } from "@/lib/api/reports";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -53,9 +52,16 @@ const STATUS_CLASSES: Record<string, string> = {
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const cls = STATUS_CLASSES[status?.toLowerCase()] ?? "bg-muted text-muted-foreground border-border";
+  const cls =
+    STATUS_CLASSES[status?.toLowerCase()] ??
+    "bg-muted text-muted-foreground border-border";
   return (
-    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize", cls)}>
+    <span
+      className={cn(
+        "text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize",
+        cls,
+      )}
+    >
       {status}
     </span>
   );
@@ -117,7 +123,8 @@ export default function StudentsReportPage() {
             size="sm"
             onClick={() => {
               void exportReport("reports/students", {
-                status: enrollmentStatus !== "all" ? enrollmentStatus : undefined,
+                status:
+                  enrollmentStatus !== "all" ? enrollmentStatus : undefined,
                 grade: gradeLevel !== "all" ? gradeLevel : undefined,
                 type: studentType !== "all" ? studentType : undefined,
               });
@@ -131,8 +138,17 @@ export default function StudentsReportPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
-        <Select value={enrollmentStatus} onValueChange={(v) => { setEnrollmentStatus(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[160px] text-xs" aria-label="Enrollment status filter">
+        <Select
+          value={enrollmentStatus}
+          onValueChange={(v) => {
+            setEnrollmentStatus(v ?? "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[160px] text-xs"
+            aria-label="Enrollment status filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -145,20 +161,40 @@ export default function StudentsReportPage() {
           </SelectContent>
         </Select>
 
-        <Select value={gradeLevel} onValueChange={(v) => { setGradeLevel(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[140px] text-xs" aria-label="Grade level filter">
+        <Select
+          value={gradeLevel}
+          onValueChange={(v) => {
+            setGradeLevel(v ?? "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[140px] text-xs"
+            aria-label="Grade level filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Grades</SelectItem>
             {GRADE_LEVELS.map((g) => (
-              <SelectItem key={g} value={g}>{g}</SelectItem>
+              <SelectItem key={g} value={g}>
+                {g}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={studentType} onValueChange={(v) => { setStudentType(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-8 w-[160px] text-xs" aria-label="Student type filter">
+        <Select
+          value={studentType}
+          onValueChange={(v) => {
+            setStudentType(v ?? "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            className="h-8 w-[160px] text-xs"
+            aria-label="Student type filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -176,40 +212,60 @@ export default function StudentsReportPage() {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Total Enrolled
             </p>
-            <p className="mt-1 text-2xl font-extrabold text-foreground">{summary.total}</p>
+            <p className="mt-1 text-2xl font-extrabold text-foreground">
+              {summary.total}
+            </p>
           </div>
 
-          {summary.grade_breakdown && Object.keys(summary.grade_breakdown).length > 0 && (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                By Grade
-              </p>
-              <div className="space-y-1">
-                {Object.entries(summary.grade_breakdown).map(([grade, count]) => (
-                  <div key={grade} className="flex items-center justify-between text-xs">
-                    <span className="text-foreground">{grade}</span>
-                    <span className="font-semibold text-foreground">{count}</span>
-                  </div>
-                ))}
+          {summary.grade_breakdown &&
+            Object.keys(summary.grade_breakdown).length > 0 && (
+              <div className="rounded-xl border border-border bg-card p-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  By Grade
+                </p>
+                <div className="space-y-1">
+                  {Object.entries(summary.grade_breakdown).map(
+                    ([grade, count]) => (
+                      <div
+                        key={grade}
+                        className="flex items-center justify-between text-xs"
+                      >
+                        <span className="text-foreground">{grade}</span>
+                        <span className="font-semibold text-foreground">
+                          {count}
+                        </span>
+                      </div>
+                    ),
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {summary.status_breakdown && Object.keys(summary.status_breakdown).length > 0 && (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                By Status
-              </p>
-              <div className="space-y-1">
-                {Object.entries(summary.status_breakdown).map(([status, count]) => (
-                  <div key={status} className="flex items-center justify-between text-xs">
-                    <span className="capitalize text-foreground">{status}</span>
-                    <span className="font-semibold text-foreground">{count}</span>
-                  </div>
-                ))}
+          {summary.status_breakdown &&
+            Object.keys(summary.status_breakdown).length > 0 && (
+              <div className="rounded-xl border border-border bg-card p-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  By Status
+                </p>
+                <div className="space-y-1">
+                  {Object.entries(summary.status_breakdown).map(
+                    ([status, count]) => (
+                      <div
+                        key={status}
+                        className="flex items-center justify-between text-xs"
+                      >
+                        <span className="capitalize text-foreground">
+                          {status}
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {count}
+                        </span>
+                      </div>
+                    ),
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       )}
 
@@ -223,34 +279,67 @@ export default function StudentsReportPage() {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Name</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Student #</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Grade</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Section</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Status</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Wallet Balance</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Total Spent</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Name
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Student #
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Grade
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Section
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  Wallet Balance
+                </th>
+                <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                  Total Spent
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} />)
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRowSkeleton key={i} />
+                ))
               ) : !rows?.length ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-10 text-center text-muted-foreground"
+                  >
                     No students found for the selected filters.
                   </td>
                 </tr>
               ) : (
                 rows.map((row) => (
                   <tr key={row.id} className="hover:bg-muted/20">
-                    <td className="px-4 py-2.5 font-medium text-foreground">{row.full_name}</td>
-                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{row.student_number}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{row.grade_level}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{row.section ?? "—"}</td>
-                    <td className="px-4 py-2.5"><StatusBadge status={row.status} /></td>
-                    <td className="px-4 py-2.5 text-right">{formatPeso(row.wallet_balance)}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold">{formatPeso(row.total_spent)}</td>
+                    <td className="px-4 py-2.5 font-medium text-foreground">
+                      {row.full_name}
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
+                      {row.student_number}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {row.grade_level}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {row.section ?? "—"}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <StatusBadge status={row.status} />
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      {formatPeso(row.wallet_balance)}
+                    </td>
+                    <td className="px-4 py-2.5 text-right font-semibold">
+                      {formatPeso(row.total_spent)}
+                    </td>
                   </tr>
                 ))
               )}
@@ -262,13 +351,29 @@ export default function StudentsReportPage() {
       {/* Pagination */}
       {meta && meta.last_page > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Page {meta.current_page} of {meta.last_page} ({meta.total} records)</span>
+          <span>
+            Page {meta.current_page} of {meta.last_page} ({meta.total} records)
+          </span>
           <div className="flex gap-1">
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              aria-label="Previous page"
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="flex items-center px-2 font-medium text-foreground">{page} / {meta.last_page}</span>
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))} disabled={page === meta.last_page} aria-label="Next page">
+            <span className="flex items-center px-2 font-medium text-foreground">
+              {page} / {meta.last_page}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
+              disabled={page === meta.last_page}
+              aria-label="Next page"
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

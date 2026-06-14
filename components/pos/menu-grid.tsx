@@ -58,7 +58,11 @@ export function MenuGrid({ className }: Props) {
     }, 300);
   }
 
-  const { data: allItems, isLoading, isError } = useQuery({
+  const {
+    data: allItems,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["pos-menu-items"],
     queryFn: posMenuItemApi.list,
   });
@@ -66,7 +70,8 @@ export function MenuGrid({ className }: Props) {
   const availableItems = allItems?.filter((item) => item.is_available) ?? [];
 
   const filteredItems = availableItems.filter((item) => {
-    const matchesCategory = activeCategory === "all" || item.category === activeCategory;
+    const matchesCategory =
+      activeCategory === "all" || item.category === activeCategory;
     const matchesSearch =
       !debouncedSearch ||
       item.name.toLowerCase().includes(debouncedSearch.toLowerCase());
@@ -79,7 +84,12 @@ export function MenuGrid({ className }: Props) {
 
   if (isError) {
     return (
-      <div className={cn("rounded-xl border border-border p-6 text-center", className)}>
+      <div
+        className={cn(
+          "rounded-xl border border-border p-6 text-center",
+          className,
+        )}
+      >
         <p className="text-sm text-destructive">Failed to load menu items.</p>
       </div>
     );
@@ -112,7 +122,7 @@ export function MenuGrid({ className }: Props) {
               "rounded-full px-3.5 py-1 text-sm font-medium transition-colors",
               activeCategory === cat.value
                 ? "bg-primary text-primary-foreground"
-                : "border border-border bg-background text-foreground hover:border-primary/50"
+                : "border border-border bg-background text-foreground hover:border-primary/50",
             )}
           >
             {cat.label}
@@ -142,9 +152,11 @@ export function MenuGrid({ className }: Props) {
             const isUnmapped = !item.has_inventory_mapping;
             const isUnconfigured = item.is_subscription_item === null;
             const isSubscriptionBlocked =
-              paymentMethod === "subscription" && item.is_subscription_item !== true;
+              paymentMethod === "subscription" &&
+              item.is_subscription_item !== true;
 
-            const isDisabled = isOut || isUnmapped || isUnconfigured || isSubscriptionBlocked;
+            const isDisabled =
+              isOut || isUnmapped || isUnconfigured || isSubscriptionBlocked;
 
             return (
               <button
@@ -153,7 +165,12 @@ export function MenuGrid({ className }: Props) {
                 disabled={isDisabled}
                 onClick={() => {
                   if (!isDisabled) {
-                    addItem({ id: item.id, name: item.name, price: parseFloat(item.price), category: item.category });
+                    addItem({
+                      id: item.id,
+                      name: item.name,
+                      price: parseFloat(item.price),
+                      category: item.category,
+                    });
                   }
                 }}
                 className={cn(
@@ -161,8 +178,8 @@ export function MenuGrid({ className }: Props) {
                   isDisabled
                     ? "opacity-40 cursor-not-allowed border-border bg-card"
                     : inCart
-                    ? "border-primary bg-primary/10"
-                    : "border-border bg-card hover:border-primary/40 hover:bg-muted/50"
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-card hover:border-primary/40 hover:bg-muted/50",
                 )}
                 aria-disabled={isDisabled}
               >
@@ -188,7 +205,7 @@ export function MenuGrid({ className }: Props) {
                 <span
                   className={cn(
                     "mt-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize",
-                    CATEGORY_BADGE_STYLES[item.category]
+                    CATEGORY_BADGE_STYLES[item.category],
                   )}
                 >
                   {item.category}

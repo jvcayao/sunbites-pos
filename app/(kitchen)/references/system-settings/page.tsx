@@ -26,7 +26,11 @@ import type { SystemConfiguration } from "@/types/system-configuration";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const CURRENCY_KEYS = new Set(["credit_limit", "daily_meal_rate", "loyalty_point_threshold"]);
+const CURRENCY_KEYS = new Set([
+  "credit_limit",
+  "daily_meal_rate",
+  "loyalty_point_threshold",
+]);
 
 function formatValue(config: SystemConfiguration): string {
   if (config.type === "decimal" || config.type === "integer") {
@@ -118,9 +122,15 @@ function EditConfigDialog({ config, onClose }: EditConfigDialogProps) {
   }
 
   const inputStep =
-    config?.type === "decimal" ? "0.01" : config?.type === "integer" ? "1" : undefined;
+    config?.type === "decimal"
+      ? "0.01"
+      : config?.type === "integer"
+        ? "1"
+        : undefined;
   const inputType =
-    config?.type === "decimal" || config?.type === "integer" ? "number" : "text";
+    config?.type === "decimal" || config?.type === "integer"
+      ? "number"
+      : "text";
 
   return (
     <Dialog open={config !== null} onOpenChange={handleOpenChange}>
@@ -169,7 +179,10 @@ function EditConfigDialog({ config, onClose }: EditConfigDialogProps) {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={mutation.isPending || savedIndicator}>
+            <Button
+              type="submit"
+              disabled={mutation.isPending || savedIndicator}
+            >
               {mutation.isPending ? "Saving…" : "Save Changes"}
             </Button>
           </DialogFooter>
@@ -199,9 +212,7 @@ function ConfigTableRow({ config, onEdit }: ConfigTableRowProps) {
           </p>
         )}
       </td>
-      <td className="px-4 py-3 text-sm font-semibold">
-        {formatValue(config)}
-      </td>
+      <td className="px-4 py-3 text-sm font-semibold">{formatValue(config)}</td>
       <td className="px-4 py-3 text-right">
         <Button
           type="button"
@@ -238,7 +249,8 @@ export default function SystemSettingsPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.roles.includes("admin") === true;
-  const [editingConfig, setEditingConfig] = useState<SystemConfiguration | null>(null);
+  const [editingConfig, setEditingConfig] =
+    useState<SystemConfiguration | null>(null);
 
   useEffect(() => {
     if (!isAdmin) {
