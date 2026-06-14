@@ -2875,7 +2875,9 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                         <td className="px-3 py-2 text-xs text-muted-foreground">
                           {new Date(log.created_at).toLocaleDateString()}
                         </td>
-                        <td className="px-3 py-2">{log.causer_name ?? "System"}</td>
+                        <td className="px-3 py-2">
+                          {log.causer_name ?? "System"}
+                        </td>
                         <td className="px-3 py-2">{log.description}</td>
                       </tr>
                     ))}
