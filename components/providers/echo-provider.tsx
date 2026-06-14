@@ -48,12 +48,15 @@ export function EchoProvider({ children }: EchoProviderProps) {
 
     return () => {
       instance.disconnect();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEcho(null);
     };
   }, [token]);
 
-  return <EchoContext.Provider value={token ? echo : null}>{children}</EchoContext.Provider>;
+  return (
+    <EchoContext.Provider value={token ? echo : null}>
+      {children}
+    </EchoContext.Provider>
+  );
 }
 
 export function useEcho(): InstanceType<typeof Echo> | null {

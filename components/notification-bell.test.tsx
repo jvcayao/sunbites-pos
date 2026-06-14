@@ -4,34 +4,43 @@ import { http, HttpResponse } from "msw";
 
 import { server } from "@/__tests__/mocks/server";
 import { NotificationBell } from "./notification-bell";
+import type { StaffNotification } from "@/types/staff-notification";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 jest.mock("@/components/providers/echo-provider", () => ({
   useEcho: () => null,
 }));
-const mockAuthState = { user: { id: 1, name: "Admin" }, token: null, activeBranch: null };
+const mockAuthState = {
+  user: { id: 1, name: "Admin" },
+  token: null,
+  activeBranch: null,
+};
 jest.mock("@/lib/store/auth", () => ({
-  useAuthStore: Object.assign(
-    (sel: (s: any) => any) => sel(mockAuthState),
-    { getState: () => mockAuthState }
-  ),
+  useAuthStore: Object.assign((sel: (s: typeof mockAuthState) => unknown) => sel(mockAuthState), {
+    getState: () => mockAuthState,
+  }),
 }));
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
-function setupHandlers(count: number, items: any[] = []) {
+function setupHandlers(count: number, items: StaffNotification[] = []) {
   server.use(
     http.get(`${API}/staff/notifications/unread-count`, () =>
-      HttpResponse.json({ count })
+      HttpResponse.json({ count }),
     ),
     http.get(`${API}/staff/notifications`, () =>
       HttpResponse.json({
         data: items,
-        meta: { current_page: 1, last_page: 1, per_page: 20, total: items.length },
-      })
-    )
+        meta: {
+          current_page: 1,
+          last_page: 1,
+          per_page: 20,
+          total: items.length,
+        },
+      }),
+    ),
   );
 }
 
@@ -40,7 +49,9 @@ describe("NotificationBell (POS)", () => {
     setupHandlers(0);
     render(<NotificationBell />);
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Notifications" }),
+      ).toBeInTheDocument();
     });
     expect(screen.queryByText("3")).not.toBeInTheDocument();
   });
@@ -50,7 +61,7 @@ describe("NotificationBell (POS)", () => {
     render(<NotificationBell />);
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "3 unread notifications" })
+        screen.getByRole("button", { name: "3 unread notifications" }),
       ).toBeInTheDocument();
     });
   });
@@ -59,7 +70,9 @@ describe("NotificationBell (POS)", () => {
     setupHandlers(0, []);
     render(<NotificationBell />);
     await waitFor(() => screen.getByRole("button", { name: "Notifications" }));
-    await userEvent.click(screen.getByRole("button", { name: "Notifications" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Notifications" }),
+    );
     await waitFor(() => {
       expect(screen.getByText("View all notifications →")).toBeInTheDocument();
     });
@@ -68,7 +81,9 @@ describe("NotificationBell (POS)", () => {
   it("shows empty state when notification list is empty", async () => {
     setupHandlers(0, []);
     render(<NotificationBell />);
-    await userEvent.click(screen.getByRole("button", { name: "Notifications" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Notifications" }),
+    );
     await waitFor(() => {
       expect(screen.getByText("You're all caught up")).toBeInTheDocument();
     });
@@ -77,10 +92,16 @@ describe("NotificationBell (POS)", () => {
   it("shows mark-all-read button only when unread count > 0", async () => {
     setupHandlers(2, []);
     render(<NotificationBell />);
-    await waitFor(() => screen.getByRole("button", { name: "2 unread notifications" }));
-    await userEvent.click(screen.getByRole("button", { name: "2 unread notifications" }));
+    await waitFor(() =>
+      screen.getByRole("button", { name: "2 unread notifications" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "2 unread notifications" }),
+    );
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Mark all as read" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Mark all as read" }),
+      ).toBeInTheDocument();
     });
   });
 });

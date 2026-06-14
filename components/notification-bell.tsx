@@ -8,7 +8,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { NotificationItem } from "@/components/notification-item";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Sheet,
   SheetContent,
@@ -21,29 +25,42 @@ import { staffNotificationApi } from "@/lib/api/staff-notifications";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
-import type { StaffNotification } from "@/types/staff-notification";
+import type {
+  StaffNotification,
+  StaffNotificationListResponse,
+} from "@/types/staff-notification";
 
 interface Props {
   className?: string;
 }
 
 function groupByDate(
-  items: StaffNotification[]
+  items: StaffNotification[],
 ): { label: string; items: StaffNotification[] }[] {
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
   const startOfYesterday = new Date(startOfToday.getTime() - 86_400_000);
   return [
-    { label: "Today", items: items.filter((n) => new Date(n.created_at) >= startOfToday) },
+    {
+      label: "Today",
+      items: items.filter((n) => new Date(n.created_at) >= startOfToday),
+    },
     {
       label: "Yesterday",
       items: items.filter(
         (n) =>
           new Date(n.created_at) >= startOfYesterday &&
-          new Date(n.created_at) < startOfToday
+          new Date(n.created_at) < startOfToday,
       ),
     },
-    { label: "Earlier", items: items.filter((n) => new Date(n.created_at) < startOfYesterday) },
+    {
+      label: "Earlier",
+      items: items.filter((n) => new Date(n.created_at) < startOfYesterday),
+    },
   ].filter((g) => g.items.length > 0);
 }
 
@@ -75,7 +92,9 @@ function NotificationDetailSheet({
     if (notification.type === "App\\Notifications\\AnnouncementNotification") {
       router.push(`/announcements/${notification.data.announcement_id}`);
     } else {
-      router.push(`/pre-registrations/${notification.data.pre_registration_id}`);
+      router.push(
+        `/pre-registrations/${notification.data.pre_registration_id}`,
+      );
     }
   }
 
@@ -91,7 +110,7 @@ function NotificationDetailSheet({
                     "text-[11px] font-bold px-2.5 py-0.5 rounded-full border",
                     isAnnouncement
                       ? "bg-amber-100 text-amber-700 border-amber-300"
-                      : "bg-blue-100 text-blue-700 border-blue-300"
+                      : "bg-blue-100 text-blue-700 border-blue-300",
                   )}
                 >
                   {isAnnouncement ? "Announcement" : "Pre-Registration"}
@@ -141,7 +160,8 @@ function NotificationDetailSheet({
                     {notification.data.student_name}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground capitalize">
-                    {notification.data.enrollment_type} · {notification.data.branch_name}
+                    {notification.data.enrollment_type} ·{" "}
+                    {notification.data.branch_name}
                   </p>
                 </>
               )}
@@ -160,7 +180,10 @@ function NotificationDetailSheet({
                 {isDeleting ? "Deleting…" : "Delete"}
               </Button>
               <Button size="sm" onClick={handleNavigate}>
-                <ExternalLink className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                <ExternalLink
+                  className="h-3.5 w-3.5 mr-1.5"
+                  aria-hidden="true"
+                />
                 {isAnnouncement ? "View Announcement" : "View Pre-Registration"}
               </Button>
             </div>
@@ -206,17 +229,18 @@ function NotificationPanel({
     mutationFn: (id: string) => staffNotificationApi.markRead(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ["staff-notifications"] });
-      const prev = queryClient.getQueryData(["staff-notifications"]);
-      queryClient.setQueryData(["staff-notifications"], (old: any) => ({
+      const prev = queryClient.getQueryData(["staff-notifications"]) as StaffNotificationListResponse | undefined;
+      queryClient.setQueryData(["staff-notifications"], (old: StaffNotificationListResponse | undefined) => ({
         ...old,
-        data: old?.data?.map((n: any) =>
-          n.id === id ? { ...n, read_at: new Date().toISOString() } : n
+        data: old?.data?.map((n: StaffNotification) =>
+          n.id === id ? { ...n, read_at: new Date().toISOString() } : n,
         ),
       }));
       return { prev };
     },
-    onError: (_err: unknown, _id: string, ctx: any) => {
-      if (ctx?.prev) queryClient.setQueryData(["staff-notifications"], ctx.prev);
+    onError: (_err: unknown, _id: string, ctx: { prev: StaffNotificationListResponse | undefined } | undefined) => {
+      if (ctx?.prev)
+        queryClient.setQueryData(["staff-notifications"], ctx.prev);
     },
     onSettled: () => invalidateAll(),
   });
@@ -225,15 +249,16 @@ function NotificationPanel({
     mutationFn: (id: string) => staffNotificationApi.destroy(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ["staff-notifications"] });
-      const prev = queryClient.getQueryData(["staff-notifications"]);
-      queryClient.setQueryData(["staff-notifications"], (old: any) => ({
+      const prev = queryClient.getQueryData(["staff-notifications"]) as StaffNotificationListResponse | undefined;
+      queryClient.setQueryData(["staff-notifications"], (old: StaffNotificationListResponse | undefined) => ({
         ...old,
-        data: old?.data?.filter((n: any) => n.id !== id),
+        data: old?.data?.filter((n: StaffNotification) => n.id !== id),
       }));
       return { prev };
     },
-    onError: (_err: unknown, _id: string, ctx: any) => {
-      if (ctx?.prev) queryClient.setQueryData(["staff-notifications"], ctx.prev);
+    onError: (_err: unknown, _id: string, ctx: { prev: StaffNotificationListResponse | undefined } | undefined) => {
+      if (ctx?.prev)
+        queryClient.setQueryData(["staff-notifications"], ctx.prev);
     },
     onSettled: () => invalidateAll(),
   });
@@ -289,9 +314,14 @@ function NotificationPanel({
 
         {!isLoading && notifications.length === 0 && (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <Bell className="mb-2 h-8 w-8 text-muted-foreground" aria-hidden="true" />
+            <Bell
+              className="mb-2 h-8 w-8 text-muted-foreground"
+              aria-hidden="true"
+            />
             <p className="text-sm font-medium">You&apos;re all caught up</p>
-            <p className="text-xs text-muted-foreground">No new notifications</p>
+            <p className="text-xs text-muted-foreground">
+              No new notifications
+            </p>
           </div>
         )}
 
@@ -308,10 +338,12 @@ function NotificationPanel({
                   onMarkRead={(id) => markReadMutation.mutate(id)}
                   onDelete={(id) => deleteMutation.mutate(id)}
                   isMarkingRead={
-                    markReadMutation.isPending && markReadMutation.variables === n.id
+                    markReadMutation.isPending &&
+                    markReadMutation.variables === n.id
                   }
                   isDeleting={
-                    deleteMutation.isPending && deleteMutation.variables === n.id
+                    deleteMutation.isPending &&
+                    deleteMutation.variables === n.id
                   }
                   onNavigate={onClose}
                   onCardClick={() => handleOpen(n)}
@@ -364,15 +396,16 @@ export function NotificationBell({ className }: Props) {
     mutationFn: (id: string) => staffNotificationApi.destroy(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ["staff-notifications"] });
-      const prev = queryClient.getQueryData(["staff-notifications"]);
-      queryClient.setQueryData(["staff-notifications"], (old: any) => ({
+      const prev = queryClient.getQueryData(["staff-notifications"]) as StaffNotificationListResponse | undefined;
+      queryClient.setQueryData(["staff-notifications"], (old: StaffNotificationListResponse | undefined) => ({
         ...old,
-        data: old?.data?.filter((n: any) => n.id !== id),
+        data: old?.data?.filter((n: StaffNotification) => n.id !== id),
       }));
       return { prev };
     },
-    onError: (_err: unknown, _id: string, ctx: any) => {
-      if (ctx?.prev) queryClient.setQueryData(["staff-notifications"], ctx.prev);
+    onError: (_err: unknown, _id: string, ctx: { prev: StaffNotificationListResponse | undefined } | undefined) => {
+      if (ctx?.prev)
+        queryClient.setQueryData(["staff-notifications"], ctx.prev);
     },
     onSettled: () => {
       invalidateAll();
@@ -406,11 +439,13 @@ export function NotificationBell({ className }: Props) {
             <button
               type="button"
               aria-label={
-                unreadCount > 0 ? `${unreadCount} unread notifications` : "Notifications"
+                unreadCount > 0
+                  ? `${unreadCount} unread notifications`
+                  : "Notifications"
               }
               className={cn(
                 "relative flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-muted",
-                className
+                className,
               )}
             />
           }
@@ -441,7 +476,8 @@ export function NotificationBell({ className }: Props) {
         onClose={() => setSelectedNotification(null)}
         onDelete={(id) => deleteMutation.mutate(id)}
         isDeleting={
-          deleteMutation.isPending && deleteMutation.variables === selectedNotification?.id
+          deleteMutation.isPending &&
+          deleteMutation.variables === selectedNotification?.id
         }
       />
     </>
