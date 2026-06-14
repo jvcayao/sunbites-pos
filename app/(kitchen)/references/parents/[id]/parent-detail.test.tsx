@@ -118,6 +118,57 @@ describe("ParentDetailPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("calls resend activation API and shows success toast", async () => {
+    server.use(
+      http.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/references/parents/:id`,
+        () =>
+          HttpResponse.json({
+            ...parentDetailFixture,
+            is_activated: false,
+            email_verified_at: null,
+          }),
+      ),
+    );
+
+    const user = userEvent.setup();
+    render(<ParentDetailPage />);
+    await screen.findByText("Maria Dela Cruz");
+
+    const resendBtn = screen.getByRole("button", {
+      name: /resend activation email/i,
+    });
+    await user.click(resendBtn);
+
+    expect(
+      await screen.findByText(/activation email resent/i),
+    ).toBeInTheDocument();
+  });
+
+  it("calls restore API and shows success toast on Restore click", async () => {
+    server.use(
+      http.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/references/parents/:id`,
+        () =>
+          HttpResponse.json({
+            ...parentDetailFixture,
+            deleted_at: "2026-06-01T00:00:00.000000Z",
+          }),
+      ),
+    );
+
+    const user = userEvent.setup();
+    render(<ParentDetailPage />);
+    await screen.findByText("Maria Dela Cruz");
+
+    const restoreBtn = screen.getByRole("button", { name: /restore/i });
+    await user.click(restoreBtn);
+
+    expect(
+      await screen.findByText(/parent account restored/i),
+    ).toBeInTheDocument();
+  });
+
   it("calls delete API and navigates away on Delete click", async () => {
     const user = userEvent.setup();
     render(<ParentDetailPage />);

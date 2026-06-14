@@ -6,7 +6,12 @@ import { Eye, EyeOff } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-function Input({ className, type, disabled, ...props }: React.ComponentProps<"input">) {
+function Input({
+  className,
+  type,
+  disabled,
+  ...props
+}: React.ComponentProps<"input">) {
   const [shown, setShown] = React.useState(false);
   const isPassword = type === "password";
 

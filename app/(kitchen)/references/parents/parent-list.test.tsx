@@ -71,13 +71,11 @@ describe("ParentsPage", () => {
 
   it("renders Deleted badge when deleted_at is set", async () => {
     server.use(
-      http.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/references/parents`,
-        () =>
-          HttpResponse.json({
-            ...paginatedParentsFixture,
-            data: [deletedParentFixture],
-          }),
+      http.get(`${process.env.NEXT_PUBLIC_API_URL}/references/parents`, () =>
+        HttpResponse.json({
+          ...paginatedParentsFixture,
+          data: [deletedParentFixture],
+        }),
       ),
     );
 
