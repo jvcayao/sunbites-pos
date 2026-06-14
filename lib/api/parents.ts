@@ -6,7 +6,7 @@ interface ParentListParams {
   search?: string;
   per_page?: number;
   page?: number;
-  include_deleted?: 1;
+  status?: "active" | "pending" | "disabled" | "deleted";
 }
 
 export const parentApi = {
