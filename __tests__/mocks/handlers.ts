@@ -2,6 +2,7 @@ import { http, HttpResponse } from "msw";
 
 import type { AdminBranch } from "@/types/branch";
 import type { InventoryItem } from "@/types/inventory";
+import type { Parent, ParentDetail, PaginatedParents } from "@/types/parent";
 import type { PosMenuItem } from "@/types/pos-menu-item";
 import type { SystemConfiguration } from "@/types/system-configuration";
 import type {
@@ -333,6 +334,63 @@ export const systemConfigsFixture: SystemConfiguration[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Parent management fixtures
+// ---------------------------------------------------------------------------
+
+export const parentFixture: Parent = {
+  id: 1,
+  full_name: "Maria Dela Cruz",
+  email: "maria@example.com",
+  phone: "09171234567",
+  is_activated: true,
+  is_disabled: false,
+  deleted_at: null,
+  students_count: 1,
+  students: [{ id: 1, student_number: "2024-001", full_name: "Juan Dela Cruz" }],
+};
+
+export const disabledParentFixture: Parent = {
+  ...parentFixture,
+  id: 2,
+  full_name: "Disabled Parent",
+  email: "disabled@example.com",
+  is_disabled: true,
+  deleted_at: null,
+};
+
+export const deletedParentFixture: Parent = {
+  ...parentFixture,
+  id: 3,
+  full_name: "Deleted Parent",
+  email: "deleted@example.com",
+  is_disabled: false,
+  deleted_at: "2026-06-01T00:00:00.000000Z",
+};
+
+export const parentDetailFixture: ParentDetail = {
+  ...parentFixture,
+  address: "123 Test St, Manila",
+  profile_photo_url: null,
+  created_at: "2026-01-01T00:00:00.000000Z",
+  students: [
+    {
+      id: 1,
+      student_number: "2024-001",
+      full_name: "Juan Dela Cruz",
+      grade_level: "Grade 3",
+      branch_name: "Main Branch",
+      wallet_alert_threshold: 100,
+      linked_at: "2026-01-15T00:00:00.000000Z",
+    },
+  ],
+};
+
+export const paginatedParentsFixture: PaginatedParents = {
+  data: [parentFixture, disabledParentFixture],
+  meta: { current_page: 1, last_page: 1, per_page: 15, total: 2, from: 1, to: 2 },
+};
+
 export const paginatedStudentsFixture: PaginatedStudents = {
   data: [studentFixture, nonSubStudentFixture],
   links: { first: null, last: null, prev: null, next: null },
@@ -595,5 +653,34 @@ export const handlers = [
       description:
         "Daily rate used to compute monthly subscription amounts when no override is set.",
     } satisfies SystemConfiguration),
+  ),
+
+  // Parent management
+  http.get(`${API}/references/parents`, () =>
+    HttpResponse.json(paginatedParentsFixture),
+  ),
+
+  http.get(`${API}/references/parents/:id`, () =>
+    HttpResponse.json(parentDetailFixture),
+  ),
+
+  http.post(`${API}/references/parents/:id/resend-activation`, () =>
+    HttpResponse.json({ message: "Activation email sent." }),
+  ),
+
+  http.post(`${API}/references/parents/:id/disable`, () =>
+    HttpResponse.json({ message: "Parent access disabled." }),
+  ),
+
+  http.post(`${API}/references/parents/:id/enable`, () =>
+    HttpResponse.json({ message: "Parent access enabled. Activation email queued." }),
+  ),
+
+  http.delete(`${API}/references/parents/:id`, () =>
+    HttpResponse.json({ message: "Parent account deleted." }),
+  ),
+
+  http.post(`${API}/references/parents/:id/restore`, () =>
+    HttpResponse.json({ message: "Parent account restored. Activation email queued." }),
   ),
 ];
