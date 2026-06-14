@@ -151,7 +151,7 @@ export default function ParentsPage() {
       parentApi.list({
         search: debouncedSearch || undefined,
         page,
-        include_deleted: includeDeleted || undefined,
+        include_deleted: includeDeleted ? 1 : undefined,
       }),
   });
 
