@@ -46,16 +46,16 @@ const CATEGORY_CONFIG: Record<
     label: "Service",
     className: "bg-blue-100 text-blue-700 border-blue-300",
   },
-  Pricing: {
-    label: "Pricing",
-    className: "bg-purple-100 text-purple-700 border-purple-300",
+  PortionSize: {
+    label: "Portion Size",
+    className: "bg-amber-100 text-amber-700 border-amber-300",
   },
   Cleanliness: {
     label: "Cleanliness",
     className: "bg-green-100 text-green-700 border-green-300",
   },
-  Other: {
-    label: "Other",
+  General: {
+    label: "General",
     className: "bg-muted text-muted-foreground border-border",
   },
 };
@@ -91,7 +91,7 @@ function FeedbackSkeleton() {
 }
 
 function CategoryBadge({ category }: { category: FeedbackCategory }) {
-  const config = CATEGORY_CONFIG[category] ?? CATEGORY_CONFIG.Other;
+  const config = CATEGORY_CONFIG[category] ?? CATEGORY_CONFIG.General;
   return (
     <span
       className={cn(
@@ -163,8 +163,10 @@ function FeedbackDetailSheet({
               </div>
               <SheetTitle className="text-left mt-2">
                 {
-                  (CATEGORY_CONFIG[feedback.category] ?? CATEGORY_CONFIG.Other)
-                    .label
+                  (
+                    CATEGORY_CONFIG[feedback.category] ??
+                    CATEGORY_CONFIG.General
+                  ).label
                 }{" "}
                 Feedback
               </SheetTitle>
