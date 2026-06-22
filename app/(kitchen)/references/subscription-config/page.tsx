@@ -204,8 +204,8 @@ function EditDaysDialog({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (days < 1 || days > 31) {
-      setError("Days must be between 1 and 31.");
+    if (days < 0 || days > 31) {
+      setError("Days must be between 0 and 31.");
       return;
     }
     if (year < YEAR_MIN || year > YEAR_MAX) {
@@ -232,6 +232,15 @@ function EditDaysDialog({
   }
 
   const computedAmount = days * dailyMealRate;
+  const isZeroDays = days === 0;
+
+  function handleDaysChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = Number(e.target.value);
+    setDays(value);
+    if (value === 0) {
+      setAmountOverride("");
+    }
+  }
 
   return (
     <Dialog open={row !== null} onOpenChange={handleOpenChange}>
@@ -250,10 +259,10 @@ function EditDaysDialog({
             <Input
               id="edit-days"
               type="number"
-              min={1}
+              min={0}
               max={31}
               value={days}
-              onChange={(e) => setDays(Number(e.target.value))}
+              onChange={handleDaysChange}
               aria-invalid={!!error}
             />
             <p className="text-xs text-muted-foreground">
@@ -261,7 +270,13 @@ function EditDaysDialog({
               <span className="font-semibold text-primary">
                 ₱{computedAmount.toLocaleString()}
               </span>{" "}
-              (₱{dailyMealRate} × {days} days)
+              {isZeroDays ? (
+                <span className="text-muted-foreground">(no charge)</span>
+              ) : (
+                <>
+                  (₱{dailyMealRate} × {days} days)
+                </>
+              )}
             </p>
           </div>
 
@@ -280,10 +295,18 @@ function EditDaysDialog({
               placeholder="Leave blank to use computed amount"
               value={amountOverride}
               onChange={(e) => setAmountOverride(e.target.value)}
+              disabled={isZeroDays}
             />
-            <p className="text-xs text-muted-foreground">
-              Leave blank to use computed amount.
-            </p>
+            {isZeroDays ? (
+              <p className="text-xs text-muted-foreground">
+                No charge — month has no school activity. Students will not be
+                billed for this month.
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Leave blank to use computed amount.
+              </p>
+            )}
           </div>
 
           {error && (

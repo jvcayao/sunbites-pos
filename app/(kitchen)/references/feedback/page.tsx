@@ -163,8 +163,10 @@ function FeedbackDetailSheet({
               </div>
               <SheetTitle className="text-left mt-2">
                 {
-                  (CATEGORY_CONFIG[feedback.category] ?? CATEGORY_CONFIG.General)
-                    .label
+                  (
+                    CATEGORY_CONFIG[feedback.category] ??
+                    CATEGORY_CONFIG.General
+                  ).label
                 }{" "}
                 Feedback
               </SheetTitle>
