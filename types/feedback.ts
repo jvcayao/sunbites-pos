@@ -1,9 +1,9 @@
 export type FeedbackCategory =
   | "FoodQuality"
   | "Service"
-  | "Pricing"
+  | "PortionSize"
   | "Cleanliness"
-  | "Other";
+  | "General";
 
 export interface Feedback {
   id: number;
