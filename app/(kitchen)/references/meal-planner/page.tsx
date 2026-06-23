@@ -261,11 +261,6 @@ export default function MealPlannerPage() {
 
   return (
     <div className="p-6">
-      <div>
-        <p className="text-xs text-muted-foreground">References</p>
-        <h1 className="text-2xl font-bold text-foreground">Meal Planner</h1>
-      </div>
-
       {/* Month tabs */}
       <div className="mt-6 flex flex-wrap gap-2">
         {MONTHS.map(({ key, label }) => (

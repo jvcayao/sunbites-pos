@@ -162,12 +162,6 @@ export default function PreRegistrationsPage() {
 
   return (
     <div className="p-6 space-y-4">
-      {/* Header */}
-      <div>
-        <p className="text-xs text-muted-foreground">References</p>
-        <h1 className="text-xl font-bold text-foreground">Pre-Registrations</h1>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Date preset pills */}

@@ -52,10 +52,11 @@ beforeEach(() => {
 });
 
 describe("MealPlannerPage", () => {
-  it("renders the Meal Planner heading", () => {
+  it("renders the meal planner month and week tabs on load", () => {
     render(<MealPlannerPage />);
 
-    expect(screen.getByText("Meal Planner")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Jun" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Week 1" })).toBeInTheDocument();
   });
 
   it("renders all 10 month tabs", () => {

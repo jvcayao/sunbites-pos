@@ -208,10 +208,6 @@ export default function AnnouncementsPage() {
     <div className="p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Communications</p>
-          <h1 className="text-xl font-bold text-foreground">Announcements</h1>
-        </div>
         <Link
           href="/announcements/create"
           className={cn(buttonVariants({ size: "sm" }))}

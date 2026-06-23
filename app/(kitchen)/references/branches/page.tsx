@@ -357,13 +357,6 @@ export default function BranchesPage() {
 
   return (
     <div className="p-6">
-      <div>
-        <p className="text-xs text-muted-foreground">References</p>
-        <h1 className="text-2xl font-bold text-foreground">
-          Branch Management
-        </h1>
-      </div>
-
       {isError ? (
         <p className="mt-6 text-destructive">Failed to load branches.</p>
       ) : (
