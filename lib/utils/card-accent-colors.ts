@@ -11,7 +11,9 @@ export interface CardAccentColors {
   footerBorder: string;
 }
 
-export function getCardAccentColors(studentType: StudentType): CardAccentColors {
+export function getCardAccentColors(
+  studentType: StudentType,
+): CardAccentColors {
   if (studentType === "subscription") {
     return {
       headerBg: "#e5322a",
