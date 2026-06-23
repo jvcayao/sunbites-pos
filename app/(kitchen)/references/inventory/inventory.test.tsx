@@ -65,7 +65,9 @@ describe("ReferencesInventoryPage", () => {
   it("renders the Inventory and History tab navigation", () => {
     render(<ReferencesInventoryPage />);
 
-    expect(screen.getByRole("button", { name: "Inventory" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Inventory" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "History" })).toBeInTheDocument();
   });
 

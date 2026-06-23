@@ -88,7 +88,11 @@ export function AppHeader({ onMenuOpen }: AppHeaderProps) {
                 {user.first_name} {user.last_name}
               </span>
               {user.roles[0] && (
-                <span className={cn("text-xs capitalize leading-tight text-muted-foreground")}>
+                <span
+                  className={cn(
+                    "text-xs capitalize leading-tight text-muted-foreground",
+                  )}
+                >
                   {user.roles[0]}
                 </span>
               )}

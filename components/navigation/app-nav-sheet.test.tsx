@@ -57,8 +57,8 @@ function makeAuthState(roles: string[]): AuthState {
 }
 
 beforeEach(() => {
-  mockUseAuthStore.mockImplementation(
-    (sel: (s: AuthState) => unknown) => sel(makeAuthState(["admin"])),
+  mockUseAuthStore.mockImplementation((sel: (s: AuthState) => unknown) =>
+    sel(makeAuthState(["admin"])),
   );
 
   server.use(
@@ -79,18 +79,26 @@ describe("AppNavSheet", () => {
 
   it("renders all main nav items", () => {
     render(<AppNavSheet open={true} onOpenChange={jest.fn()} />);
-    expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /enrollment/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /dashboard/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /enrollment/i }),
+    ).toBeInTheDocument();
     // Scope to the Main group to distinguish it from the Reports "Students" link
     const mainSection = screen.getByText("Main").closest("div");
-    expect(within(mainSection!).getByRole("link", { name: /students/i })).toBeInTheDocument();
+    expect(
+      within(mainSection!).getByRole("link", { name: /students/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders all reports nav items for admin", () => {
     render(<AppNavSheet open={true} onOpenChange={jest.fn()} />);
     expect(screen.getByRole("link", { name: /sales/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /wallet/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /activity log/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /activity log/i }),
+    ).toBeInTheDocument();
   });
 
   it("calls onOpenChange(false) when a nav link is clicked", async () => {
@@ -102,28 +110,38 @@ describe("AppNavSheet", () => {
 
   it("renders logout button", () => {
     render(<AppNavSheet open={true} onOpenChange={jest.fn()} />);
-    expect(screen.getByRole("button", { name: /log out/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /log out/i }),
+    ).toBeInTheDocument();
   });
 
   it("hides Credits and Activity Log from supervisor", () => {
-    mockUseAuthStore.mockImplementation(
-      (sel: (s: AuthState) => unknown) => sel(makeAuthState(["supervisor"])),
+    mockUseAuthStore.mockImplementation((sel: (s: AuthState) => unknown) =>
+      sel(makeAuthState(["supervisor"])),
     );
 
     render(<AppNavSheet open={true} onOpenChange={jest.fn()} />);
 
-    expect(screen.queryByRole("link", { name: /credits/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /activity log/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /credits/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /activity log/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("hides System Settings and Users from non-admin", () => {
-    mockUseAuthStore.mockImplementation(
-      (sel: (s: AuthState) => unknown) => sel(makeAuthState(["manager"])),
+    mockUseAuthStore.mockImplementation((sel: (s: AuthState) => unknown) =>
+      sel(makeAuthState(["manager"])),
     );
 
     render(<AppNavSheet open={true} onOpenChange={jest.fn()} />);
 
-    expect(screen.queryByRole("link", { name: /system settings/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /users/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /system settings/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /users/i }),
+    ).not.toBeInTheDocument();
   });
 });

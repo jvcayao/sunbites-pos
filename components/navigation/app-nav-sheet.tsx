@@ -103,13 +103,17 @@ export function AppNavSheet({ open, onOpenChange }: AppNavSheetProps) {
   const mainNavFiltered = mainNav
     .map((item) =>
       item.href === "/pre-registrations"
-        ? { ...item, badge: pendingPreRegCount > 0 ? pendingPreRegCount : undefined }
+        ? {
+            ...item,
+            badge: pendingPreRegCount > 0 ? pendingPreRegCount : undefined,
+          }
         : item,
     )
     .filter((item) => {
       if (item.href === "/reminders" && !canSeeReminders) return false;
       if (item.href === "/announcements" && !canSeeAnnouncements) return false;
-      if (item.href === "/pre-registrations" && !canSeePreRegistrations) return false;
+      if (item.href === "/pre-registrations" && !canSeePreRegistrations)
+        return false;
       return true;
     });
 
@@ -156,7 +160,9 @@ export function AppNavSheet({ open, onOpenChange }: AppNavSheetProps) {
               className="shrink-0"
             />
             <div>
-              <p className="font-bold leading-tight text-foreground">Sunbites</p>
+              <p className="font-bold leading-tight text-foreground">
+                Sunbites
+              </p>
               <p className="text-xs leading-tight text-muted-foreground">
                 Your healthy kitchen
               </p>

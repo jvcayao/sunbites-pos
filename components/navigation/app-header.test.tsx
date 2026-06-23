@@ -28,9 +28,19 @@ const mockBranch = { id: 1, name: "Antipolo Branch" };
 
 jest.mock("@/lib/store/auth", () => ({
   useAuthStore: Object.assign(
-    (sel: (s: { user: typeof mockUser; activeBranch: typeof mockBranch }) => unknown) =>
-      sel({ user: mockUser, activeBranch: mockBranch }),
-    { getState: () => ({ user: mockUser, activeBranch: mockBranch, logout: jest.fn() }) },
+    (
+      sel: (s: {
+        user: typeof mockUser;
+        activeBranch: typeof mockBranch;
+      }) => unknown,
+    ) => sel({ user: mockUser, activeBranch: mockBranch }),
+    {
+      getState: () => ({
+        user: mockUser,
+        activeBranch: mockBranch,
+        logout: jest.fn(),
+      }),
+    },
   ),
 }));
 
