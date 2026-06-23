@@ -1,7 +1,9 @@
-import { render, screen, waitFor } from "@/__tests__/test-utils";
+import { render, screen, within } from "@/__tests__/test-utils";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+
 import { server } from "@/__tests__/mocks/server";
+import { useAuthStore, type AuthState } from "@/lib/store/auth";
 import { AppNavSheet } from "./app-nav-sheet";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -18,24 +20,47 @@ jest.mock("next/image", () => ({
   ),
 }));
 
-const mockAdmin = {
-  id: 1,
-  first_name: "Jhersonn",
-  last_name: "Cayao",
-  roles: ["admin"],
-  branches: [{ id: 1, name: "Antipolo Branch" }],
-};
-const mockBranch = { id: 1, name: "Antipolo Branch" };
+jest.mock("@/lib/store/auth", () => {
+  const actual = jest.requireActual(
+    "@/lib/store/auth",
+  ) as typeof import("@/lib/store/auth");
+  return {
+    ...actual,
+    useAuthStore: Object.assign(jest.fn(), {
+      getState: actual.useAuthStore.getState,
+      setState: actual.useAuthStore.setState,
+    }),
+  };
+});
 
-function mockAuthStore(overrides: Partial<typeof mockAdmin> = {}) {
-  const user = { ...mockAdmin, ...overrides };
-  jest.mock("@/lib/store/auth", () => ({
-    useAuthStore: (sel: (s: { user: typeof mockAdmin; activeBranch: typeof mockBranch; logout: () => void }) => unknown) =>
-      sel({ user, activeBranch: mockBranch, logout: jest.fn() }),
-  }));
+const mockUseAuthStore = jest.mocked(useAuthStore);
+
+const mockBranch = { id: 1, name: "Antipolo Branch", slug: "antipolo-branch" };
+
+function makeAuthState(roles: string[]): AuthState {
+  return {
+    token: "test-token",
+    user: {
+      id: 1,
+      first_name: "Jhersonn",
+      last_name: "Cayao",
+      full_name: "Jhersonn Cayao",
+      email: "jhersonn@test.com",
+      roles,
+      branches: [{ id: 1, name: "Antipolo Branch", slug: "antipolo-branch" }],
+    },
+    activeBranch: mockBranch,
+    login: jest.fn(),
+    logout: jest.fn(),
+    setActiveBranch: jest.fn(),
+  };
 }
 
 beforeEach(() => {
+  mockUseAuthStore.mockImplementation(
+    (sel: (s: AuthState) => unknown) => sel(makeAuthState(["admin"])),
+  );
+
   server.use(
     http.get(`${API}/pre-registrations`, () =>
       HttpResponse.json({ data: [], meta: { total: 0 } }),
@@ -43,14 +68,6 @@ beforeEach(() => {
     http.post(`${API}/auth/logout`, () => HttpResponse.json({})),
   );
 });
-
-jest.mock("@/lib/store/auth", () => ({
-  useAuthStore: Object.assign(
-    (sel: (s: { user: typeof mockAdmin; activeBranch: typeof mockBranch; logout: () => void }) => unknown) =>
-      sel({ user: mockAdmin, activeBranch: mockBranch, logout: jest.fn() }),
-    { getState: () => ({ user: mockAdmin, activeBranch: mockBranch, logout: jest.fn() }) },
-  ),
-}));
 
 describe("AppNavSheet", () => {
   it("renders nav sheet with brand header when open", () => {
@@ -64,8 +81,9 @@ describe("AppNavSheet", () => {
     render(<AppNavSheet open={true} onOpenChange={jest.fn()} />);
     expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /enrollment/i })).toBeInTheDocument();
-    // "Students" appears in both main nav and reports nav — getAllByRole handles the ambiguity
-    expect(screen.getAllByRole("link", { name: /students/i }).length).toBeGreaterThanOrEqual(1);
+    // Scope to the Main group to distinguish it from the Reports "Students" link
+    const mainSection = screen.getByText("Main").closest("div");
+    expect(within(mainSection!).getByRole("link", { name: /students/i })).toBeInTheDocument();
   });
 
   it("renders all reports nav items for admin", () => {
@@ -85,5 +103,26 @@ describe("AppNavSheet", () => {
   it("renders logout button", () => {
     render(<AppNavSheet open={true} onOpenChange={jest.fn()} />);
     expect(screen.getByRole("button", { name: /log out/i })).toBeInTheDocument();
+  });
+
+  it("hides Credits and Activity Log from supervisor", () => {
+    mockUseAuthStore.mockImplementation(
+      (sel: (s: AuthState) => unknown) => sel(makeAuthState(["supervisor"])),
+    );
+
+    render(<AppNavSheet open={true} onOpenChange={jest.fn()} />);
+
+    expect(screen.queryByRole("link", { name: /credits/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /activity log/i })).not.toBeInTheDocument();
+  });
+
+  it("hides System Settings from non-admin", () => {
+    mockUseAuthStore.mockImplementation(
+      (sel: (s: AuthState) => unknown) => sel(makeAuthState(["manager"])),
+    );
+
+    render(<AppNavSheet open={true} onOpenChange={jest.fn()} />);
+
+    expect(screen.queryByRole("link", { name: /system settings/i })).not.toBeInTheDocument();
   });
 });

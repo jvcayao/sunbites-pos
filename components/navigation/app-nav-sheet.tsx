@@ -33,6 +33,14 @@ interface NavGroupProps {
   onClose: () => void;
 }
 
+const SUPERVISOR_ALLOWED_REPORTS = [
+  "/reports/sales",
+  "/reports/students",
+  "/reports/inventory",
+  "/reports/billing",
+  "/reports/subscription",
+];
+
 function NavGroup({ label, items, pathname, onClose }: NavGroupProps) {
   return (
     <div className="space-y-1">
@@ -105,18 +113,11 @@ export function AppNavSheet({ open, onOpenChange }: AppNavSheetProps) {
       return true;
     });
 
-  const supervisorAllowedReports = [
-    "/reports/sales",
-    "/reports/students",
-    "/reports/inventory",
-    "/reports/billing",
-    "/reports/subscription",
-  ];
   const reportsNavFiltered =
     isAdmin || isManager
       ? reportsNav
       : reportsNav.filter((item) =>
-          supervisorAllowedReports.includes(item.href),
+          SUPERVISOR_ALLOWED_REPORTS.includes(item.href),
         );
 
   const referencesNavFiltered = isAdmin
