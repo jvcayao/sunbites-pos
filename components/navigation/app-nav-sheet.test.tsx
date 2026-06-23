@@ -116,7 +116,7 @@ describe("AppNavSheet", () => {
     expect(screen.queryByRole("link", { name: /activity log/i })).not.toBeInTheDocument();
   });
 
-  it("hides System Settings from non-admin", () => {
+  it("hides System Settings and Users from non-admin", () => {
     mockUseAuthStore.mockImplementation(
       (sel: (s: AuthState) => unknown) => sel(makeAuthState(["manager"])),
     );
@@ -124,5 +124,6 @@ describe("AppNavSheet", () => {
     render(<AppNavSheet open={true} onOpenChange={jest.fn()} />);
 
     expect(screen.queryByRole("link", { name: /system settings/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /users/i })).not.toBeInTheDocument();
   });
 });

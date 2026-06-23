@@ -123,7 +123,9 @@ export function AppNavSheet({ open, onOpenChange }: AppNavSheetProps) {
   const referencesNavFiltered = isAdmin
     ? referencesNav
     : referencesNav.filter(
-        (item) => item.href !== "/references/system-settings",
+        (item) =>
+          item.href !== "/references/system-settings" &&
+          item.href !== "/references/users",
       );
 
   function handleClose() {
