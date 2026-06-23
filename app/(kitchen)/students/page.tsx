@@ -31,6 +31,7 @@ import {
 import { studentApi } from "@/lib/api/students";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
+import { getCardAccentColors } from "@/lib/utils/card-accent-colors";
 
 import type { ApiError } from "@/types/auth";
 import type {
@@ -439,6 +440,8 @@ function PrintCard({ student }: { student: Student }) {
     };
   }, [student.photo_url]);
 
+  const colors = getCardAccentColors(student.student_type);
+
   const parts = student.enrollment_date?.split("-") ?? [];
   const enrolledFormatted =
     parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : null;
@@ -451,7 +454,7 @@ function PrintCard({ student }: { student: Student }) {
         height: "85.6mm",
         display: "flex",
         flexDirection: "column",
-        border: "1.5px solid oklch(0.577 0.245 27.325)",
+        border: `1.5px solid ${colors.borderColor}`,
         borderRadius: "3mm",
         overflow: "hidden",
         backgroundColor: "white",
@@ -462,7 +465,7 @@ function PrintCard({ student }: { student: Student }) {
       {/* Header */}
       <div
         style={{
-          backgroundColor: "oklch(0.577 0.245 27.325)",
+          backgroundColor: colors.headerBg,
           padding: "2mm 3mm",
           flexShrink: 0,
           textAlign: "center",
@@ -470,7 +473,7 @@ function PrintCard({ student }: { student: Student }) {
       >
         <div
           style={{
-            color: "white",
+            color: colors.headerText,
             fontWeight: 800,
             fontSize: "8px",
             letterSpacing: "0.3px",
@@ -480,7 +483,7 @@ function PrintCard({ student }: { student: Student }) {
         </div>
         <div
           style={{
-            color: "rgba(255,255,255,0.85)",
+            color: colors.headerSubText,
             fontSize: "7px",
             marginTop: "0.5mm",
           }}
@@ -510,7 +513,7 @@ function PrintCard({ student }: { student: Student }) {
               height: "18mm",
               objectFit: "cover",
               borderRadius: "2mm",
-              border: "1px solid oklch(0.577 0.245 27.325)",
+              border: `1px solid ${colors.accentColor}`,
               flexShrink: 0,
             }}
           />
@@ -520,14 +523,14 @@ function PrintCard({ student }: { student: Student }) {
               width: "18mm",
               height: "18mm",
               borderRadius: "2mm",
-              border: "1px solid oklch(0.577 0.245 27.325)",
-              backgroundColor: "#fff3f0",
+              border: `1px solid ${colors.accentColor}`,
+              backgroundColor: colors.avatarBg,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "8mm",
               fontWeight: 800,
-              color: "oklch(0.577 0.245 27.325)",
+              color: colors.accentColor,
               flexShrink: 0,
             }}
           >
@@ -547,7 +550,7 @@ function PrintCard({ student }: { student: Student }) {
         </p>
         <p
           style={{
-            color: "oklch(0.577 0.245 27.325)",
+            color: colors.accentColor,
             fontSize: "8px",
             margin: 0,
             fontWeight: 600,
@@ -594,8 +597,8 @@ function PrintCard({ student }: { student: Student }) {
       <div
         style={{
           flexShrink: 0,
-          backgroundColor: "#fff3f0",
-          borderTop: "1px solid #fdd8cc",
+          backgroundColor: colors.footerBg,
+          borderTop: `1px solid ${colors.footerBorder}`,
           padding: "1.5mm 3mm",
           textAlign: "center",
         }}
