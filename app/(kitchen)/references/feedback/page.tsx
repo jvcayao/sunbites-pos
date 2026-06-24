@@ -342,12 +342,6 @@ export default function FeedbackPage() {
 
   return (
     <div className="p-6 space-y-4">
-      {/* Header */}
-      <div>
-        <p className="text-xs text-muted-foreground">References</p>
-        <h1 className="text-xl font-bold text-foreground">Feedback</h1>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input

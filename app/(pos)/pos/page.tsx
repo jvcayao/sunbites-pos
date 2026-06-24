@@ -1,35 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-
-import {
-  Menu,
-  LayoutDashboard,
-  ClipboardList,
-  Users,
-  Archive,
-  CalendarDays,
-  GitBranch,
-  UserCog,
-  LogOut,
-} from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { authApi } from "@/lib/api/auth";
 import { useAuthStore } from "@/lib/store/auth";
 import { useCartStore } from "@/lib/store/cart";
 import { usePosKeyboardShortcuts } from "@/hooks/use-pos-keyboard-shortcuts";
-import { AppLogo } from "@/components/app-logo";
-import { Badge } from "@/components/ui/badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
+import { AppHeader } from "@/components/navigation/app-header";
+import { AppNavSheet } from "@/components/navigation/app-nav-sheet";
 import { CartPanel } from "@/components/pos/cart-panel";
 import { MenuGrid } from "@/components/pos/menu-grid";
 import { ReceiptModal } from "@/components/pos/receipt-modal";
@@ -43,51 +21,6 @@ import { MenuMgmtTab } from "@/components/pos/menu-mgmt-tab";
 import { InventoryTab } from "@/components/pos/inventory-tab";
 
 import type { Order, PosStudent } from "@/types/order";
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon: React.ReactNode;
-  adminOnly?: boolean;
-}
-
-const MAIN_NAV: NavItem[] = [
-  {
-    href: "/dashboard",
-    label: "Dashboard",
-    icon: <LayoutDashboard className="h-4 w-4" />,
-  },
-  {
-    href: "/enrollment",
-    label: "Enrollment",
-    icon: <ClipboardList className="h-4 w-4" />,
-  },
-  { href: "/students", label: "Students", icon: <Users className="h-4 w-4" /> },
-];
-
-const REFERENCES_NAV: NavItem[] = [
-  {
-    href: "/references/inventory",
-    label: "Inventory",
-    icon: <Archive className="h-4 w-4" />,
-  },
-  {
-    href: "/references/meal-planner",
-    label: "Meal Planner",
-    icon: <CalendarDays className="h-4 w-4" />,
-  },
-  {
-    href: "/references/users",
-    label: "Users",
-    icon: <UserCog className="h-4 w-4" />,
-    adminOnly: true,
-  },
-  {
-    href: "/references/branches",
-    label: "Branches",
-    icon: <GitBranch className="h-4 w-4" />,
-  },
-];
 
 type ActiveTab = "pos" | "transactions" | "menu-mgmt" | "inventory";
 
@@ -110,26 +43,11 @@ const TABS: TabConfig[] = [
 
 export default function PosPage() {
   const user = useAuthStore((s) => s.user);
-  const activeBranch = useAuthStore((s) => s.activeBranch);
   const { student, isWalkIn, setStudent, setWalkIn, clearCart } =
     useCartStore();
   const [activeTab, setActiveTab] = useState<ActiveTab>("pos");
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const isAdmin = user?.roles.includes("admin") ?? false;
-
-  async function handleLogout() {
-    try {
-      await authApi.logout();
-    } catch {
-      // proceed with local logout even if the API call fails
-    }
-    useAuthStore.getState().logout();
-    router.push("/login");
-  }
 
   const handleStudentSelected = useCallback(
     (selected: PosStudent | null) => {
@@ -180,118 +98,8 @@ export default function PosPage() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
-      {/* Top header bar */}
-      <div className="flex h-12 shrink-0 items-center border-b border-border bg-card px-3">
-        <button
-          type="button"
-          aria-label="Open menu"
-          onClick={() => setMenuOpen(true)}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-
-        <span className="ml-3 text-sm text-muted-foreground">
-          {activeBranch?.name ?? "No branch selected"}
-        </span>
-
-        <div className="ml-auto flex items-center gap-2">
-          {user && (
-            <>
-              <span className="text-sm font-medium text-foreground">
-                {user.first_name}
-              </span>
-              {user.roles[0] && (
-                <Badge variant="secondary" className="capitalize">
-                  {user.roles[0]}
-                </Badge>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Hamburger Sheet */}
-      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent side="left" className="flex flex-col p-0 sm:max-w-xs">
-          <SheetHeader className="border-b border-border px-4 py-4">
-            <div className="flex items-center justify-between">
-              <AppLogo variant="full" />
-            </div>
-            {activeBranch && (
-              <Badge variant="outline" className="mt-2 w-fit">
-                {activeBranch.name}
-              </Badge>
-            )}
-            <SheetTitle className="sr-only">Navigation</SheetTitle>
-          </SheetHeader>
-
-          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
-            <div>
-              <p className="mb-1.5 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Main
-              </p>
-              <div className="space-y-0.5">
-                {MAIN_NAV.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                      pathname === item.href
-                        ? "border-l-4 border-primary bg-primary/10 font-semibold text-primary"
-                        : "text-foreground hover:bg-muted",
-                    )}
-                    aria-current={pathname === item.href ? "page" : undefined}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="mb-1.5 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                References
-              </p>
-              <div className="space-y-0.5">
-                {REFERENCES_NAV.filter(
-                  (item) => !item.adminOnly || isAdmin,
-                ).map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                      pathname === item.href
-                        ? "border-l-4 border-primary bg-primary/10 font-semibold text-primary"
-                        : "text-foreground hover:bg-muted",
-                    )}
-                    aria-current={pathname === item.href ? "page" : undefined}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </nav>
-
-          <SheetFooter className="border-t border-border px-3 py-3">
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
-            >
-              <LogOut className="h-4 w-4" />
-              Log out
-            </button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <AppHeader onMenuOpen={() => setMenuOpen(true)} />
+      <AppNavSheet open={menuOpen} onOpenChange={setMenuOpen} />
 
       {/* Tab bar */}
       <div className="flex shrink-0 items-center gap-2 border-b border-border bg-card px-4 py-2">

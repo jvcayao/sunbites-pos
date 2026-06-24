@@ -51,6 +51,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { contactApi } from "@/lib/api/contacts";
 import { studentApi } from "@/lib/api/students";
 import { useAuthStore } from "@/lib/store/auth";
+import { getCardAccentColors } from "@/lib/utils/card-accent-colors";
 import { cn } from "@/lib/utils";
 
 import type { ApiError } from "@/types/auth";
@@ -2254,6 +2255,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   }
 
   const statusConfig = ENROLLMENT_STATUS_CONFIG[student.enrollment_status];
+  const printColors = getCardAccentColors(student.student_type);
 
   return (
     <div className="p-6 space-y-6">
@@ -2282,12 +2284,13 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       {/* Print-only canteen ID card */}
       <div className="print-only">
         <div
+          data-qr-card
           style={{
             width: "53.98mm",
             height: "85.6mm",
             display: "flex",
             flexDirection: "column",
-            border: "1.5px solid oklch(0.577 0.245 27.325)",
+            border: `1.5px solid ${printColors.borderColor}`,
             borderRadius: "3mm",
             overflow: "hidden",
             backgroundColor: "white",
@@ -2298,7 +2301,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
           {/* Header */}
           <div
             style={{
-              backgroundColor: "oklch(0.577 0.245 27.325)",
+              backgroundColor: printColors.headerBg,
               padding: "2mm 3mm",
               flexShrink: 0,
               textAlign: "center",
@@ -2306,7 +2309,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
           >
             <div
               style={{
-                color: "white",
+                color: printColors.headerText,
                 fontWeight: 800,
                 fontSize: "8px",
                 letterSpacing: "0.3px",
@@ -2316,7 +2319,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
             </div>
             <div
               style={{
-                color: "rgba(255,255,255,0.85)",
+                color: printColors.headerSubText,
                 fontSize: "7px",
                 marginTop: "0.5mm",
               }}
@@ -2346,7 +2349,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                   height: "18mm",
                   objectFit: "cover",
                   borderRadius: "2mm",
-                  border: "1px solid oklch(0.577 0.245 27.325)",
+                  border: `1px solid ${printColors.accentColor}`,
                   flexShrink: 0,
                 }}
               />
@@ -2356,14 +2359,14 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                   width: "18mm",
                   height: "18mm",
                   borderRadius: "2mm",
-                  border: "1px solid oklch(0.577 0.245 27.325)",
-                  backgroundColor: "#fff3f0",
+                  border: `1px solid ${printColors.accentColor}`,
+                  backgroundColor: printColors.avatarBg,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: "8mm",
                   fontWeight: 800,
-                  color: "oklch(0.577 0.245 27.325)",
+                  color: printColors.accentColor,
                   flexShrink: 0,
                 }}
               >
@@ -2383,7 +2386,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
             </p>
             <p
               style={{
-                color: "oklch(0.577 0.245 27.325)",
+                color: printColors.accentColor,
                 fontSize: "8px",
                 margin: 0,
                 fontWeight: 600,
@@ -2434,8 +2437,8 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
           <div
             style={{
               flexShrink: 0,
-              backgroundColor: "#fff3f0",
-              borderTop: "1px solid #fdd8cc",
+              backgroundColor: printColors.footerBg,
+              borderTop: `1px solid ${printColors.footerBorder}`,
               padding: "1.5mm 3mm",
               textAlign: "center",
             }}

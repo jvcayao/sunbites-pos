@@ -348,10 +348,6 @@ export default function NotificationsPage() {
   if (isLoading) {
     return (
       <div className="p-6 space-y-4">
-        <div>
-          <p className="text-xs text-muted-foreground">Activity</p>
-          <h1 className="text-xl font-bold text-foreground">Notifications</h1>
-        </div>
         <NotificationSkeleton />
       </div>
     );
@@ -368,10 +364,6 @@ export default function NotificationsPage() {
     <div className="p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Activity</p>
-          <h1 className="text-xl font-bold text-foreground">Notifications</h1>
-        </div>
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <Button

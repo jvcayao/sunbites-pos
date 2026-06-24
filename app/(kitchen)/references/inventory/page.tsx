@@ -1026,11 +1026,6 @@ export default function ReferencesInventoryPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <p className="text-xs text-muted-foreground">References</p>
-        <h1 className="text-2xl font-bold text-foreground">Inventory</h1>
-      </div>
-
       {/* Tab navigation */}
       <div className="flex gap-1 border-b border-border">
         <button

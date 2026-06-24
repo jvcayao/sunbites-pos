@@ -163,10 +163,6 @@ export default function UsersPage() {
     <div className="p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">References</p>
-          <h1 className="text-xl font-bold text-foreground">User Management</h1>
-        </div>
         <Link href="/references/users/create" className={buttonVariants()}>
           <Plus className="mr-1.5 h-4 w-4" />
           Add New User

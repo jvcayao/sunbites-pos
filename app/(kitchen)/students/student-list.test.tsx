@@ -140,4 +140,41 @@ describe("StudentsPage", () => {
     const nonSubHeadings = screen.getAllByText(/non-subscription students/i);
     expect(nonSubHeadings.length).toBeGreaterThan(0);
   });
+
+  describe("PrintCard header colors in batch print modal", () => {
+    it("renders a red header for subscription students", async () => {
+      const user = userEvent.setup();
+      render(<StudentsPage />);
+      await screen.findByText("Maria Santos");
+
+      // checkboxes[0] = Maria Santos (subscription) — no select-all checkbox
+      const checkboxes = screen.getAllByRole("checkbox");
+      await user.click(checkboxes[0]);
+
+      await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+      // PrintCard renders into a React Portal on document.body
+      const card = document.querySelector("[data-qr-card]") as HTMLElement;
+      expect(card).not.toBeNull();
+      const header = card.firstElementChild as HTMLElement;
+      expect(header.style.backgroundColor).toBe("rgb(229, 50, 42)");
+    });
+
+    it("renders a yellow header for non-subscription students", async () => {
+      const user = userEvent.setup();
+      render(<StudentsPage />);
+      await screen.findByText("Carlo Mendoza");
+
+      // checkboxes[1] = Carlo Mendoza (non-subscription) — no select-all checkbox
+      const checkboxes = screen.getAllByRole("checkbox");
+      await user.click(checkboxes[1]);
+
+      await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+      const card = document.querySelector("[data-qr-card]") as HTMLElement;
+      expect(card).not.toBeNull();
+      const header = card.firstElementChild as HTMLElement;
+      expect(header.style.backgroundColor).toBe("rgb(244, 180, 0)");
+    });
+  });
 });

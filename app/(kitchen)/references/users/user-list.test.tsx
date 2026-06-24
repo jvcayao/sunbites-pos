@@ -17,10 +17,9 @@ beforeEach(() => {
 });
 
 describe("UsersPage", () => {
-  it("renders the page heading and Add New User button", () => {
+  it("renders the Add New User button", () => {
     render(<UsersPage />);
 
-    expect(screen.getByText("User Management")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /add new user/i })).toHaveAttribute(
       "href",
       "/references/users/create",

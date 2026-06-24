@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { studentApi } from "@/lib/api/students";
 import { useAuthStore } from "@/lib/store/auth";
+import { getCardAccentColors } from "@/lib/utils/card-accent-colors";
 import { cn } from "@/lib/utils";
 
 import type { ApiError } from "@/types/auth";
@@ -451,90 +452,260 @@ export default function EnrollmentPage() {
   // ---------------------------------------------------------------------------
 
   if (enrolledResult) {
+    const enrollColors = getCardAccentColors(enrolledResult.student_type);
+    const dateParts = enrolledResult.enrollment_date.split("-");
+    const enrolledFormatted =
+      dateParts.length === 3
+        ? `${dateParts[1]}/${dateParts[2]}/${dateParts[0]}`
+        : null;
+    const [syYear, syMonth] = enrolledResult.enrollment_date
+      .split("-")
+      .map(Number);
+    const schoolYear =
+      syMonth >= 6 ? `${syYear}–${syYear + 1}` : `${syYear - 1}–${syYear}`;
+
     return (
-      <div className="p-6 max-w-2xl mx-auto space-y-6">
-        <div className="border border-green-300 bg-green-50 rounded-xl p-6 text-center space-y-4">
-          <CheckCircle2
-            className="mx-auto text-green-500"
-            size={48}
-            aria-hidden="true"
-          />
-          <h1 className="text-2xl font-bold text-green-800">
-            Enrollment Successful!
-          </h1>
-          <p className="text-green-700 text-sm">
-            The student has been enrolled and their QR code is ready.
-          </p>
+      <>
+        {/* Print-only canteen ID card — hidden on screen, shown when window.print() fires */}
+        <div
+          data-qr-card
+          className="enrollment-print-card"
+          style={{
+            display: "none",
+            width: "53.98mm",
+            height: "85.6mm",
+            flexDirection: "column",
+            border: `1.5px solid ${enrollColors.borderColor}`,
+            borderRadius: "3mm",
+            overflow: "hidden",
+            backgroundColor: "white",
+            fontFamily: "sans-serif",
+            boxSizing: "border-box",
+            position: "fixed",
+            top: 0,
+            left: 0,
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              backgroundColor: enrollColors.headerBg,
+              padding: "2mm 3mm",
+              flexShrink: 0,
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                color: enrollColors.headerText,
+                fontWeight: 800,
+                fontSize: "8px",
+                letterSpacing: "0.3px",
+              }}
+            >
+              🍽 SUNBITES KITCHEN
+            </div>
+            <div
+              style={{
+                color: enrollColors.headerSubText,
+                fontSize: "7px",
+                marginTop: "0.5mm",
+              }}
+            >
+              Student Canteen ID
+            </div>
+          </div>
+
+          {/* Body */}
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "3mm 3mm 2mm",
+              gap: "1.5mm",
+              overflow: "hidden",
+            }}
+          >
+            {/* No photo_url on EnrolledStudentResponse — always render the initial */}
+            <div
+              style={{
+                width: "18mm",
+                height: "18mm",
+                borderRadius: "2mm",
+                border: `1px solid ${enrollColors.accentColor}`,
+                backgroundColor: enrollColors.avatarBg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "8mm",
+                fontWeight: 800,
+                color: enrollColors.accentColor,
+                flexShrink: 0,
+              }}
+            >
+              {enrolledResult.full_name.charAt(0).toUpperCase()}
+            </div>
+            <p
+              style={{
+                fontWeight: 700,
+                fontSize: "9px",
+                textAlign: "center",
+                margin: 0,
+                color: "#111",
+              }}
+            >
+              {enrolledResult.full_name}
+            </p>
+            <p style={{ color: "#555", fontSize: "7px", margin: 0 }}>
+              🍽{" "}
+              {enrolledResult.student_type === "subscription"
+                ? "Subscription"
+                : "Non-Subscription"}
+            </p>
+            {enrolledFormatted && (
+              <p style={{ fontSize: "6.5px", color: "#444", margin: 0 }}>
+                Enrolled: {enrolledFormatted}
+              </p>
+            )}
+            <div
+              style={{
+                border: "1px solid #e0e0e0",
+                borderRadius: "2mm",
+                padding: "1.5mm",
+                marginTop: "1mm",
+              }}
+            >
+              <QRCode
+                value={enrolledResult.qr_code}
+                size={85}
+                style={{ width: "22mm", height: "22mm" }}
+              />
+            </div>
+            <p
+              style={{
+                fontFamily: "monospace",
+                fontSize: "5px",
+                color: "#888",
+                margin: 0,
+                textAlign: "center",
+              }}
+            >
+              {enrolledResult.qr_code}
+            </p>
+          </div>
+
+          {/* Footer */}
+          <div
+            style={{
+              flexShrink: 0,
+              backgroundColor: enrollColors.footerBg,
+              borderTop: `1px solid ${enrollColors.footerBorder}`,
+              padding: "1.5mm 3mm",
+              textAlign: "center",
+            }}
+          >
+            <p style={{ fontSize: "5.5px", color: "#666", margin: 0 }}>
+              Scan QR to view wallet balance • Valid S.Y. {schoolYear}
+            </p>
+          </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-            Enrollment Details
-          </h2>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-muted-foreground text-xs">Student Name</p>
-              <p className="font-semibold">{enrolledResult.full_name}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs">Student Type</p>
-              <p className="font-semibold">
-                {enrolledResult.student_type === "subscription"
-                  ? "Subscription"
-                  : "Non-Subscription"}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs">Student Number</p>
-              <p className="font-semibold font-mono">
-                {enrolledResult.student_number ?? "—"}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs">Enrollment Date</p>
-              <p className="font-semibold">{enrolledResult.enrollment_date}</p>
-            </div>
-            {enrolledResult.subscription_period && (
+        {/* On-screen success content — hidden during print */}
+        <div className="no-print p-6 max-w-2xl mx-auto space-y-6">
+          <div className="border border-green-300 bg-green-50 rounded-xl p-6 text-center space-y-4">
+            <CheckCircle2
+              className="mx-auto text-green-500"
+              size={48}
+              aria-hidden="true"
+            />
+            <h1 className="text-2xl font-bold text-green-800">
+              Enrollment Successful!
+            </h1>
+            <p className="text-green-700 text-sm">
+              The student has been enrolled and their QR code is ready.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              Enrollment Details
+            </h2>
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-muted-foreground text-xs">
-                  Subscription Period
-                </p>
+                <p className="text-muted-foreground text-xs">Student Name</p>
+                <p className="font-semibold">{enrolledResult.full_name}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Student Type</p>
                 <p className="font-semibold">
-                  {enrolledResult.subscription_period}
+                  {enrolledResult.student_type === "subscription"
+                    ? "Subscription"
+                    : "Non-Subscription"}
                 </p>
               </div>
-            )}
+              <div>
+                <p className="text-muted-foreground text-xs">Student Number</p>
+                <p className="font-semibold font-mono">
+                  {enrolledResult.student_number ?? "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Enrollment Date</p>
+                <p className="font-semibold">
+                  {enrolledResult.enrollment_date}
+                </p>
+              </div>
+              {enrolledResult.subscription_period && (
+                <div>
+                  <p className="text-muted-foreground text-xs">
+                    Subscription Period
+                  </p>
+                  <p className="font-semibold">
+                    {enrolledResult.subscription_period}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="rounded-xl border-2 border-primary bg-card p-6 flex flex-col items-center gap-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
-            Student QR Code
-          </h2>
-          <QRCode value={enrolledResult.qr_code} size={140} />
-          <p className="text-xs text-muted-foreground font-mono">
-            QR ID: {enrolledResult.qr_code}
-          </p>
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => window.print()}
-              aria-label="Print QR Code"
-            >
-              <Printer className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              Print QR Code
-            </Button>
+          <div className="rounded-xl border-2 border-primary bg-card p-6 flex flex-col items-center gap-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-primary">
+              Student QR Code
+            </h2>
+            <QRCode value={enrolledResult.qr_code} size={140} />
+            <p className="text-xs text-muted-foreground font-mono">
+              QR ID: {enrolledResult.qr_code}
+            </p>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => window.print()}
+                aria-label="Print QR Code"
+              >
+                <Printer className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Print QR Code
+              </Button>
+            </div>
           </div>
+
+          <Button type="button" className="w-full" onClick={resetForm}>
+            <UserPlus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Enroll Another Student
+          </Button>
+
+          <style>{`
+            .enrollment-print-card { display: none; }
+            @media print {
+              .no-print { display: none !important; }
+              .enrollment-print-card { display: flex !important; }
+              @page { size: 53.98mm 85.6mm portrait; margin: 0; }
+            }
+          `}</style>
         </div>
-
-        <Button type="button" className="w-full" onClick={resetForm}>
-          <UserPlus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-          Enroll Another Student
-        </Button>
-
-        <style>{`@media print { .no-print { display: none !important; } }`}</style>
-      </div>
+      </>
     );
   }
 

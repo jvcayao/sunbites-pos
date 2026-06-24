@@ -54,10 +54,10 @@ beforeEach(() => {
 });
 
 describe("BranchesPage", () => {
-  it("renders the Branch Management heading", () => {
+  it("renders the branches page for an admin user without redirecting", () => {
     render(<BranchesPage />);
 
-    expect(screen.getByText("Branch Management")).toBeInTheDocument();
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it("renders branch cards with name after data loads", async () => {

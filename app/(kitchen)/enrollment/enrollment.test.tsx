@@ -347,4 +347,16 @@ describe("EnrollmentPage", () => {
     const skeletons = document.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThan(0);
   });
+
+  it("renders a red print card header for subscription student after enrollment", async () => {
+    const user = userEvent.setup();
+    render(<EnrollmentPage />);
+    await fillAndSubmitForm(user);
+    await screen.findByText(/enrollment successful/i);
+
+    const card = document.querySelector("[data-qr-card]") as HTMLElement;
+    expect(card).not.toBeNull();
+    const header = card.firstElementChild as HTMLElement;
+    expect(header.style.backgroundColor).toBe("rgb(229, 50, 42)");
+  });
 });
