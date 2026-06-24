@@ -696,4 +696,19 @@ export const handlers = [
       message: "Parent account restored. Activation email queued.",
     }),
   ),
+
+  // Public kiosk lookup — no auth required
+  http.post(`${API}/api/v1/public/kiosk/lookup`, () =>
+    HttpResponse.json({
+      name: "Juan Dela Cruz",
+      initials: "JD",
+      grade_level: "Grade 3",
+      student_type: "subscription",
+      balance: "245.00",
+      last_orders: [
+        { items: "Rice Meal, Water", total: "55.00", date: "Jun 23, 2026" },
+        { items: "Snack Pack", total: "25.00", date: "Jun 22, 2026" },
+      ],
+    }),
+  ),
 ];
