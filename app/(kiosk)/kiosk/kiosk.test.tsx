@@ -3,6 +3,9 @@ import { http, HttpResponse } from "msw";
 import { server } from "@/__tests__/mocks/server";
 import KioskPage from "./page";
 
+// Mock canvas-confetti — no real canvas in jsdom
+jest.mock("canvas-confetti", () => jest.fn());
+
 // Mock @zxing/browser — camera does not work in jsdom
 let capturedScanCallback:
   | ((result: { getText: () => string } | null) => void)
@@ -50,19 +53,21 @@ describe("KioskPage", () => {
     expect(await screen.findByText("Juan Dela Cruz")).toBeInTheDocument();
     expect(screen.getByText("Grade 3")).toBeInTheDocument();
     expect(screen.getByText("JD")).toBeInTheDocument();
-    expect(screen.getByText("₱245.00")).toBeInTheDocument();
+    // balance: "245.00" — count-up ends at ₱245.00
+    expect(await screen.findByText("₱245.00")).toBeInTheDocument();
     expect(screen.getByText("Rice Meal, Water")).toBeInTheDocument();
   });
 
-  it("shows green balance for amount >= 50", async () => {
+  it("shows green balance color for amount >= 150", async () => {
     render(<KioskPage />);
     simulateScan("SB-testqrcode1234");
 
+    // Default mock returns balance: "245.00" which is green (>= 150)
     const balance = await screen.findByText("₱245.00");
     expect(balance).toHaveClass("text-green-600");
   });
 
-  it("shows orange balance for amount between 0 and 50", async () => {
+  it("shows orange balance for amount between 80 and 149", async () => {
     server.use(
       http.post(
         `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
@@ -72,7 +77,7 @@ describe("KioskPage", () => {
             initials: "JD",
             grade_level: "Grade 3",
             student_type: "subscription",
-            balance: "30.00",
+            balance: "100.00",
             last_orders: [],
           }),
       ),
@@ -81,11 +86,11 @@ describe("KioskPage", () => {
     render(<KioskPage />);
     simulateScan("SB-testqrcode1234");
 
-    const balance = await screen.findByText("₱30.00");
+    const balance = await screen.findByText("₱100.00");
     expect(balance).toHaveClass("text-orange-500");
   });
 
-  it("shows red balance for zero balance", async () => {
+  it("shows red balance for amount <= 79", async () => {
     server.use(
       http.post(
         `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
@@ -211,8 +216,77 @@ describe("KioskPage", () => {
     render(<KioskPage />);
     simulateScan("INVALID-123");
 
-    // Should stay on scan screen — no loading or result
     expect(screen.getByText(/scan your id card/i)).toBeInTheDocument();
     expect(screen.queryByText(/please see a cashier/i)).not.toBeInTheDocument();
+  });
+
+  // ── Tier-specific emoji and message tests ───────────────────────────────
+
+  it("shows no tier message for green balance (>= 150)", async () => {
+    render(<KioskPage />);
+    simulateScan("SB-testqrcode1234");
+
+    await screen.findByText("Juan Dela Cruz");
+
+    expect(
+      screen.queryByText(/running low/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/insufficient balance/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows sad emoji and running low message for orange balance (80-149)", async () => {
+    server.use(
+      http.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
+        () =>
+          HttpResponse.json({
+            name: "Juan Dela Cruz",
+            initials: "JD",
+            grade_level: "Grade 3",
+            student_type: "subscription",
+            balance: "100.00",
+            last_orders: [],
+          }),
+      ),
+    );
+
+    render(<KioskPage />);
+    simulateScan("SB-testqrcode1234");
+
+    await screen.findByText("Juan Dela Cruz");
+
+    expect(screen.getByText("😢")).toBeInTheDocument();
+    expect(
+      screen.getByText("Your balance is running low. Please top up soon!"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows worried emoji and insufficient balance message for red balance (<= 79)", async () => {
+    server.use(
+      http.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
+        () =>
+          HttpResponse.json({
+            name: "Juan Dela Cruz",
+            initials: "JD",
+            grade_level: "Grade 3",
+            student_type: "subscription",
+            balance: "30.00",
+            last_orders: [],
+          }),
+      ),
+    );
+
+    render(<KioskPage />);
+    simulateScan("SB-testqrcode1234");
+
+    await screen.findByText("Juan Dela Cruz");
+
+    expect(screen.getByText("😰")).toBeInTheDocument();
+    expect(
+      screen.getByText("Insufficient balance. Please top up before ordering."),
+    ).toBeInTheDocument();
   });
 });
