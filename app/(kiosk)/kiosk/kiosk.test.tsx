@@ -45,8 +45,24 @@ const simulateKeyboardScan = (code: string) => {
 };
 
 describe("KioskPage", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     capturedScanCallback = null;
+    // Reset the @zxing/browser mock to default successful implementation
+    const { BrowserMultiFormatReader } = await import("@zxing/browser");
+    (BrowserMultiFormatReader as unknown as jest.Mock).mockImplementation(
+      () => ({
+        decodeFromVideoDevice: jest.fn(
+          (
+            _deviceId: unknown,
+            _video: unknown,
+            callback: (result: { getText: () => string } | null) => void,
+          ) => {
+            capturedScanCallback = callback;
+            return Promise.resolve({ stop: jest.fn() });
+          },
+        ),
+      }),
+    );
   });
 
   it("shows the scan prompt on initial load", () => {
@@ -200,10 +216,8 @@ describe("KioskPage", () => {
     }
   });
 
-  it("shows camera access required message when camera is denied", async () => {
+  it("shows 'Use your camera' button when camera is denied", async () => {
     const { BrowserMultiFormatReader } = await import("@zxing/browser");
-    // Override the constructor for this test to return an instance whose
-    // decodeFromVideoDevice rejects with NotAllowedError (camera denied).
     (BrowserMultiFormatReader as unknown as jest.Mock).mockImplementationOnce(
       () => ({
         decodeFromVideoDevice: jest
@@ -217,8 +231,10 @@ describe("KioskPage", () => {
     render(<KioskPage />);
 
     expect(
-      await screen.findByText(/camera access required/i),
+      await screen.findByRole("button", { name: /use your camera/i }),
     ).toBeInTheDocument();
+    // Scan prompt remains — kiosk is still functional for hardware scanners
+    expect(screen.getByText(/scan your id card/i)).toBeInTheDocument();
   });
 
   it("hardware scanner works when camera is blocked", async () => {
@@ -236,13 +252,67 @@ describe("KioskPage", () => {
     render(<KioskPage />);
 
     // Wait for camera to fail and cameraBlocked to be set
-    await screen.findByText(/camera access required/i);
+    await screen.findByRole("button", { name: /use your camera/i });
 
     // Simulate hardware QR scanner via keyboard input
     simulateKeyboardScan("SB-testqrcode1234");
 
     // Student card should appear — keyboard scanner was not silenced by camera failure
     expect(await screen.findByText("Juan Dela Cruz")).toBeInTheDocument();
+  });
+
+  it("'Use your camera' button re-triggers camera access on click", async () => {
+    const { BrowserMultiFormatReader } = await import("@zxing/browser");
+    const constructorMock = BrowserMultiFormatReader as unknown as jest.Mock;
+    constructorMock.mockImplementation(() => ({
+      decodeFromVideoDevice: jest
+        .fn()
+        .mockRejectedValue(
+          new DOMException("Permission denied", "NotAllowedError"),
+        ),
+    }));
+
+    render(<KioskPage />);
+
+    // Wait for first camera failure — button appears
+    const retryButton = await screen.findByRole("button", {
+      name: /use your camera/i,
+    });
+    const callCountAfterInit = constructorMock.mock.calls.length;
+
+    // Click retry
+    act(() => {
+      retryButton.click();
+    });
+
+    // Camera effect re-runs — BrowserMultiFormatReader constructor is called again
+    await screen.findByRole("button", { name: /use your camera/i });
+    expect(constructorMock.mock.calls.length).toBeGreaterThan(callCountAfterInit);
+  });
+
+  it("scan guide remains visible and video is hidden when camera is blocked", async () => {
+    const { BrowserMultiFormatReader } = await import("@zxing/browser");
+    (BrowserMultiFormatReader as unknown as jest.Mock).mockImplementationOnce(
+      () => ({
+        decodeFromVideoDevice: jest
+          .fn()
+          .mockRejectedValueOnce(
+            new DOMException("Permission denied", "NotAllowedError"),
+          ),
+      }),
+    );
+
+    const { container } = render(<KioskPage />);
+
+    // Wait for camera to fail
+    await screen.findByRole("button", { name: /use your camera/i });
+
+    // Scan guide is visible — hardware scanner can still be used
+    expect(screen.getByText(/scan your id card/i)).toBeInTheDocument();
+
+    // Video element has the hidden class in camera-blocked mode
+    const video = container.querySelector("video");
+    expect(video).toHaveClass("hidden");
   });
 
   it("ignores QR codes that do not start with SB-", () => {

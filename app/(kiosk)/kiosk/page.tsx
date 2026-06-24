@@ -47,6 +47,7 @@ export default function KioskPage() {
   const [cameraBlocked, setCameraBlocked] = useState(false);
 
   const handleCameraError = useCallback(() => setCameraBlocked(true), []);
+  const handleCameraRetry = useCallback(() => setCameraBlocked(false), []);
 
   const isScanningState = state === "scanning" || state === "loading";
 
@@ -68,18 +69,18 @@ export default function KioskPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center">
-      {/* Camera viewfinder — always mounted, hidden when not in scanning/loading state */}
+      {/* Camera viewfinder — hidden when not scanning or camera is blocked */}
       <video
         ref={videoRef}
         className={cn(
           "absolute inset-0 h-full w-full object-cover",
-          !isScanningState && "hidden",
+          (!isScanningState || cameraBlocked) && "hidden",
         )}
         muted
         playsInline
       />
 
-      {/* Logo — always visible at top, inverted (white) over the dark camera overlay */}
+      {/* Logo — inverted (white) only when camera is actively streaming */}
       <div
         className={cn(
           "absolute top-8 left-1/2 z-20 -translate-x-1/2",
@@ -89,21 +90,53 @@ export default function KioskPage() {
         <AppLogo variant="full" />
       </div>
 
-      {/* Scanning state overlay */}
-      {isScanningState && !cameraBlocked && (
-        <div className="relative z-10 flex flex-col items-center gap-6 text-white">
+      {/* Scanning state — shown regardless of camera availability */}
+      {isScanningState && (
+        <div
+          className={cn(
+            "relative z-10 flex flex-col items-center gap-6",
+            cameraBlocked ? "text-foreground" : "text-white",
+          )}
+        >
           {/* Scan guide frame */}
-          <div className="relative h-64 w-64 overflow-hidden rounded-2xl border-4 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+          <div
+            className={cn(
+              "relative h-64 w-64 overflow-hidden rounded-2xl border-4",
+              cameraBlocked
+                ? "border-border"
+                : "border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]",
+            )}
+          >
             {/* Corner bracket accents */}
             <div className="pointer-events-none absolute inset-0">
-              <div className="absolute left-0 top-0 h-6 w-6 border-l-4 border-t-4 border-white" />
-              <div className="absolute right-0 top-0 h-6 w-6 border-r-4 border-t-4 border-white" />
-              <div className="absolute bottom-0 left-0 h-6 w-6 border-b-4 border-l-4 border-white" />
-              <div className="absolute bottom-0 right-0 h-6 w-6 border-b-4 border-r-4 border-white" />
+              <div
+                className={cn(
+                  "absolute left-0 top-0 h-6 w-6 border-l-4 border-t-4",
+                  cameraBlocked ? "border-border" : "border-white",
+                )}
+              />
+              <div
+                className={cn(
+                  "absolute right-0 top-0 h-6 w-6 border-r-4 border-t-4",
+                  cameraBlocked ? "border-border" : "border-white",
+                )}
+              />
+              <div
+                className={cn(
+                  "absolute bottom-0 left-0 h-6 w-6 border-b-4 border-l-4",
+                  cameraBlocked ? "border-border" : "border-white",
+                )}
+              />
+              <div
+                className={cn(
+                  "absolute bottom-0 right-0 h-6 w-6 border-b-4 border-r-4",
+                  cameraBlocked ? "border-border" : "border-white",
+                )}
+              />
             </div>
 
-            {/* Animated scan line — only during scanning, not loading */}
-            {state === "scanning" && (
+            {/* Animated scan line — only when scanning with active camera */}
+            {state === "scanning" && !cameraBlocked && (
               <div
                 className="absolute left-0 h-0.5 w-full bg-primary opacity-90"
                 style={{ animation: "scanLine 2s ease-in-out infinite" }}
@@ -126,6 +159,16 @@ export default function KioskPage() {
           >
             {state === "loading" ? "Checking..." : "Scan your ID card"}
           </p>
+
+          {/* Camera retry — visible only when scanning and camera is blocked */}
+          {state === "scanning" && cameraBlocked && (
+            <button
+              onClick={handleCameraRetry}
+              className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent"
+            >
+              📷 Use your camera to scan QR
+            </button>
+          )}
         </div>
       )}
 
@@ -136,16 +179,6 @@ export default function KioskPage() {
 
       {/* Error state */}
       {state === "error" && <ErrorCard />}
-
-      {/* Camera blocked state */}
-      {cameraBlocked && (
-        <div className="z-10 flex flex-col items-center gap-3 text-center">
-          <p className="text-xl font-semibold">Camera access required.</p>
-          <p className="text-muted-foreground">
-            Please allow camera and refresh.
-          </p>
-        </div>
-      )}
     </div>
   );
 }
