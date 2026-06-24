@@ -83,6 +83,8 @@ export function useKioskScanner({
   useEffect(() => {
     if (!isKeyboardEnabled) return;
 
+    // Intentionally a closure variable, not a ref: partial input from a previous
+    // scan cycle should not persist into the next one (effect re-runs fresh).
     let buffer = "";
 
     const handleKeydown = (e: KeyboardEvent) => {
@@ -92,6 +94,8 @@ export function useKioskScanner({
         const code = buffer.trim();
         buffer = "";
         if (code.startsWith("SB-")) {
+          // isLockedRef prevents double-fire in the gap between setState("loading") and
+          // the next render removing this listener (isKeyboardEnabled becomes false).
           isLockedRef.current = true;
           onScanRef.current(code);
           setTimeout(() => {
