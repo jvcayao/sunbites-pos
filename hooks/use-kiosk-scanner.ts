@@ -57,17 +57,12 @@ export function useKioskScanner({
           controls = ctrl;
         }
       })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-
-        // Only show "camera blocked" for an actual user permission denial.
-        // Other errors (device busy, Strict Mode race, no device found) should
-        // not lock the UI into the blocked state.
-        const isPermissionDenied =
-          err instanceof DOMException &&
-          (err.name === "NotAllowedError" || err.name === "PermissionDeniedError");
-
-        if (isPermissionDenied) {
+      .catch(() => {
+        // The `cancelled` flag already filters out Strict Mode double-invoke
+        // races (those resolve after cleanup sets cancelled=true). Any error
+        // that reaches here is a real device failure — signal the parent so the
+        // user sees feedback instead of a blank unresponsive viewfinder.
+        if (!cancelled) {
           onCameraErrorRef.current();
         }
       });
