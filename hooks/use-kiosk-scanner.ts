@@ -19,12 +19,13 @@ export function useKioskScanner({
 }: UseKioskScannerProps): void {
   const isLockedRef = useRef(false);
 
-  // Refs keep callbacks fresh without re-triggering the scanner effect
+  // Refs keep callbacks fresh without re-triggering scanner effects
   const onScanRef = useRef(onScan);
   const onCameraErrorRef = useRef(onCameraError);
   onScanRef.current = onScan;
   onCameraErrorRef.current = onCameraError;
 
+  // Camera-based scanning via @zxing/browser (phone/tablet)
   useEffect(() => {
     if (!isEnabled || !videoRef.current) return;
 
@@ -58,10 +59,8 @@ export function useKioskScanner({
         }
       })
       .catch(() => {
-        // The `cancelled` flag already filters out Strict Mode double-invoke
-        // races (those resolve after cleanup sets cancelled=true). Any error
-        // that reaches here is a real device failure — signal the parent so the
-        // user sees feedback instead of a blank unresponsive viewfinder.
+        // The `cancelled` flag filters Strict Mode double-invoke races.
+        // Any remaining error is a real device failure — notify the parent.
         if (!cancelled) {
           onCameraErrorRef.current();
         }
@@ -72,4 +71,37 @@ export function useKioskScanner({
       controls?.stop();
     };
   }, [isEnabled, videoRef]);
+
+  // Hardware QR scanner support (USB/Bluetooth scanners that emulate keyboard input).
+  // These devices send the QR code as rapid keystrokes followed by Enter.
+  // We buffer characters and fire onScan when Enter arrives with a valid SB- code.
+  useEffect(() => {
+    if (!isEnabled) return;
+
+    let buffer = "";
+
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (isLockedRef.current) return;
+
+      if (e.key === "Enter") {
+        const code = buffer.trim();
+        buffer = "";
+        if (code.startsWith("SB-")) {
+          isLockedRef.current = true;
+          onScanRef.current(code);
+          setTimeout(() => {
+            isLockedRef.current = false;
+          }, 1000);
+        }
+      } else if (e.key.length === 1) {
+        buffer += e.key;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeydown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    };
+  }, [isEnabled]);
 }
