@@ -11,14 +11,16 @@ interface UseKioskScannerProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   onScan: (code: string) => void;
   onCameraError: () => void;
-  isEnabled: boolean;
+  isCameraEnabled: boolean;
+  isKeyboardEnabled: boolean;
 }
 
 export function useKioskScanner({
   videoRef,
   onScan,
   onCameraError,
-  isEnabled,
+  isCameraEnabled,
+  isKeyboardEnabled,
 }: UseKioskScannerProps): void {
   const isLockedRef = useRef(false);
 
@@ -33,7 +35,7 @@ export function useKioskScanner({
 
   // Camera-based scanning via @zxing/browser (phone/tablet)
   useEffect(() => {
-    if (!isEnabled || !videoRef.current) return;
+    if (!isCameraEnabled || !videoRef.current) return;
 
     let cancelled = false;
     let controls: IScannerControls | null = null;
@@ -73,13 +75,13 @@ export function useKioskScanner({
       cancelled = true;
       controls?.stop();
     };
-  }, [isEnabled, videoRef]);
+  }, [isCameraEnabled, videoRef]);
 
   // Hardware QR scanner support (USB/Bluetooth scanners that emulate keyboard input).
   // These devices send the QR code as rapid keystrokes followed by Enter.
   // We buffer characters and fire onScan when Enter arrives with a valid SB- code.
   useEffect(() => {
-    if (!isEnabled) return;
+    if (!isKeyboardEnabled) return;
 
     let buffer = "";
 
@@ -106,5 +108,5 @@ export function useKioskScanner({
     return () => {
       window.removeEventListener("keydown", handleKeydown);
     };
-  }, [isEnabled]);
+  }, [isKeyboardEnabled]);
 }

@@ -54,7 +54,8 @@ export default function KioskPage() {
     videoRef,
     onScan: handleScan,
     onCameraError: handleCameraError,
-    isEnabled: state === "scanning" && !cameraBlocked,
+    isCameraEnabled: state === "scanning" && !cameraBlocked,
+    isKeyboardEnabled: state === "scanning",
   });
 
   // Auto-reset: 10 seconds on result, 5 seconds on error

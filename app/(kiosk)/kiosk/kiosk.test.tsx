@@ -35,6 +35,15 @@ const simulateScan = (qrCode: string) => {
   });
 };
 
+const simulateKeyboardScan = (code: string) => {
+  act(() => {
+    for (const char of code) {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: char }));
+    }
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+  });
+};
+
 describe("KioskPage", () => {
   beforeEach(() => {
     capturedScanCallback = null;
@@ -210,6 +219,30 @@ describe("KioskPage", () => {
     expect(
       await screen.findByText(/camera access required/i),
     ).toBeInTheDocument();
+  });
+
+  it("hardware scanner works when camera is blocked", async () => {
+    const { BrowserMultiFormatReader } = await import("@zxing/browser");
+    (BrowserMultiFormatReader as unknown as jest.Mock).mockImplementationOnce(
+      () => ({
+        decodeFromVideoDevice: jest
+          .fn()
+          .mockRejectedValueOnce(
+            new DOMException("Permission denied", "NotAllowedError"),
+          ),
+      }),
+    );
+
+    render(<KioskPage />);
+
+    // Wait for camera to fail and cameraBlocked to be set
+    await screen.findByText(/camera access required/i);
+
+    // Simulate hardware QR scanner via keyboard input
+    simulateKeyboardScan("SB-testqrcode1234");
+
+    // Student card should appear — keyboard scanner was not silenced by camera failure
+    expect(await screen.findByText("Juan Dela Cruz")).toBeInTheDocument();
   });
 
   it("ignores QR codes that do not start with SB-", () => {
