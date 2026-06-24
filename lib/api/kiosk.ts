@@ -3,7 +3,7 @@ import type { KioskStudent } from "@/types/kiosk";
 export const kioskApi = {
   lookup: async (qrCode: string): Promise<KioskStudent> => {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/kiosk/lookup`,
+      `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
       {
         method: "POST",
         headers: {

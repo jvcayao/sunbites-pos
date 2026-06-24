@@ -62,7 +62,7 @@ describe("KioskPage", () => {
   it("shows orange balance for amount between 0 and 50", async () => {
     server.use(
       http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/kiosk/lookup`,
+        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
         () =>
           HttpResponse.json({
             name: "Juan Dela Cruz",
@@ -85,7 +85,7 @@ describe("KioskPage", () => {
   it("shows red balance for zero balance", async () => {
     server.use(
       http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/kiosk/lookup`,
+        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
         () =>
           HttpResponse.json({
             name: "Juan Dela Cruz",
@@ -108,7 +108,7 @@ describe("KioskPage", () => {
   it("shows the same error card for 404", async () => {
     server.use(
       http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/kiosk/lookup`,
+        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
         () =>
           HttpResponse.json({ message: "Student not found." }, { status: 404 }),
       ),
@@ -123,7 +123,7 @@ describe("KioskPage", () => {
   it("shows the same error card for 403 (restricted student)", async () => {
     server.use(
       http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/kiosk/lookup`,
+        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
         () =>
           HttpResponse.json(
             { message: "Student is not eligible." },
@@ -163,7 +163,7 @@ describe("KioskPage", () => {
 
     server.use(
       http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/kiosk/lookup`,
+        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
         () =>
           HttpResponse.json({ message: "Student not found." }, { status: 404 }),
       ),

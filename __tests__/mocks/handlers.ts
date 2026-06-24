@@ -698,7 +698,7 @@ export const handlers = [
   ),
 
   // Public kiosk lookup — no auth required
-  http.post(`${API}/api/v1/public/kiosk/lookup`, () =>
+  http.post(`${API}/public/kiosk/lookup`, () =>
     HttpResponse.json({
       name: "Juan Dela Cruz",
       initials: "JD",
