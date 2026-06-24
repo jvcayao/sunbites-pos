@@ -15,20 +15,20 @@ function useCountUp(target: number, duration = 900): number {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    if (target === 0) {
-      setValue(0);
-      return;
-    }
+    let cancelled = false;
     let start: number | null = null;
     const step = (ts: number) => {
+      if (cancelled) return;
       if (!start) start = ts;
       const progress = Math.min((ts - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(target * eased);
       if (progress < 1) requestAnimationFrame(step);
     };
-    const raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+    requestAnimationFrame(step);
+    return () => {
+      cancelled = true;
+    };
   }, [target, duration]);
 
   return value;
@@ -117,7 +117,12 @@ export default function KioskPage() {
             )}
           </div>
 
-          <p className={cn("text-xl font-medium tracking-wide", state === "scanning" && "animate-pulse")}>
+          <p
+            className={cn(
+              "text-xl font-medium tracking-wide",
+              state === "scanning" && "animate-pulse",
+            )}
+          >
             {state === "loading" ? "Checking..." : "Scan your ID card"}
           </p>
         </div>
@@ -135,7 +140,9 @@ export default function KioskPage() {
       {cameraBlocked && (
         <div className="z-10 flex flex-col items-center gap-3 text-center">
           <p className="text-xl font-semibold">Camera access required.</p>
-          <p className="text-muted-foreground">Please allow camera and refresh.</p>
+          <p className="text-muted-foreground">
+            Please allow camera and refresh.
+          </p>
         </div>
       )}
     </div>
@@ -210,7 +217,9 @@ function StudentCard({
 
       {/* Subscription badge */}
       <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium capitalize">
-        {student.student_type === "subscription" ? "Subscription" : "Non-Subscription"}
+        {student.student_type === "subscription"
+          ? "Subscription"
+          : "Non-Subscription"}
       </span>
 
       {/* Balance with tier emoji (emoji only for orange/red) */}

@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
-import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser";
+import {
+  BrowserMultiFormatReader,
+  type IScannerControls,
+} from "@zxing/browser";
 
 interface UseKioskScannerProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -19,11 +22,14 @@ export function useKioskScanner({
 }: UseKioskScannerProps): void {
   const isLockedRef = useRef(false);
 
-  // Refs keep callbacks fresh without re-triggering scanner effects
+  // Refs keep callbacks fresh without re-triggering scanner effects.
+  // useLayoutEffect syncs before camera/keyboard effects read the refs.
   const onScanRef = useRef(onScan);
   const onCameraErrorRef = useRef(onCameraError);
-  onScanRef.current = onScan;
-  onCameraErrorRef.current = onCameraError;
+  useLayoutEffect(() => {
+    onScanRef.current = onScan;
+    onCameraErrorRef.current = onCameraError;
+  });
 
   // Camera-based scanning via @zxing/browser (phone/tablet)
   useEffect(() => {
@@ -34,10 +40,8 @@ export function useKioskScanner({
 
     const reader = new BrowserMultiFormatReader();
 
-    reader.decodeFromVideoDevice(
-      undefined,
-      videoRef.current,
-      (result) => {
+    reader
+      .decodeFromVideoDevice(undefined, videoRef.current, (result) => {
         if (!result || isLockedRef.current) return;
 
         const text = result.getText();
@@ -49,8 +53,7 @@ export function useKioskScanner({
         setTimeout(() => {
           isLockedRef.current = false;
         }, 1000);
-      },
-    )
+      })
       .then((ctrl) => {
         if (cancelled) {
           ctrl.stop();

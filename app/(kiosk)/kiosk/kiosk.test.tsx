@@ -69,17 +69,15 @@ describe("KioskPage", () => {
 
   it("shows orange balance for amount between 80 and 149", async () => {
     server.use(
-      http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
-        () =>
-          HttpResponse.json({
-            name: "Juan Dela Cruz",
-            initials: "JD",
-            grade_level: "Grade 3",
-            student_type: "subscription",
-            balance: "100.00",
-            last_orders: [],
-          }),
+      http.post(`${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`, () =>
+        HttpResponse.json({
+          name: "Juan Dela Cruz",
+          initials: "JD",
+          grade_level: "Grade 3",
+          student_type: "subscription",
+          balance: "100.00",
+          last_orders: [],
+        }),
       ),
     );
 
@@ -92,17 +90,15 @@ describe("KioskPage", () => {
 
   it("shows red balance for amount <= 79", async () => {
     server.use(
-      http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
-        () =>
-          HttpResponse.json({
-            name: "Juan Dela Cruz",
-            initials: "JD",
-            grade_level: "Grade 3",
-            student_type: "subscription",
-            balance: "0.00",
-            last_orders: [],
-          }),
+      http.post(`${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`, () =>
+        HttpResponse.json({
+          name: "Juan Dela Cruz",
+          initials: "JD",
+          grade_level: "Grade 3",
+          student_type: "subscription",
+          balance: "0.00",
+          last_orders: [],
+        }),
       ),
     );
 
@@ -115,39 +111,41 @@ describe("KioskPage", () => {
 
   it("shows the same error card for 404", async () => {
     server.use(
-      http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
-        () =>
-          HttpResponse.json({ message: "Student not found." }, { status: 404 }),
+      http.post(`${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`, () =>
+        HttpResponse.json({ message: "Student not found." }, { status: 404 }),
       ),
     );
 
     render(<KioskPage />);
     simulateScan("SB-testqrcode1234");
 
-    expect(await screen.findByText(/please see a cashier/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/please see a cashier/i),
+    ).toBeInTheDocument();
   });
 
   it("shows the same error card for 403 (restricted student)", async () => {
     server.use(
-      http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
-        () =>
-          HttpResponse.json(
-            { message: "Student is not eligible." },
-            { status: 403 },
-          ),
+      http.post(`${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`, () =>
+        HttpResponse.json(
+          { message: "Student is not eligible." },
+          { status: 403 },
+        ),
       ),
     );
 
     render(<KioskPage />);
     simulateScan("SB-testqrcode1234");
 
-    expect(await screen.findByText(/please see a cashier/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/please see a cashier/i),
+    ).toBeInTheDocument();
   });
 
   it("auto-resets to scan state after 10 seconds on result", async () => {
-    jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate", "queueMicrotask", "Promise"] });
+    jest.useFakeTimers({
+      doNotFake: ["nextTick", "setImmediate", "queueMicrotask"],
+    });
 
     try {
       render(<KioskPage />);
@@ -167,13 +165,13 @@ describe("KioskPage", () => {
   });
 
   it("auto-resets to scan state after 5 seconds on error", async () => {
-    jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate", "queueMicrotask", "Promise"] });
+    jest.useFakeTimers({
+      doNotFake: ["nextTick", "setImmediate", "queueMicrotask"],
+    });
 
     server.use(
-      http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
-        () =>
-          HttpResponse.json({ message: "Student not found." }, { status: 404 }),
+      http.post(`${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`, () =>
+        HttpResponse.json({ message: "Student not found." }, { status: 404 }),
       ),
     );
 
@@ -197,13 +195,15 @@ describe("KioskPage", () => {
     const { BrowserMultiFormatReader } = await import("@zxing/browser");
     // Override the constructor for this test to return an instance whose
     // decodeFromVideoDevice rejects with NotAllowedError (camera denied).
-    (BrowserMultiFormatReader as jest.Mock).mockImplementationOnce(() => ({
-      decodeFromVideoDevice: jest
-        .fn()
-        .mockRejectedValueOnce(
-          new DOMException("Permission denied", "NotAllowedError"),
-        ),
-    }));
+    (BrowserMultiFormatReader as unknown as jest.Mock).mockImplementationOnce(
+      () => ({
+        decodeFromVideoDevice: jest
+          .fn()
+          .mockRejectedValueOnce(
+            new DOMException("Permission denied", "NotAllowedError"),
+          ),
+      }),
+    );
 
     render(<KioskPage />);
 
@@ -228,27 +228,21 @@ describe("KioskPage", () => {
 
     await screen.findByText("Juan Dela Cruz");
 
-    expect(
-      screen.queryByText(/running low/i),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText(/insufficient balance/i),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/running low/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/insufficient balance/i)).not.toBeInTheDocument();
   });
 
   it("shows sad emoji and running low message for orange balance (80-149)", async () => {
     server.use(
-      http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
-        () =>
-          HttpResponse.json({
-            name: "Juan Dela Cruz",
-            initials: "JD",
-            grade_level: "Grade 3",
-            student_type: "subscription",
-            balance: "100.00",
-            last_orders: [],
-          }),
+      http.post(`${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`, () =>
+        HttpResponse.json({
+          name: "Juan Dela Cruz",
+          initials: "JD",
+          grade_level: "Grade 3",
+          student_type: "subscription",
+          balance: "100.00",
+          last_orders: [],
+        }),
       ),
     );
 
@@ -265,17 +259,15 @@ describe("KioskPage", () => {
 
   it("shows worried emoji and insufficient balance message for red balance (<= 79)", async () => {
     server.use(
-      http.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`,
-        () =>
-          HttpResponse.json({
-            name: "Juan Dela Cruz",
-            initials: "JD",
-            grade_level: "Grade 3",
-            student_type: "subscription",
-            balance: "30.00",
-            last_orders: [],
-          }),
+      http.post(`${process.env.NEXT_PUBLIC_API_URL}/public/kiosk/lookup`, () =>
+        HttpResponse.json({
+          name: "Juan Dela Cruz",
+          initials: "JD",
+          grade_level: "Grade 3",
+          student_type: "subscription",
+          balance: "30.00",
+          last_orders: [],
+        }),
       ),
     );
 
