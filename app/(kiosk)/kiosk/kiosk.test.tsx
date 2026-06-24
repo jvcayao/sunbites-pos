@@ -8,8 +8,11 @@ let capturedScanCallback:
   | ((result: { getText: () => string } | null) => void)
   | null = null;
 
+// BrowserMultiFormatReader is an instance-based class in @zxing/browser v0.2.x.
+// The constructor mock returns an object whose decodeFromVideoDevice captures
+// the scan callback so tests can simulate QR scans via simulateScan().
 jest.mock("@zxing/browser", () => ({
-  BrowserMultiFormatReader: {
+  BrowserMultiFormatReader: jest.fn().mockImplementation(() => ({
     decodeFromVideoDevice: jest.fn(
       (
         _deviceId: unknown,
@@ -20,7 +23,7 @@ jest.mock("@zxing/browser", () => ({
         return Promise.resolve({ stop: jest.fn() });
       },
     ),
-  },
+  })),
 }));
 
 const simulateScan = (qrCode: string) => {
@@ -187,11 +190,15 @@ describe("KioskPage", () => {
 
   it("shows camera access required message when camera is denied", async () => {
     const { BrowserMultiFormatReader } = await import("@zxing/browser");
-    (
-      BrowserMultiFormatReader.decodeFromVideoDevice as jest.Mock
-    ).mockRejectedValueOnce(
-      new DOMException("Permission denied", "NotAllowedError"),
-    );
+    // Override the constructor for this test to return an instance whose
+    // decodeFromVideoDevice rejects with NotAllowedError (camera denied).
+    (BrowserMultiFormatReader as jest.Mock).mockImplementationOnce(() => ({
+      decodeFromVideoDevice: jest
+        .fn()
+        .mockRejectedValueOnce(
+          new DOMException("Permission denied", "NotAllowedError"),
+        ),
+    }));
 
     render(<KioskPage />);
 

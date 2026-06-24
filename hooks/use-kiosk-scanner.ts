@@ -31,7 +31,9 @@ export function useKioskScanner({
     let cancelled = false;
     let controls: IScannerControls | null = null;
 
-    BrowserMultiFormatReader.decodeFromVideoDevice(
+    const reader = new BrowserMultiFormatReader();
+
+    reader.decodeFromVideoDevice(
       undefined,
       videoRef.current,
       (result) => {
