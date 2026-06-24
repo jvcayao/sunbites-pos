@@ -152,4 +152,14 @@ describe("StudentDetailPage", () => {
       await screen.findByText(/no activity logs yet/i),
     ).toBeInTheDocument();
   });
+
+  it("renders red header on the print card for a subscription student", async () => {
+    render(<StudentDetailPage params={{ id: "1" }} />);
+    await screen.findAllByText("Maria Santos"); // wait for data
+
+    const card = document.querySelector("[data-qr-card]") as HTMLElement;
+    expect(card).not.toBeNull();
+    const header = card.firstElementChild as HTMLElement;
+    expect(header.style.backgroundColor).toBe("rgb(229, 50, 42)");
+  });
 });

@@ -253,12 +253,6 @@ export default function RemindersPage() {
     <div className="p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold">Payment Reminders</h2>
-          <p className="text-sm text-muted-foreground">
-            Send payment reminders to parents with unpaid subscription months.
-          </p>
-        </div>
         {canSend && selectedIds.size > 0 && (
           <Button
             onClick={handleSendClick}
