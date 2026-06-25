@@ -505,6 +505,7 @@ function PrintCard({ student }: { student: Student }) {
         }}
       >
         {photoSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={photoSrc}
             alt={student.full_name}
@@ -636,6 +637,8 @@ function QrCard({ student }: { student: Student }) {
     };
   }, [student.photo_url]);
 
+  const colors = getCardAccentColors(student.student_type);
+
   const parts = student.enrollment_date?.split("-") ?? [];
   const enrolledFormatted =
     parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : null;
@@ -648,7 +651,7 @@ function QrCard({ student }: { student: Student }) {
         width: "100%",
         height: "100%",
         borderRadius: "6px",
-        border: "2px solid oklch(0.577 0.245 27.325)",
+        border: `2px solid ${colors.borderColor}`,
         overflow: "hidden",
         backgroundColor: "white",
         fontFamily: "sans-serif",
@@ -659,13 +662,13 @@ function QrCard({ student }: { student: Student }) {
       <div
         style={{
           flexShrink: 0,
-          backgroundColor: "oklch(0.577 0.245 27.325)",
+          backgroundColor: colors.headerBg,
           padding: "4px 6px",
         }}
       >
         <p
           style={{
-            color: "white",
+            color: colors.headerText,
             fontWeight: 800,
             fontSize: "8px",
             letterSpacing: "0.3px",
@@ -676,7 +679,7 @@ function QrCard({ student }: { student: Student }) {
         </p>
         <p
           style={{
-            color: "rgba(255,255,255,0.85)",
+            color: colors.headerSubText,
             fontSize: "6.5px",
             margin: "1px 0 0",
           }}
@@ -698,6 +701,7 @@ function QrCard({ student }: { student: Student }) {
         }}
       >
         {photoSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={photoSrc}
             alt={student.full_name}
@@ -706,7 +710,7 @@ function QrCard({ student }: { student: Student }) {
               height: "44px",
               objectFit: "cover",
               borderRadius: "5px",
-              border: "2px solid oklch(0.577 0.245 27.325)",
+              border: `2px solid ${colors.accentColor}`,
               flexShrink: 0,
             }}
           />
@@ -716,14 +720,14 @@ function QrCard({ student }: { student: Student }) {
               width: "44px",
               height: "44px",
               borderRadius: "5px",
-              border: "2px solid oklch(0.577 0.245 27.325)",
-              backgroundColor: "#fff3f0",
+              border: `2px solid ${colors.accentColor}`,
+              backgroundColor: colors.avatarBg,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontWeight: 800,
               fontSize: "16px",
-              color: "oklch(0.577 0.245 27.325)",
+              color: colors.accentColor,
               flexShrink: 0,
             }}
           >
@@ -742,7 +746,7 @@ function QrCard({ student }: { student: Student }) {
         </p>
         <p
           style={{
-            color: "oklch(0.577 0.245 27.325)",
+            color: colors.accentColor,
             fontSize: "8px",
             margin: 0,
             fontWeight: 700,
@@ -787,8 +791,8 @@ function QrCard({ student }: { student: Student }) {
       <div
         style={{
           flexShrink: 0,
-          backgroundColor: "#fff3f0",
-          borderTop: "1px solid #fdd8cc",
+          backgroundColor: colors.footerBg,
+          borderTop: `1px solid ${colors.footerBorder}`,
           padding: "3px 4px",
         }}
       >
@@ -1101,6 +1105,7 @@ function StudentCard({
       {/* Header */}
       <div className="flex items-start gap-3 pl-7">
         {photoSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={photoSrc}
             alt={student.full_name}

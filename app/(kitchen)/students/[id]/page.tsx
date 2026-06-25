@@ -2080,6 +2080,7 @@ function CameraModal({
                   className="h-full w-full object-cover"
                 />
               ) : (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={captured}
                   alt="Captured"
@@ -2341,6 +2342,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
             }}
           >
             {photoObjectUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={photoObjectUrl}
                 alt={student.full_name}
@@ -2515,6 +2517,7 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
           <div className="flex items-start gap-4">
             <div className="relative shrink-0">
               {photoObjectUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={photoObjectUrl}
                   alt={student.full_name}

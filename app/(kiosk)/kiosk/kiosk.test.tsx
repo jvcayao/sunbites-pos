@@ -287,7 +287,9 @@ describe("KioskPage", () => {
 
     // Camera effect re-runs — BrowserMultiFormatReader constructor is called again
     await screen.findByRole("button", { name: /use your camera/i });
-    expect(constructorMock.mock.calls.length).toBeGreaterThan(callCountAfterInit);
+    expect(constructorMock.mock.calls.length).toBeGreaterThan(
+      callCountAfterInit,
+    );
   });
 
   it("scan guide remains visible and video is hidden when camera is blocked", async () => {
