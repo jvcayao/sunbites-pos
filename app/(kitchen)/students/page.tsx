@@ -1262,6 +1262,238 @@ function RemoveStudentDialog({
 }
 
 // ---------------------------------------------------------------------------
+// StudentRow
+// ---------------------------------------------------------------------------
+
+interface StudentRowProps {
+  student: Student;
+  selected: boolean;
+  onSelect: (student: Student, selected: boolean) => void;
+  onTopUp: (student: Student) => void;
+  onStatusClick: (student: Student) => void;
+  onRemove: (student: Student) => void;
+  canTogglePayment: boolean;
+  accentColor: string;
+}
+
+function StudentRow({
+  student,
+  selected,
+  onSelect,
+  onTopUp,
+  onStatusClick,
+  onRemove,
+  canTogglePayment,
+  accentColor,
+}: StudentRowProps) {
+  const isSubscription = student.student_type === "subscription";
+  const statusConfig = ENROLLMENT_STATUS_CONFIG[student.enrollment_status];
+  const creditOwed = parseFloat(student.credit_balance) > 0;
+
+  const [photoSrc, setPhotoSrc] = useState<string | null>(null);
+  useEffect(() => {
+    if (!student.photo_url) return;
+    let objectUrl: string | null = null;
+    const { token, activeBranch } = useAuthStore.getState();
+    const headers: Record<string, string> = { Accept: "image/*" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (activeBranch) headers["X-Branch-Id"] = String(activeBranch.id);
+    fetch(student.photo_url, { headers })
+      .then((res) => res.blob())
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setPhotoSrc(objectUrl);
+      })
+      .catch(() => {});
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [student.photo_url]);
+
+  return (
+    <div
+      className="rounded-xl border border-border bg-card px-4 py-3 flex items-start gap-3"
+      style={{ borderLeftWidth: 4, borderLeftColor: accentColor }}
+    >
+      <div className="pt-0.5 shrink-0">
+        <Checkbox
+          checked={selected}
+          onCheckedChange={(checked) => onSelect(student, !!checked)}
+          aria-label={`Select ${student.full_name}`}
+        />
+      </div>
+
+      {photoSrc ? (
+        <img
+          src={photoSrc}
+          alt={student.full_name}
+          className="h-9 w-9 shrink-0 rounded-full object-cover border border-primary/20"
+        />
+      ) : (
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+          {student.first_name.charAt(0).toUpperCase()}
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold text-foreground truncate">
+            {student.full_name}
+          </span>
+          <button
+            type="button"
+            onClick={() => onStatusClick(student)}
+            className={statusConfig.className}
+          >
+            {statusConfig.label}
+          </button>
+          {creditOwed && (
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-red-100 text-destructive border-red-300">
+              ₱{student.credit_balance} Credit Owed
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {student.grade_level}
+          {student.section ? ` · ${student.section}` : ""}
+        </p>
+        {isSubscription && (
+          <div className="mt-2">
+            <MonthBadges
+              studentId={student.id}
+              payments={student.monthly_payments ?? []}
+              canToggle={canTogglePayment}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2 ml-auto flex-wrap justify-end">
+        <span className="text-sm font-bold text-foreground tabular-nums">
+          ₱{(student.wallet_balance ?? 0).toFixed(2)}
+        </span>
+        <Link
+          href={`/students/${student.id}`}
+          className="rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted/40"
+        >
+          Edit
+        </Link>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => onTopUp(student)}
+        >
+          Wallet
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => onRemove(student)}
+          className="text-destructive border-destructive/40 hover:bg-destructive/10"
+        >
+          Remove
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pagination
+// ---------------------------------------------------------------------------
+
+interface PaginationProps {
+  currentPage: number;
+  lastPage: number;
+  from: number | null;
+  to: number | null;
+  total: number;
+  onPageChange: (page: number) => void;
+}
+
+function Pagination({
+  currentPage,
+  lastPage,
+  from,
+  to,
+  total,
+  onPageChange,
+}: PaginationProps) {
+  if (lastPage <= 1) return null;
+
+  const pages: (number | "…")[] = [];
+  for (let i = 1; i <= lastPage; i++) {
+    if (
+      i === 1 ||
+      i === lastPage ||
+      (i >= currentPage - 1 && i <= currentPage + 1)
+    ) {
+      pages.push(i);
+    } else if (
+      (i === currentPage - 2 && currentPage > 3) ||
+      (i === currentPage + 2 && currentPage < lastPage - 2)
+    ) {
+      pages.push("…");
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between pt-3 border-t border-border">
+      <p className="text-xs text-muted-foreground">
+        Showing {from}–{to} of {total}
+      </p>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="rounded px-2 py-1 text-sm text-muted-foreground hover:bg-muted/40 disabled:opacity-40"
+          aria-label="Previous page"
+        >
+          ←
+        </button>
+        {pages.map((p, idx) =>
+          p === "…" ? (
+            <span
+              key={`ellipsis-${idx}`}
+              className="px-2 text-muted-foreground text-sm"
+            >
+              …
+            </span>
+          ) : (
+            <button
+              key={p}
+              type="button"
+              onClick={() => onPageChange(p as number)}
+              className={cn(
+                "rounded px-2.5 py-1 text-sm transition-colors",
+                p === currentPage
+                  ? "bg-primary text-primary-foreground font-bold"
+                  : "text-muted-foreground hover:bg-muted/40",
+              )}
+              aria-current={p === currentPage ? "page" : undefined}
+            >
+              {p}
+            </button>
+          ),
+        )}
+        <button
+          type="button"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === lastPage}
+          className="rounded px-2 py-1 text-sm text-muted-foreground hover:bg-muted/40 disabled:opacity-40"
+          aria-label="Next page"
+        >
+          →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -1283,7 +1515,9 @@ export default function StudentsPage() {
   const [monthFilter, setMonthFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
-  const [selectedStudents, setSelectedStudents] = useState<Map<number, Student>>(new Map());
+  const [selectedStudents, setSelectedStudents] = useState<
+    Map<number, Student>
+  >(new Map());
   const [subPage, setSubPage] = useState(1);
   const [nonSubPage, setNonSubPage] = useState(1);
   const [showBatchModal, setShowBatchModal] = useState(false);
@@ -1603,91 +1837,211 @@ export default function StudentsPage() {
         )
       ) : activeTab === "all" ? (
         <div className="space-y-6">
-          <div className="space-y-3">
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
             <h2 className="text-sm font-extrabold uppercase tracking-wider text-amber-600">
               Subscription Students ({subMeta?.total ?? 0})
             </h2>
-            {subStudents.map((s) => (
-              <StudentCard
-                key={s.id}
-                student={s}
-                selected={selectedStudents.has(s.id)}
-                onSelect={toggleSelect}
-                onTopUp={setTopUpStudent}
-                onStatusClick={(st) =>
-                  setStatusPickerState({
-                    studentId: st.id,
-                    current: st.enrollment_status,
-                  })
-                }
-                onRemove={setRemoveStudent}
-                canTogglePayment={canTogglePayment}
-              />
-            ))}
+            {subQuery.isLoading ? (
+              <div className="space-y-2">
+                {[1, 2].map((k) => (
+                  <div
+                    key={k}
+                    className="h-14 animate-pulse rounded-lg bg-muted"
+                  />
+                ))}
+              </div>
+            ) : subStudents.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No subscription students found.
+              </p>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  {subStudents.map((s) => (
+                    <StudentRow
+                      key={s.id}
+                      student={s}
+                      selected={selectedStudents.has(s.id)}
+                      onSelect={toggleSelect}
+                      onTopUp={setTopUpStudent}
+                      onStatusClick={(st) =>
+                        setStatusPickerState({
+                          studentId: st.id,
+                          current: st.enrollment_status,
+                        })
+                      }
+                      onRemove={setRemoveStudent}
+                      canTogglePayment={canTogglePayment}
+                      accentColor="#F59E0B"
+                    />
+                  ))}
+                </div>
+                {subMeta && (
+                  <Pagination
+                    currentPage={subMeta.current_page}
+                    lastPage={subMeta.last_page}
+                    from={subMeta.from}
+                    to={subMeta.to}
+                    total={subMeta.total}
+                    onPageChange={setSubPage}
+                  />
+                )}
+              </>
+            )}
           </div>
 
-          <div className="space-y-3">
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
             <h2 className="text-sm font-extrabold uppercase tracking-wider text-violet-600">
               Non-Subscription Students ({nonSubMeta?.total ?? 0})
             </h2>
-            {nonSubStudents.map((s) => (
-              <StudentCard
-                key={s.id}
-                student={s}
-                selected={selectedStudents.has(s.id)}
-                onSelect={toggleSelect}
-                onTopUp={setTopUpStudent}
-                onStatusClick={(st) =>
-                  setStatusPickerState({
-                    studentId: st.id,
-                    current: st.enrollment_status,
-                  })
-                }
-                onRemove={setRemoveStudent}
-                canTogglePayment={canTogglePayment}
-              />
-            ))}
+            {nonSubQuery.isLoading ? (
+              <div className="space-y-2">
+                {[1, 2].map((k) => (
+                  <div
+                    key={k}
+                    className="h-14 animate-pulse rounded-lg bg-muted"
+                  />
+                ))}
+              </div>
+            ) : nonSubStudents.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No non-subscription students found.
+              </p>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  {nonSubStudents.map((s) => (
+                    <StudentRow
+                      key={s.id}
+                      student={s}
+                      selected={selectedStudents.has(s.id)}
+                      onSelect={toggleSelect}
+                      onTopUp={setTopUpStudent}
+                      onStatusClick={(st) =>
+                        setStatusPickerState({
+                          studentId: st.id,
+                          current: st.enrollment_status,
+                        })
+                      }
+                      onRemove={setRemoveStudent}
+                      canTogglePayment={canTogglePayment}
+                      accentColor="#8B5CF6"
+                    />
+                  ))}
+                </div>
+                {nonSubMeta && (
+                  <Pagination
+                    currentPage={nonSubMeta.current_page}
+                    lastPage={nonSubMeta.last_page}
+                    from={nonSubMeta.from}
+                    to={nonSubMeta.to}
+                    total={nonSubMeta.total}
+                    onPageChange={setNonSubPage}
+                  />
+                )}
+              </>
+            )}
           </div>
         </div>
       ) : activeTab === "subscription" ? (
-        <div className="space-y-3">
-          {subStudents.map((s) => (
-            <StudentCard
-              key={s.id}
-              student={s}
-              selected={selectedStudents.has(s.id)}
-              onSelect={toggleSelect}
-              onTopUp={setTopUpStudent}
-              onStatusClick={(st) =>
-                setStatusPickerState({
-                  studentId: st.id,
-                  current: st.enrollment_status,
-                })
-              }
-              onRemove={setRemoveStudent}
-              canTogglePayment={canTogglePayment}
-            />
-          ))}
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          {subQuery.isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((k) => (
+                <div
+                  key={k}
+                  className="h-14 animate-pulse rounded-lg bg-muted"
+                />
+              ))}
+            </div>
+          ) : subStudents.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              No students found.
+            </p>
+          ) : (
+            <>
+              <div className="space-y-2">
+                {subStudents.map((s) => (
+                  <StudentRow
+                    key={s.id}
+                    student={s}
+                    selected={selectedStudents.has(s.id)}
+                    onSelect={toggleSelect}
+                    onTopUp={setTopUpStudent}
+                    onStatusClick={(st) =>
+                      setStatusPickerState({
+                        studentId: st.id,
+                        current: st.enrollment_status,
+                      })
+                    }
+                    onRemove={setRemoveStudent}
+                    canTogglePayment={canTogglePayment}
+                    accentColor="#F59E0B"
+                  />
+                ))}
+              </div>
+              {subMeta && (
+                <Pagination
+                  currentPage={subMeta.current_page}
+                  lastPage={subMeta.last_page}
+                  from={subMeta.from}
+                  to={subMeta.to}
+                  total={subMeta.total}
+                  onPageChange={setSubPage}
+                />
+              )}
+            </>
+          )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {nonSubStudents.map((s) => (
-            <StudentCard
-              key={s.id}
-              student={s}
-              selected={selectedStudents.has(s.id)}
-              onSelect={toggleSelect}
-              onTopUp={setTopUpStudent}
-              onStatusClick={(st) =>
-                setStatusPickerState({
-                  studentId: st.id,
-                  current: st.enrollment_status,
-                })
-              }
-              onRemove={setRemoveStudent}
-              canTogglePayment={canTogglePayment}
-            />
-          ))}
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          {nonSubQuery.isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((k) => (
+                <div
+                  key={k}
+                  className="h-14 animate-pulse rounded-lg bg-muted"
+                />
+              ))}
+            </div>
+          ) : nonSubStudents.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              No students found.
+            </p>
+          ) : (
+            <>
+              <div className="space-y-2">
+                {nonSubStudents.map((s) => (
+                  <StudentRow
+                    key={s.id}
+                    student={s}
+                    selected={selectedStudents.has(s.id)}
+                    onSelect={toggleSelect}
+                    onTopUp={setTopUpStudent}
+                    onStatusClick={(st) =>
+                      setStatusPickerState({
+                        studentId: st.id,
+                        current: st.enrollment_status,
+                      })
+                    }
+                    onRemove={setRemoveStudent}
+                    canTogglePayment={canTogglePayment}
+                    accentColor="#8B5CF6"
+                  />
+                ))}
+              </div>
+              {nonSubMeta && (
+                <Pagination
+                  currentPage={nonSubMeta.current_page}
+                  lastPage={nonSubMeta.last_page}
+                  from={nonSubMeta.from}
+                  to={nonSubMeta.to}
+                  total={nonSubMeta.total}
+                  onPageChange={setNonSubPage}
+                />
+              )}
+            </>
+          )}
         </div>
       )}
 
