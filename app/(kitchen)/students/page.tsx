@@ -1284,6 +1284,8 @@ export default function StudentsPage() {
   const [yearFilter, setYearFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [selectedStudents, setSelectedStudents] = useState<Map<number, Student>>(new Map());
+  const [subPage, setSubPage] = useState(1);
+  const [nonSubPage, setNonSubPage] = useState(1);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [topUpStudent, setTopUpStudent] = useState<Student | null>(null);
   const [statusPickerState, setStatusPickerState] = useState<{
@@ -1292,12 +1294,12 @@ export default function StudentsPage() {
   } | null>(null);
   const [removeStudent, setRemoveStudent] = useState<Student | null>(null);
 
-  const { data, isLoading, isError } = useQuery({
+  const subQuery = useQuery({
     queryKey: [
       "students",
+      "subscription",
       {
-        showDeleted,
-        activeTab,
+        subPage,
         search,
         gradeFilter,
         statusFilter,
@@ -1307,41 +1309,66 @@ export default function StudentsPage() {
       },
     ],
     queryFn: () =>
-      studentApi.list(
-        showDeleted
-          ? {
-              deleted: 1,
-              search: search || undefined,
-              grade: gradeFilter || undefined,
-            }
-          : {
-              search: search || undefined,
-              grade: gradeFilter || undefined,
-              status: statusFilter || undefined,
-              type: activeTab !== "all" ? activeTab : undefined,
-              month:
-                activeTab === "subscription" && monthFilter
-                  ? (monthFilter as SchoolMonth)
-                  : undefined,
-              year:
-                activeTab === "subscription" && yearFilter
-                  ? Number(yearFilter)
-                  : undefined,
-              payment_status:
-                activeTab === "subscription" && paymentStatusFilter
-                  ? paymentStatusFilter
-                  : undefined,
-            },
-      ),
+      studentApi.list({
+        type: "subscription",
+        page: subPage,
+        search: search || undefined,
+        grade: gradeFilter || undefined,
+        status: statusFilter || undefined,
+        month: monthFilter ? (monthFilter as SchoolMonth) : undefined,
+        year: yearFilter ? Number(yearFilter) : undefined,
+        payment_status: paymentStatusFilter || undefined,
+      }),
+    enabled: !showDeleted,
   });
 
-  const allStudents = data?.data ?? [];
-  const subscriptionStudents = allStudents.filter(
-    (s) => s.student_type === "subscription",
-  );
-  const nonSubStudents = allStudents.filter(
-    (s) => s.student_type === "non_subscription",
-  );
+  const nonSubQuery = useQuery({
+    queryKey: [
+      "students",
+      "non_subscription",
+      {
+        nonSubPage,
+        search,
+        gradeFilter,
+        statusFilter,
+      },
+    ],
+    queryFn: () =>
+      studentApi.list({
+        type: "non_subscription",
+        page: nonSubPage,
+        search: search || undefined,
+        grade: gradeFilter || undefined,
+        status: statusFilter || undefined,
+      }),
+    enabled: !showDeleted,
+  });
+
+  const deletedQuery = useQuery({
+    queryKey: ["students", "deleted", { search, gradeFilter }],
+    queryFn: () =>
+      studentApi.list({
+        deleted: 1,
+        search: search || undefined,
+        grade: gradeFilter || undefined,
+      }),
+    enabled: showDeleted,
+  });
+
+  const subStudents = subQuery.data?.data ?? [];
+  const nonSubStudents = nonSubQuery.data?.data ?? [];
+  const deletedStudents = deletedQuery.data?.data ?? [];
+
+  const subMeta = subQuery.data?.meta;
+  const nonSubMeta = nonSubQuery.data?.meta;
+
+  const isLoading = showDeleted
+    ? deletedQuery.isLoading
+    : subQuery.isLoading || nonSubQuery.isLoading;
+
+  const isError = showDeleted
+    ? deletedQuery.isError
+    : subQuery.isError || nonSubQuery.isError;
 
   function toggleSelect(student: Student, checked: boolean) {
     setSelectedStudents((prev) => {
@@ -1358,13 +1385,6 @@ export default function StudentsPage() {
   function clearSelection() {
     setSelectedStudents(new Map());
   }
-
-  const displayedStudents =
-    activeTab === "all"
-      ? allStudents
-      : activeTab === "subscription"
-        ? subscriptionStudents
-        : nonSubStudents;
 
   return (
     <div className="p-6 space-y-4">
@@ -1533,11 +1553,11 @@ export default function StudentsPage() {
               { value: "all", label: "All" },
               {
                 value: "subscription",
-                label: `Subscription (${subscriptionStudents.length})`,
+                label: `Subscription (${subMeta?.total ?? 0})`,
               },
               {
                 value: "non_subscription",
-                label: `Non-Subscription (${nonSubStudents.length})`,
+                label: `Non-Subscription (${nonSubMeta?.total ?? 0})`,
               },
             ] as const
           ).map((tab) => (
@@ -1570,76 +1590,88 @@ export default function StudentsPage() {
           ))}
         </div>
       ) : showDeleted ? (
-        !allStudents.length ? (
+        !deletedStudents.length ? (
           <div className="rounded-xl border border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
             No removed students found.
           </div>
         ) : (
           <div className="space-y-3">
-            {allStudents.map((s) => (
+            {deletedStudents.map((s) => (
               <DeletedStudentCard key={s.id} student={s} />
             ))}
           </div>
         )
-      ) : !displayedStudents.length ? (
-        <div className="rounded-xl border border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
-          No students found.
-        </div>
       ) : activeTab === "all" ? (
         <div className="space-y-6">
-          {subscriptionStudents.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-sm font-extrabold uppercase tracking-wider text-orange-600">
-                Subscription Students ({subscriptionStudents.length})
-              </h2>
-              {subscriptionStudents.map((s) => (
-                <StudentCard
-                  key={s.id}
-                  student={s}
-                  selected={selectedStudents.has(s.id)}
-                  onSelect={toggleSelect}
-                  onTopUp={setTopUpStudent}
-                  onStatusClick={(st) =>
-                    setStatusPickerState({
-                      studentId: st.id,
-                      current: st.enrollment_status,
-                    })
-                  }
-                  onRemove={setRemoveStudent}
-                  canTogglePayment={canTogglePayment}
-                />
-              ))}
-            </div>
-          )}
+          <div className="space-y-3">
+            <h2 className="text-sm font-extrabold uppercase tracking-wider text-amber-600">
+              Subscription Students ({subMeta?.total ?? 0})
+            </h2>
+            {subStudents.map((s) => (
+              <StudentCard
+                key={s.id}
+                student={s}
+                selected={selectedStudents.has(s.id)}
+                onSelect={toggleSelect}
+                onTopUp={setTopUpStudent}
+                onStatusClick={(st) =>
+                  setStatusPickerState({
+                    studentId: st.id,
+                    current: st.enrollment_status,
+                  })
+                }
+                onRemove={setRemoveStudent}
+                canTogglePayment={canTogglePayment}
+              />
+            ))}
+          </div>
 
-          {nonSubStudents.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-sm font-extrabold uppercase tracking-wider text-purple-600">
-                Non-Subscription Students ({nonSubStudents.length})
-              </h2>
-              {nonSubStudents.map((s) => (
-                <StudentCard
-                  key={s.id}
-                  student={s}
-                  selected={selectedStudents.has(s.id)}
-                  onSelect={toggleSelect}
-                  onTopUp={setTopUpStudent}
-                  onStatusClick={(st) =>
-                    setStatusPickerState({
-                      studentId: st.id,
-                      current: st.enrollment_status,
-                    })
-                  }
-                  onRemove={setRemoveStudent}
-                  canTogglePayment={canTogglePayment}
-                />
-              ))}
-            </div>
-          )}
+          <div className="space-y-3">
+            <h2 className="text-sm font-extrabold uppercase tracking-wider text-violet-600">
+              Non-Subscription Students ({nonSubMeta?.total ?? 0})
+            </h2>
+            {nonSubStudents.map((s) => (
+              <StudentCard
+                key={s.id}
+                student={s}
+                selected={selectedStudents.has(s.id)}
+                onSelect={toggleSelect}
+                onTopUp={setTopUpStudent}
+                onStatusClick={(st) =>
+                  setStatusPickerState({
+                    studentId: st.id,
+                    current: st.enrollment_status,
+                  })
+                }
+                onRemove={setRemoveStudent}
+                canTogglePayment={canTogglePayment}
+              />
+            ))}
+          </div>
+        </div>
+      ) : activeTab === "subscription" ? (
+        <div className="space-y-3">
+          {subStudents.map((s) => (
+            <StudentCard
+              key={s.id}
+              student={s}
+              selected={selectedStudents.has(s.id)}
+              onSelect={toggleSelect}
+              onTopUp={setTopUpStudent}
+              onStatusClick={(st) =>
+                setStatusPickerState({
+                  studentId: st.id,
+                  current: st.enrollment_status,
+                })
+              }
+              onRemove={setRemoveStudent}
+              canTogglePayment={canTogglePayment}
+            />
+          ))}
         </div>
       ) : (
         <div className="space-y-3">
-          {displayedStudents.map((s) => (
+          {nonSubStudents.map((s) => (
             <StudentCard
               key={s.id}
               student={s}
