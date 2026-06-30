@@ -102,6 +102,8 @@ export interface StudentReportRow {
   status: string;
   wallet_balance: number;
   total_spent: number;
+  notes: string | null;
+  allergies: string | null;
 }
 
 export interface StudentReportSummary {
