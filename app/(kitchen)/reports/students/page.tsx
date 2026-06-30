@@ -1,24 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { reportApi, exportReport } from "@/lib/api/reports";
+import { FilterPillGroup } from "@/components/reports/filter-pill-group";
+import { exportReport, reportApi } from "@/lib/api/reports";
 import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Constants
 // ---------------------------------------------------------------------------
 
 const GRADE_LEVELS = [
@@ -39,6 +34,25 @@ const GRADE_LEVELS = [
   "Grade 12",
 ];
 
+const STATUS_OPTIONS = [
+  { label: "Enrolled", value: "enrolled" },
+  { label: "Paused", value: "paused" },
+  { label: "Unenrolled", value: "unenrolled" },
+  { label: "Banned", value: "banned" },
+  { label: "Graduated", value: "graduated" },
+];
+
+const GRADE_OPTIONS = GRADE_LEVELS.map((g) => ({ label: g, value: g }));
+
+const TYPE_OPTIONS = [
+  { label: "Subscription", value: "subscription" },
+  { label: "Non-Subscription", value: "non_subscription" },
+];
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 function formatPeso(n: number | null | undefined): string {
   return `₱${(n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
@@ -58,7 +72,7 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize",
+        "rounded-full border px-2 py-0.5 text-[11px] font-bold capitalize",
         cls,
       )}
     >
@@ -70,7 +84,7 @@ function StatusBadge({ status }: { status: string }) {
 function TableRowSkeleton() {
   return (
     <tr>
-      {Array.from({ length: 7 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
           <Skeleton className="h-4 w-full" />
         </td>
@@ -88,15 +102,27 @@ export default function StudentsReportPage() {
   const isAdmin = user?.roles.includes("admin") ?? false;
   const isManager = user?.roles.includes("manager") ?? false;
 
-  const [enrollmentStatus, setEnrollmentStatus] = useState("all");
-  const [gradeLevel, setGradeLevel] = useState("all");
-  const [studentType, setStudentType] = useState("all");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [enrollmentStatus, setEnrollmentStatus] = useState("");
+  const [gradeLevel, setGradeLevel] = useState("");
+  const [studentType, setStudentType] = useState("");
   const [page, setPage] = useState(1);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   const params = {
-    status: enrollmentStatus !== "all" ? enrollmentStatus : undefined,
-    grade: gradeLevel !== "all" ? gradeLevel : undefined,
-    type: studentType !== "all" ? studentType : undefined,
+    search: search || undefined,
+    status: enrollmentStatus || undefined,
+    grade: gradeLevel || undefined,
+    type: studentType || undefined,
     page,
   };
 
@@ -109,8 +135,19 @@ export default function StudentsReportPage() {
   const summary = data?.summary;
   const meta = data?.meta;
 
+  function handleFilterChange(setter: (v: string) => void) {
+    return (v: string) => {
+      setter(v);
+      setPage(1);
+    };
+  }
+
+  function toggleRow(id: number) {
+    setExpandedRowId((prev) => (prev === id ? null : id));
+  }
+
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-4 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -123,10 +160,10 @@ export default function StudentsReportPage() {
             size="sm"
             onClick={() => {
               void exportReport("reports/students", {
-                status:
-                  enrollmentStatus !== "all" ? enrollmentStatus : undefined,
-                grade: gradeLevel !== "all" ? gradeLevel : undefined,
-                type: studentType !== "all" ? studentType : undefined,
+                search: search || undefined,
+                status: enrollmentStatus || undefined,
+                grade: gradeLevel || undefined,
+                type: studentType || undefined,
               });
             }}
           >
@@ -136,73 +173,40 @@ export default function StudentsReportPage() {
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <Select
+      {/* Search + Filter toolbar */}
+      <div className="space-y-2.5">
+        <div className="relative">
+          <Search
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            className="h-9 pl-9 text-sm"
+            placeholder="Search by name, student number, or section..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            aria-label="Search students"
+          />
+        </div>
+
+        <FilterPillGroup
+          label="Status"
+          options={STATUS_OPTIONS}
           value={enrollmentStatus}
-          onValueChange={(v) => {
-            setEnrollmentStatus(v ?? "all");
-            setPage(1);
-          }}
-        >
-          <SelectTrigger
-            className="h-8 w-[160px] text-xs"
-            aria-label="Enrollment status filter"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="enrolled">Enrolled</SelectItem>
-            <SelectItem value="paused">Paused</SelectItem>
-            <SelectItem value="unenrolled">Unenrolled</SelectItem>
-            <SelectItem value="banned">Banned</SelectItem>
-            <SelectItem value="graduated">Graduated</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
+          onChange={handleFilterChange(setEnrollmentStatus)}
+        />
+        <FilterPillGroup
+          label="Grade"
+          options={GRADE_OPTIONS}
           value={gradeLevel}
-          onValueChange={(v) => {
-            setGradeLevel(v ?? "all");
-            setPage(1);
-          }}
-        >
-          <SelectTrigger
-            className="h-8 w-[140px] text-xs"
-            aria-label="Grade level filter"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Grades</SelectItem>
-            {GRADE_LEVELS.map((g) => (
-              <SelectItem key={g} value={g}>
-                {g}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
+          onChange={handleFilterChange(setGradeLevel)}
+        />
+        <FilterPillGroup
+          label="Type"
+          options={TYPE_OPTIONS}
           value={studentType}
-          onValueChange={(v) => {
-            setStudentType(v ?? "all");
-            setPage(1);
-          }}
-        >
-          <SelectTrigger
-            className="h-8 w-[160px] text-xs"
-            aria-label="Student type filter"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="subscription">Subscription</SelectItem>
-            <SelectItem value="non_subscription">Non-Subscription</SelectItem>
-          </SelectContent>
-        </Select>
+          onChange={handleFilterChange(setStudentType)}
+        />
       </div>
 
       {/* Summary */}
@@ -270,7 +274,7 @@ export default function StudentsReportPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-xl border border-border bg-card overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border border-border bg-card">
         {isError ? (
           <p className="px-4 py-8 text-center text-sm text-destructive">
             Failed to load student data. Please try again.
@@ -300,6 +304,7 @@ export default function StudentsReportPage() {
                 <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
                   Total Spent
                 </th>
+                <th className="w-8 px-4 py-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -310,15 +315,19 @@ export default function StudentsReportPage() {
               ) : !rows?.length ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-10 text-center text-muted-foreground"
                   >
                     No students found for the selected filters.
                   </td>
                 </tr>
               ) : (
-                rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-muted/20">
+                rows.flatMap((row) => [
+                  <tr
+                    key={row.id}
+                    className="cursor-pointer hover:bg-muted/20"
+                    onClick={() => toggleRow(row.id)}
+                  >
                     <td className="px-4 py-2.5 font-medium text-foreground">
                       {row.full_name}
                     </td>
@@ -340,8 +349,49 @@ export default function StudentsReportPage() {
                     <td className="px-4 py-2.5 text-right font-semibold">
                       {formatPeso(row.total_spent)}
                     </td>
-                  </tr>
-                ))
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      <ChevronRight
+                        className={cn(
+                          "h-4 w-4 transition-transform duration-150",
+                          expandedRowId === row.id && "rotate-90",
+                        )}
+                        aria-hidden="true"
+                      />
+                    </td>
+                  </tr>,
+                  ...(expandedRowId === row.id
+                    ? [
+                        <tr key={`${row.id}-detail`} className="bg-muted/10">
+                          <td colSpan={8} className="px-6 py-4">
+                            {row.notes || row.allergies ? (
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="rounded-lg border bg-card p-3">
+                                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Allergies
+                                  </p>
+                                  <p className="text-sm text-foreground">
+                                    {row.allergies ?? "None recorded"}
+                                  </p>
+                                </div>
+                                <div className="rounded-lg border bg-card p-3">
+                                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Notes
+                                  </p>
+                                  <p className="text-sm text-foreground">
+                                    {row.notes ?? "None recorded"}
+                                  </p>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-center text-sm text-muted-foreground">
+                                No notes or allergies recorded for this student.
+                              </p>
+                            )}
+                          </td>
+                        </tr>,
+                      ]
+                    : []),
+                ])
               )}
             </tbody>
           </table>
