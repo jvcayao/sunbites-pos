@@ -16,7 +16,7 @@ export type SchoolMonth =
   | "january"
   | "february"
   | "march";
-export type PaymentStatus = "paid" | "unpaid";
+export type PaymentStatus = "paid" | "unpaid" | "voided";
 export type WalletPaymentMethod = "cash" | "gcash" | "bank_transfer";
 
 export interface StudentContact {
@@ -37,6 +37,24 @@ export interface MonthlyPayment {
   status: PaymentStatus;
   amount: string;
   recorded_at: string | null;
+  voided_at: string | null;
+  void_reason: string | null;
+}
+
+export interface DowngradePreviewMonth {
+  id: number;
+  school_month: SchoolMonth;
+  year: number;
+  amount: number;
+  label: string;
+}
+
+export interface DowngradePreview {
+  paid_months_retained: DowngradePreviewMonth[];
+  paid_voidable_months: DowngradePreviewMonth[];
+  unpaid_months_to_delete: string[];
+  unpaid_months_to_delete_count: number;
+  wallet_balance: number;
 }
 
 export interface Student {

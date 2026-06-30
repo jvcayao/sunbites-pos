@@ -265,6 +265,15 @@ export interface SubscriptionReportRow {
   };
 }
 
+export interface HistoricalSubscriberRow {
+  id: number;
+  full_name: string;
+  student_number: string | null;
+  grade_level: string;
+  section: string | null;
+  payment_amount: number;
+}
+
 export interface DailySummaryData {
   date: string;
   total_orders: number;
@@ -379,7 +388,11 @@ export const reportApi = {
     search?: string;
     page?: number;
   }) =>
-    apiClient.get<{ data: SubscriptionReportRow[]; meta: PaginatedMeta }>(
+    apiClient.get<{
+      data: SubscriptionReportRow[];
+      meta: PaginatedMeta;
+      historical_data: HistoricalSubscriberRow[];
+    }>(
       "/reports/subscription",
       {
         params: params as Record<string, string | number | boolean | undefined>,
