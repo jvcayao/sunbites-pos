@@ -1039,7 +1039,7 @@ function DeletedStudentCard({ student }: { student: Student }) {
 interface StudentCardProps {
   student: Student;
   selected: boolean;
-  onSelect: (id: number, selected: boolean) => void;
+  onSelect: (student: Student, selected: boolean) => void;
   onTopUp: (student: Student) => void;
   onStatusClick: (student: Student) => void;
   onRemove: (student: Student) => void;
@@ -1093,7 +1093,7 @@ function StudentCard({
       <div className="absolute top-3 left-3">
         <Checkbox
           checked={selected}
-          onCheckedChange={(checked) => onSelect(student.id, !!checked)}
+          onCheckedChange={(checked) => onSelect(student, !!checked)}
           aria-label={`Select ${student.full_name}`}
         />
       </div>
@@ -1283,7 +1283,7 @@ export default function StudentsPage() {
   const [monthFilter, setMonthFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedStudents, setSelectedStudents] = useState<Map<number, Student>>(new Map());
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [topUpStudent, setTopUpStudent] = useState<Student | null>(null);
   const [statusPickerState, setStatusPickerState] = useState<{
@@ -1343,22 +1343,20 @@ export default function StudentsPage() {
     (s) => s.student_type === "non_subscription",
   );
 
-  const selectedStudents = allStudents.filter((s) => selectedIds.has(s.id));
-
-  function toggleSelect(id: number, checked: boolean) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
+  function toggleSelect(student: Student, checked: boolean) {
+    setSelectedStudents((prev) => {
+      const next = new Map(prev);
       if (checked) {
-        next.add(id);
+        next.set(student.id, student);
       } else {
-        next.delete(id);
+        next.delete(student.id);
       }
       return next;
     });
   }
 
   function clearSelection() {
-    setSelectedIds(new Set());
+    setSelectedStudents(new Map());
   }
 
   const displayedStudents =
@@ -1598,7 +1596,7 @@ export default function StudentsPage() {
                 <StudentCard
                   key={s.id}
                   student={s}
-                  selected={selectedIds.has(s.id)}
+                  selected={selectedStudents.has(s.id)}
                   onSelect={toggleSelect}
                   onTopUp={setTopUpStudent}
                   onStatusClick={(st) =>
@@ -1623,7 +1621,7 @@ export default function StudentsPage() {
                 <StudentCard
                   key={s.id}
                   student={s}
-                  selected={selectedIds.has(s.id)}
+                  selected={selectedStudents.has(s.id)}
                   onSelect={toggleSelect}
                   onTopUp={setTopUpStudent}
                   onStatusClick={(st) =>
@@ -1645,7 +1643,7 @@ export default function StudentsPage() {
             <StudentCard
               key={s.id}
               student={s}
-              selected={selectedIds.has(s.id)}
+              selected={selectedStudents.has(s.id)}
               onSelect={toggleSelect}
               onTopUp={setTopUpStudent}
               onStatusClick={(st) =>
@@ -1662,10 +1660,10 @@ export default function StudentsPage() {
       )}
 
       {/* Floating action bar */}
-      {selectedIds.size >= 1 && (
+      {selectedStudents.size >= 1 && (
         <div className="no-print fixed bottom-6 left-1/2 -translate-x-1/2 shadow-lg border border-border rounded-2xl bg-white px-6 py-3 flex items-center gap-4 z-50">
           <span className="bg-primary text-primary-foreground rounded-full px-3 py-0.5 text-sm font-bold">
-            {selectedIds.size}
+            {selectedStudents.size}
           </span>
           <Button
             type="button"
@@ -1690,7 +1688,7 @@ export default function StudentsPage() {
       <BatchQrModal
         open={showBatchModal}
         onClose={() => setShowBatchModal(false)}
-        students={selectedStudents}
+        students={Array.from(selectedStudents.values())}
       />
 
       {topUpStudent && (
