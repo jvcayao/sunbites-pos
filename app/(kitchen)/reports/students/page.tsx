@@ -327,6 +327,13 @@ export default function StudentsReportPage() {
                     key={row.id}
                     className="cursor-pointer hover:bg-muted/20"
                     onClick={() => toggleRow(row.id)}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleRow(row.id);
+                      }
+                    }}
                   >
                     <td className="px-4 py-2.5 font-medium text-foreground">
                       {row.full_name}
