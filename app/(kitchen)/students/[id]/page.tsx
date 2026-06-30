@@ -119,6 +119,19 @@ const GRADE_LEVELS = [
 ];
 
 // ---------------------------------------------------------------------------
+// Month helpers
+// ---------------------------------------------------------------------------
+
+const MONTH_TO_NUMBER: Record<string, number> = {
+  june: 6, july: 7, august: 8, september: 9, october: 10,
+  november: 11, december: 12, january: 1, february: 2, march: 3,
+};
+
+function monthToNumber(month: string): number {
+  return MONTH_TO_NUMBER[month] ?? 1;
+}
+
+// ---------------------------------------------------------------------------
 // Wallet top-up validation schema (mirrors students/page.tsx)
 // ---------------------------------------------------------------------------
 
@@ -1736,6 +1749,71 @@ function ContactsTab({
 }
 
 // ---------------------------------------------------------------------------
+// VoidPaymentDialog
+// ---------------------------------------------------------------------------
+
+interface VoidPaymentDialogProps {
+  open: boolean;
+  onClose: () => void;
+  studentId: number;
+  payment: MonthlyPayment | null;
+}
+
+function VoidPaymentDialog({ open, onClose, studentId, payment }: VoidPaymentDialogProps) {
+  const queryClient = useQueryClient();
+  const [reason, setReason] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: () => studentApi.voidPayment(studentId, payment!.id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student-payments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["student", studentId] });
+      toast.success("Payment voided.");
+      setReason("");
+      onClose();
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to void payment.");
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { setReason(""); onClose(); } }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Void Payment — {payment?.school_month_label} {payment?.year}</DialogTitle>
+          <DialogDescription>
+            This marks the ₱{payment?.amount} payment as voided. Issue any refund separately via wallet top-up.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="void-reason">Reason (required)</Label>
+          <Textarea
+            id="void-reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g. Student downgraded mid-month. Refund issued separately."
+            rows={3}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => mutation.mutate()}
+            disabled={!reason.trim() || mutation.isPending}
+          >
+            {mutation.isPending ? "Voiding…" : "Void Payment"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Payment tab
 // ---------------------------------------------------------------------------
 
@@ -1751,6 +1829,7 @@ function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
   const [editingPayment, setEditingPayment] = useState<MonthlyPayment | null>(
     null,
   );
+  const [voidingPayment, setVoidingPayment] = useState<MonthlyPayment | null>(null);
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ["student-payments", studentId],
@@ -1847,55 +1926,95 @@ function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
             {year}
           </p>
           {paymentsByYear[year].map((payment) => {
-            const isPaid = payment.status === "paid";
+            const isPaid    = payment.status === "paid";
+            const isVoided  = payment.status === "voided";
+            const isUnpaid  = payment.status === "unpaid";
+
+            const paymentDate = new Date(payment.year, monthToNumber(payment.school_month) - 1, 1);
+            const nowMonth    = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+            const isVoidable  = isPaid && paymentDate >= nowMonth;
+
             return (
               <div
                 key={payment.id}
-                className="flex items-center justify-between rounded-lg border border-border bg-card p-3"
+                className={cn(
+                  "flex items-center justify-between rounded-lg border border-border bg-card p-3",
+                  isVoided && "opacity-60",
+                )}
               >
                 <div>
-                  <p className="text-sm font-medium">
+                  <p className={cn("text-sm font-medium", isVoided && "line-through text-muted-foreground")}>
                     {payment.school_month_label} {payment.year}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    ₱{payment.amount}
-                    {payment.recorded_at
-                      ? ` · Paid ${new Date(payment.recorded_at).toLocaleDateString()}`
-                      : ""}
+                    {isVoided ? (
+                      <>
+                        <span className="line-through">₱{payment.amount}</span>
+                        {payment.void_reason && (
+                          <span className="ml-1">· {payment.void_reason}</span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        ₱{payment.amount}
+                        {payment.recorded_at
+                          ? ` · Paid ${new Date(payment.recorded_at).toLocaleDateString()}`
+                          : ""}
+                      </>
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "text-[11px] font-bold px-3 py-1 rounded-full border",
-                      isPaid
-                        ? "bg-green-100 text-green-700 border-green-300"
-                        : "bg-red-100 text-destructive border-red-300",
-                    )}
-                  >
-                    {isPaid ? "Paid" : "Unpaid"}
-                  </span>
-                  {canToggle && (
+                  {isVoided ? (
+                    <span className="text-[11px] font-bold px-3 py-1 rounded-full border bg-muted text-muted-foreground border-border">
+                      Voided
+                    </span>
+                  ) : (
                     <>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={isPaid ? "outline" : "default"}
-                        className={isPaid ? "text-muted-foreground" : ""}
-                        onClick={() => toggleMutation.mutate(payment.id)}
-                        disabled={toggleMutation.isPending}
+                      <span
+                        className={cn(
+                          "text-[11px] font-bold px-3 py-1 rounded-full border",
+                          isPaid
+                            ? "bg-green-100 text-green-700 border-green-300"
+                            : "bg-red-100 text-destructive border-red-300",
+                        )}
                       >
-                        {isPaid ? "Mark Unpaid" : "Mark as Paid"}
-                      </Button>
-                      {!isPaid && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditingPayment(payment)}
-                        >
-                          Edit Amount
-                        </Button>
+                        {isPaid ? "Paid" : "Unpaid"}
+                      </span>
+                      {canToggle && !isVoided && (
+                        <>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={isPaid ? "outline" : "default"}
+                            className={isPaid ? "text-muted-foreground" : ""}
+                            onClick={() => toggleMutation.mutate(payment.id)}
+                            disabled={toggleMutation.isPending}
+                          >
+                            {isPaid ? "Mark Unpaid" : "Mark as Paid"}
+                          </Button>
+                          {isUnpaid && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setEditingPayment(payment)}
+                            >
+                              Edit Amount
+                            </Button>
+                          )}
+                          {isVoidable && canToggle && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setVoidingPayment(payment)}
+                            >
+                              Void
+                            </Button>
+                          )}
+                        </>
                       )}
                     </>
                   )}
@@ -1920,6 +2039,13 @@ function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
           payment={editingPayment}
         />
       )}
+
+      <VoidPaymentDialog
+        open={voidingPayment !== null}
+        onClose={() => setVoidingPayment(null)}
+        studentId={studentId}
+        payment={voidingPayment}
+      />
     </div>
   );
 }
