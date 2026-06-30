@@ -814,7 +814,7 @@ function QrCard({ student }: { student: Student }) {
 }
 
 function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
-  const [cols, setCols] = useState<1 | 2 | 3>(2);
+  const [cols, setCols] = useState<1 | 2 | 3 | 4>(4);
   const [printRoot, setPrintRoot] = useState<HTMLDivElement | null>(null);
 
   // Mount a dedicated print container directly on <body> so window.print()
@@ -871,7 +871,7 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
             <span className="text-sm text-muted-foreground">
               Cards per row:
             </span>
-            {([1, 2, 3] as const).map((n) => (
+            {([4, 3, 2, 1] as const).map((n) => (
               <button
                 key={n}
                 type="button"
@@ -896,7 +896,9 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
                 ? "grid-cols-1"
                 : cols === 2
                   ? "grid-cols-2"
-                  : "grid-cols-3",
+                  : cols === 3
+                    ? "grid-cols-3"
+                    : "grid-cols-4",
             )}
           >
             {students.map((s) => (

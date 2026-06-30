@@ -292,6 +292,22 @@ describe("StudentsPage", () => {
     });
   });
 
+  it("BatchQrModal defaults to 4 cards per row with button 4 highlighted", async () => {
+    const user = userEvent.setup();
+    render(<StudentsPage />);
+    await screen.findByText("Maria Santos");
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[0]);
+    await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+    const btn4 = screen.getByRole("button", { name: "4" });
+    expect(btn4).toHaveClass("font-semibold");
+
+    const btn2 = screen.getByRole("button", { name: "2" });
+    expect(btn2).not.toHaveClass("font-semibold");
+  });
+
   describe("QrCard preview colors in batch print modal", () => {
     it("renders a red header in preview for subscription students", async () => {
       const user = userEvent.setup();
