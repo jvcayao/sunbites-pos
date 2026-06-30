@@ -139,16 +139,61 @@ const studentRowBase: StudentReportRow = {
 const subscriptionStudentRow = {
   ...studentRowBase,
   payment_history: [
-    { month: "june",      month_label: "June",      year: 2026, status: "paid" as const },
-    { month: "july",      month_label: "July",      year: 2026, status: "unpaid" as const },
-    { month: "august",    month_label: "August",    year: 2026, status: "unpaid" as const },
-    { month: "september", month_label: "September", year: 2026, status: "unpaid" as const },
-    { month: "october",   month_label: "October",   year: 2026, status: "unpaid" as const },
-    { month: "november",  month_label: "November",  year: 2026, status: "no_record" as const },
-    { month: "december",  month_label: "December",  year: 2026, status: "no_record" as const },
-    { month: "january",   month_label: "January",   year: 2026, status: "no_record" as const },
-    { month: "february",  month_label: "February",  year: 2026, status: "no_record" as const },
-    { month: "march",     month_label: "March",     year: 2026, status: "no_record" as const },
+    { month: "june", month_label: "June", year: 2026, status: "paid" as const },
+    {
+      month: "july",
+      month_label: "July",
+      year: 2026,
+      status: "unpaid" as const,
+    },
+    {
+      month: "august",
+      month_label: "August",
+      year: 2026,
+      status: "unpaid" as const,
+    },
+    {
+      month: "september",
+      month_label: "September",
+      year: 2026,
+      status: "unpaid" as const,
+    },
+    {
+      month: "october",
+      month_label: "October",
+      year: 2026,
+      status: "unpaid" as const,
+    },
+    {
+      month: "november",
+      month_label: "November",
+      year: 2026,
+      status: "no_record" as const,
+    },
+    {
+      month: "december",
+      month_label: "December",
+      year: 2026,
+      status: "no_record" as const,
+    },
+    {
+      month: "january",
+      month_label: "January",
+      year: 2026,
+      status: "no_record" as const,
+    },
+    {
+      month: "february",
+      month_label: "February",
+      year: 2026,
+      status: "no_record" as const,
+    },
+    {
+      month: "march",
+      month_label: "March",
+      year: 2026,
+      status: "no_record" as const,
+    },
   ],
 };
 
@@ -164,10 +209,7 @@ function setupEmptyReport() {
   );
 }
 
-function setupReportWith(
-  rows: StudentReportRow[],
-  summary = summaryWithTotal,
-) {
+function setupReportWith(rows: StudentReportRow[], summary = summaryWithTotal) {
   server.use(
     http.get(`${API}/reports/students`, () =>
       HttpResponse.json({
@@ -353,7 +395,9 @@ describe("StudentsReportPage", () => {
     await screen.findByText("Type");
     await user.click(screen.getByRole("button", { name: "Enrolled" }));
 
-    const clearBtn = await screen.findByRole("button", { name: /clear filters/i });
+    const clearBtn = await screen.findByRole("button", {
+      name: /clear filters/i,
+    });
     await user.click(clearBtn);
 
     // Clear filters button should disappear
@@ -374,9 +418,7 @@ describe("StudentsReportPage", () => {
     await user.click(screen.getByRole("button", { name: "Paid" }));
     await screen.findByText("From");
 
-    await user.click(
-      screen.getByRole("button", { name: /clear filters/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /clear filters/i }));
 
     await waitFor(() => {
       expect(screen.queryByText("Payment")).not.toBeInTheDocument();
@@ -440,9 +482,7 @@ describe("StudentsReportPage", () => {
     await user.click(row);
 
     // Payment History heading should appear
-    expect(
-      await screen.findByText("Payment History"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Payment History")).toBeInTheDocument();
 
     // The month labels are truncated to 3 chars — "Jun" from "June"
     expect(screen.getByText("Jun")).toBeInTheDocument();

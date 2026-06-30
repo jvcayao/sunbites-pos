@@ -57,20 +57,35 @@ const TYPE_OPTIONS = [
 ];
 
 const SCHOOL_MONTH_ORDER = [
-  "june", "july", "august", "september", "october",
-  "november", "december", "january", "february", "march",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+  "january",
+  "february",
+  "march",
 ] as const;
 
 const MONTH_LABELS: Record<string, string> = {
-  june: "June", july: "July", august: "August", september: "September",
-  october: "October", november: "November", december: "December",
-  january: "January", february: "February", march: "March",
+  june: "June",
+  july: "July",
+  august: "August",
+  september: "September",
+  october: "October",
+  november: "November",
+  december: "December",
+  january: "January",
+  february: "February",
+  march: "March",
 };
 
 const PAYMENT_OPTIONS = [
-  { label: "Paid",   value: "paid" },
+  { label: "Paid", value: "paid" },
   { label: "Unpaid", value: "unpaid" },
-  { label: "Void",   value: "voided" },
+  { label: "Void", value: "voided" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -135,8 +150,8 @@ export default function StudentsReportPage() {
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
   const [paymentStatus, setPaymentStatus] = useState<string>("");
-  const [paymentFrom, setPaymentFrom]     = useState<string>("june");
-  const [paymentTo, setPaymentTo]         = useState<string>("march");
+  const [paymentFrom, setPaymentFrom] = useState<string>("june");
+  const [paymentTo, setPaymentTo] = useState<string>("march");
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -162,8 +177,8 @@ export default function StudentsReportPage() {
     ...(studentType === "subscription" && paymentStatus
       ? {
           payment_status: paymentStatus,
-          payment_from:   paymentFrom,
-          payment_to:     paymentTo,
+          payment_from: paymentFrom,
+          payment_to: paymentTo,
         }
       : {}),
   };
@@ -204,8 +219,12 @@ export default function StudentsReportPage() {
 
   function handlePaymentFrom(value: string) {
     setPaymentFrom(value);
-    const fromIdx = SCHOOL_MONTH_ORDER.indexOf(value as typeof SCHOOL_MONTH_ORDER[number]);
-    const toIdx   = SCHOOL_MONTH_ORDER.indexOf(paymentTo as typeof SCHOOL_MONTH_ORDER[number]);
+    const fromIdx = SCHOOL_MONTH_ORDER.indexOf(
+      value as (typeof SCHOOL_MONTH_ORDER)[number],
+    );
+    const toIdx = SCHOOL_MONTH_ORDER.indexOf(
+      paymentTo as (typeof SCHOOL_MONTH_ORDER)[number],
+    );
     if (fromIdx > toIdx) setPaymentTo(value);
     setPage(1);
   }
@@ -228,15 +247,15 @@ export default function StudentsReportPage() {
             size="sm"
             onClick={() => {
               void exportReport("reports/students", {
-                search:  search || undefined,
-                status:  enrollmentStatus || undefined,
-                grade:   gradeLevel || undefined,
-                type:    studentType || undefined,
+                search: search || undefined,
+                status: enrollmentStatus || undefined,
+                grade: gradeLevel || undefined,
+                type: studentType || undefined,
                 ...(studentType === "subscription" && paymentStatus
                   ? {
                       payment_status: paymentStatus,
-                      payment_from:   paymentFrom,
-                      payment_to:     paymentTo,
+                      payment_from: paymentFrom,
+                      payment_to: paymentTo,
                     }
                   : {}),
               });
@@ -302,12 +321,20 @@ export default function StudentsReportPage() {
               label="Payment"
               options={PAYMENT_OPTIONS}
               value={paymentStatus}
-              onChange={(v) => { setPaymentStatus(v); setPage(1); }}
+              onChange={(v) => {
+                setPaymentStatus(v);
+                setPage(1);
+              }}
             />
             {paymentStatus !== "" && (
               <div className="flex items-center gap-2 pl-16">
                 <span className="text-xs text-muted-foreground">From</span>
-                <Select value={paymentFrom} onValueChange={(v) => { if (v !== null) handlePaymentFrom(v); }}>
+                <Select
+                  value={paymentFrom}
+                  onValueChange={(v) => {
+                    if (v !== null) handlePaymentFrom(v);
+                  }}
+                >
                   <SelectTrigger className="h-8 w-32 text-xs">
                     <SelectValue />
                   </SelectTrigger>
@@ -320,7 +347,15 @@ export default function StudentsReportPage() {
                   </SelectContent>
                 </Select>
                 <span className="text-xs text-muted-foreground">To</span>
-                <Select value={paymentTo} onValueChange={(v) => { if (v !== null) { setPaymentTo(v); setPage(1); } }}>
+                <Select
+                  value={paymentTo}
+                  onValueChange={(v) => {
+                    if (v !== null) {
+                      setPaymentTo(v);
+                      setPage(1);
+                    }
+                  }}
+                >
                   <SelectTrigger className="h-8 w-32 text-xs">
                     <SelectValue />
                   </SelectTrigger>
@@ -522,7 +557,8 @@ export default function StudentsReportPage() {
                                 </div>
                               ) : (
                                 <p className="text-center text-sm text-muted-foreground">
-                                  No notes or allergies recorded for this student.
+                                  No notes or allergies recorded for this
+                                  student.
                                 </p>
                               )}
 
@@ -538,10 +574,14 @@ export default function StudentsReportPage() {
                                         key={`${entry.month}-${entry.year}`}
                                         className={cn(
                                           "flex flex-col items-center rounded-md border px-2.5 py-1.5 text-center",
-                                          entry.status === "paid" && "border-green-300 bg-green-50 text-green-700",
-                                          entry.status === "unpaid" && "border-red-300 bg-red-50 text-red-700",
-                                          entry.status === "voided" && "border-border bg-muted text-muted-foreground line-through",
-                                          entry.status === "no_record" && "border-border bg-muted/40 text-muted-foreground",
+                                          entry.status === "paid" &&
+                                            "border-green-300 bg-green-50 text-green-700",
+                                          entry.status === "unpaid" &&
+                                            "border-red-300 bg-red-50 text-red-700",
+                                          entry.status === "voided" &&
+                                            "border-border bg-muted text-muted-foreground line-through",
+                                          entry.status === "no_record" &&
+                                            "border-border bg-muted/40 text-muted-foreground",
                                         )}
                                       >
                                         <span className="text-[10px] font-semibold">
