@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useState, useEffect } from "react";
+import { startTransition, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -1442,7 +1442,7 @@ function Pagination({
   return (
     <div className="flex items-center justify-between pt-3 border-t border-border">
       <p className="text-xs text-muted-foreground">
-        Showing {from}–{to} of {total}
+        Showing {from ?? 0}–{to ?? 0} of {total}
       </p>
       <div className="flex items-center gap-1">
         <button
@@ -1503,9 +1503,11 @@ export default function StudentsPage() {
   const user = useAuthStore((s) => s.user);
 
   const canTogglePayment =
-    user?.roles.includes("admin") || user?.roles.includes("manager")
-      ? true
-      : false;
+    !!user && (user.roles.includes("admin") || user.roles.includes("manager"));
+
+  const handleStatusClick = useCallback((st: Student) => {
+    setStatusPickerState({ studentId: st.id, current: st.enrollment_status });
+  }, []);
 
   const [showDeleted, setShowDeleted] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("all");
@@ -1618,6 +1620,70 @@ export default function StudentsPage() {
 
   function clearSelection() {
     setSelectedStudents(new Map());
+  }
+
+  function renderStudentSection(
+    students: Student[],
+    meta:
+      | {
+          current_page: number;
+          last_page: number;
+          from: number | null;
+          to: number | null;
+          total: number;
+        }
+      | undefined,
+    loading: boolean,
+    accentColor: string,
+    onPageChange: (p: number) => void,
+    skeletonRows = 3,
+    emptyMessage = "No students found.",
+  ) {
+    if (loading) {
+      return (
+        <div className="space-y-2">
+          {Array.from({ length: skeletonRows }, (_, k) => (
+            <div key={k} className="h-14 animate-pulse rounded-lg bg-muted" />
+          ))}
+        </div>
+      );
+    }
+    if (students.length === 0) {
+      return (
+        <p className="text-sm text-muted-foreground py-6 text-center">
+          {emptyMessage}
+        </p>
+      );
+    }
+    return (
+      <>
+        <div className="space-y-2">
+          {students.map((s) => (
+            <StudentRow
+              key={s.id}
+              student={s}
+              selected={selectedStudents.has(s.id)}
+              onSelect={toggleSelect}
+              onTopUp={setTopUpStudent}
+              onStatusClick={handleStatusClick}
+              onRemove={setRemoveStudent}
+              canTogglePayment={canTogglePayment}
+              accentColor={accentColor}
+            />
+          ))}
+        </div>
+        {meta && (
+          <Pagination
+            currentPage={meta.current_page}
+            lastPage={meta.last_page}
+            from={meta.from}
+            to={meta.to}
+            total={meta.total}
+            onPageChange={onPageChange}
+          />
+        )}
+      </>
+    );
   }
 
   return (
@@ -1841,52 +1907,14 @@ export default function StudentsPage() {
             <h2 className="text-sm font-extrabold uppercase tracking-wider text-amber-600">
               Subscription Students ({subMeta?.total ?? 0})
             </h2>
-            {subQuery.isLoading ? (
-              <div className="space-y-2">
-                {[1, 2].map((k) => (
-                  <div
-                    key={k}
-                    className="h-14 animate-pulse rounded-lg bg-muted"
-                  />
-                ))}
-              </div>
-            ) : subStudents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No subscription students found.
-              </p>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  {subStudents.map((s) => (
-                    <StudentRow
-                      key={s.id}
-                      student={s}
-                      selected={selectedStudents.has(s.id)}
-                      onSelect={toggleSelect}
-                      onTopUp={setTopUpStudent}
-                      onStatusClick={(st) =>
-                        setStatusPickerState({
-                          studentId: st.id,
-                          current: st.enrollment_status,
-                        })
-                      }
-                      onRemove={setRemoveStudent}
-                      canTogglePayment={canTogglePayment}
-                      accentColor="#F59E0B"
-                    />
-                  ))}
-                </div>
-                {subMeta && (
-                  <Pagination
-                    currentPage={subMeta.current_page}
-                    lastPage={subMeta.last_page}
-                    from={subMeta.from}
-                    to={subMeta.to}
-                    total={subMeta.total}
-                    onPageChange={setSubPage}
-                  />
-                )}
-              </>
+            {renderStudentSection(
+              subStudents,
+              subMeta,
+              subQuery.isLoading,
+              "#F59E0B",
+              setSubPage,
+              2,
+              "No subscription students found.",
             )}
           </div>
 
@@ -1894,153 +1922,35 @@ export default function StudentsPage() {
             <h2 className="text-sm font-extrabold uppercase tracking-wider text-violet-600">
               Non-Subscription Students ({nonSubMeta?.total ?? 0})
             </h2>
-            {nonSubQuery.isLoading ? (
-              <div className="space-y-2">
-                {[1, 2].map((k) => (
-                  <div
-                    key={k}
-                    className="h-14 animate-pulse rounded-lg bg-muted"
-                  />
-                ))}
-              </div>
-            ) : nonSubStudents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No non-subscription students found.
-              </p>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  {nonSubStudents.map((s) => (
-                    <StudentRow
-                      key={s.id}
-                      student={s}
-                      selected={selectedStudents.has(s.id)}
-                      onSelect={toggleSelect}
-                      onTopUp={setTopUpStudent}
-                      onStatusClick={(st) =>
-                        setStatusPickerState({
-                          studentId: st.id,
-                          current: st.enrollment_status,
-                        })
-                      }
-                      onRemove={setRemoveStudent}
-                      canTogglePayment={canTogglePayment}
-                      accentColor="#8B5CF6"
-                    />
-                  ))}
-                </div>
-                {nonSubMeta && (
-                  <Pagination
-                    currentPage={nonSubMeta.current_page}
-                    lastPage={nonSubMeta.last_page}
-                    from={nonSubMeta.from}
-                    to={nonSubMeta.to}
-                    total={nonSubMeta.total}
-                    onPageChange={setNonSubPage}
-                  />
-                )}
-              </>
+            {renderStudentSection(
+              nonSubStudents,
+              nonSubMeta,
+              nonSubQuery.isLoading,
+              "#8B5CF6",
+              setNonSubPage,
+              2,
+              "No non-subscription students found.",
             )}
           </div>
         </div>
       ) : activeTab === "subscription" ? (
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-          {subQuery.isLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((k) => (
-                <div
-                  key={k}
-                  className="h-14 animate-pulse rounded-lg bg-muted"
-                />
-              ))}
-            </div>
-          ) : subStudents.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">
-              No students found.
-            </p>
-          ) : (
-            <>
-              <div className="space-y-2">
-                {subStudents.map((s) => (
-                  <StudentRow
-                    key={s.id}
-                    student={s}
-                    selected={selectedStudents.has(s.id)}
-                    onSelect={toggleSelect}
-                    onTopUp={setTopUpStudent}
-                    onStatusClick={(st) =>
-                      setStatusPickerState({
-                        studentId: st.id,
-                        current: st.enrollment_status,
-                      })
-                    }
-                    onRemove={setRemoveStudent}
-                    canTogglePayment={canTogglePayment}
-                    accentColor="#F59E0B"
-                  />
-                ))}
-              </div>
-              {subMeta && (
-                <Pagination
-                  currentPage={subMeta.current_page}
-                  lastPage={subMeta.last_page}
-                  from={subMeta.from}
-                  to={subMeta.to}
-                  total={subMeta.total}
-                  onPageChange={setSubPage}
-                />
-              )}
-            </>
+          {renderStudentSection(
+            subStudents,
+            subMeta,
+            subQuery.isLoading,
+            "#F59E0B",
+            setSubPage,
           )}
         </div>
       ) : (
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-          {nonSubQuery.isLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((k) => (
-                <div
-                  key={k}
-                  className="h-14 animate-pulse rounded-lg bg-muted"
-                />
-              ))}
-            </div>
-          ) : nonSubStudents.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">
-              No students found.
-            </p>
-          ) : (
-            <>
-              <div className="space-y-2">
-                {nonSubStudents.map((s) => (
-                  <StudentRow
-                    key={s.id}
-                    student={s}
-                    selected={selectedStudents.has(s.id)}
-                    onSelect={toggleSelect}
-                    onTopUp={setTopUpStudent}
-                    onStatusClick={(st) =>
-                      setStatusPickerState({
-                        studentId: st.id,
-                        current: st.enrollment_status,
-                      })
-                    }
-                    onRemove={setRemoveStudent}
-                    canTogglePayment={canTogglePayment}
-                    accentColor="#8B5CF6"
-                  />
-                ))}
-              </div>
-              {nonSubMeta && (
-                <Pagination
-                  currentPage={nonSubMeta.current_page}
-                  lastPage={nonSubMeta.last_page}
-                  from={nonSubMeta.from}
-                  to={nonSubMeta.to}
-                  total={nonSubMeta.total}
-                  onPageChange={setNonSubPage}
-                />
-              )}
-            </>
+          {renderStudentSection(
+            nonSubStudents,
+            nonSubMeta,
+            nonSubQuery.isLoading,
+            "#8B5CF6",
+            setNonSubPage,
           )}
         </div>
       )}
