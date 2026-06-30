@@ -392,10 +392,7 @@ export const reportApi = {
       data: SubscriptionReportRow[];
       meta: PaginatedMeta;
       historical_data: HistoricalSubscriberRow[];
-    }>(
-      "/reports/subscription",
-      {
-        params: params as Record<string, string | number | boolean | undefined>,
-      },
-    ),
+    }>("/reports/subscription", {
+      params: params as Record<string, string | number | boolean | undefined>,
+    }),
 };
