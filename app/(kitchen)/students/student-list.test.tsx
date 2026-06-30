@@ -1,7 +1,13 @@
 import { render, screen } from "@/__tests__/test-utils";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
 
 import { useAuthStore, type AuthState } from "@/lib/store/auth";
+import {
+  paginatedNonSubFixture,
+  paginatedSubscriptionFixture,
+} from "@/__tests__/mocks/handlers";
+import { server } from "@/__tests__/mocks/server";
 import StudentsPage from "./page";
 
 const mockPush = jest.fn();
@@ -86,9 +92,11 @@ describe("StudentsPage", () => {
     expect(await screen.findByText(/jun/i)).toBeInTheDocument();
   });
 
-  it("shows wallet-only info box for non-subscription student", async () => {
+  it("non-subscription student row renders in the non-subscription section", async () => {
     render(<StudentsPage />);
-    expect(await screen.findByText(/wallet-only/i)).toBeInTheDocument();
+    await screen.findByText("Carlo Mendoza");
+    const nonSubHeadings = screen.getAllByText(/non-subscription students/i);
+    expect(nonSubHeadings.length).toBeGreaterThan(0);
   });
 
   it("shows Enroll Student link", async () => {
@@ -141,6 +149,112 @@ describe("StudentsPage", () => {
     expect(nonSubHeadings.length).toBeGreaterThan(0);
   });
 
+  it("retains selected students from subscription section when switching tabs", async () => {
+    const user = userEvent.setup();
+    render(<StudentsPage />);
+    await screen.findByText("Maria Santos");
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[0]);
+
+    expect(
+      screen.getByRole("button", { name: /print qr codes/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+
+    const tabs = screen.getAllByRole("button", { name: /non-subscription/i });
+    const nonSubTab = tabs.find((t) =>
+      t.textContent?.toLowerCase().includes("non-subscription ("),
+    );
+    if (nonSubTab) await user.click(nonSubTab);
+
+    expect(
+      screen.getByRole("button", { name: /print qr codes/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+  });
+
+  it("hides month and payment status filters on non-subscription tab", async () => {
+    const user = userEvent.setup();
+    render(<StudentsPage />);
+    await screen.findByText("Carlo Mendoza");
+
+    const tabs = screen.getAllByRole("button", { name: /non-subscription/i });
+    const nonSubTab = tabs.find((t) =>
+      t.textContent?.toLowerCase().includes("non-subscription ("),
+    );
+    if (nonSubTab) await user.click(nonSubTab);
+
+    expect(
+      screen.queryByRole("combobox", { name: /filter by month/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("combobox", { name: /filter by payment status/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides month and payment status filters on all tab by default", async () => {
+    render(<StudentsPage />);
+    await screen.findByText("Maria Santos");
+
+    expect(
+      screen.queryByRole("combobox", { name: /filter by month/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("combobox", { name: /filter by payment status/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("mixed print batch includes students selected from both sections", async () => {
+    const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+    const user = userEvent.setup();
+
+    server.use(
+      http.get(`${API}/students`, ({ request }) => {
+        const url = new URL(request.url);
+        const type = url.searchParams.get("type");
+        if (type === "subscription")
+          return HttpResponse.json(paginatedSubscriptionFixture);
+        if (type === "non_subscription")
+          return HttpResponse.json(paginatedNonSubFixture);
+        return HttpResponse.json({ ...paginatedNonSubFixture, data: [] });
+      }),
+    );
+
+    render(<StudentsPage />);
+    await screen.findByText("Maria Santos");
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[0]);
+    expect(screen.getByText("1")).toBeInTheDocument();
+
+    const tabs = screen.getAllByRole("button", { name: /non-subscription/i });
+    const nonSubTab = tabs.find((t) =>
+      t.textContent?.toLowerCase().includes("non-subscription ("),
+    );
+    if (nonSubTab) await user.click(nonSubTab);
+
+    await screen.findByText("Carlo Mendoza");
+    const newCheckboxes = screen.getAllByRole("checkbox");
+    await user.click(newCheckboxes[0]);
+    expect(screen.getByText("2")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+    const cards = document.querySelectorAll("[data-qr-card]");
+    expect(cards.length).toBe(2);
+
+    const subCard = cards[0] as HTMLElement;
+    expect(
+      (subCard.firstElementChild as HTMLElement).style.backgroundColor,
+    ).toBe("rgb(229, 50, 42)");
+
+    const nonSubCard = cards[1] as HTMLElement;
+    expect(
+      (nonSubCard.firstElementChild as HTMLElement).style.backgroundColor,
+    ).toBe("rgb(244, 180, 0)");
+  });
+
   describe("PrintCard header colors in batch print modal", () => {
     it("renders a red header for subscription students", async () => {
       const user = userEvent.setup();
@@ -174,6 +288,93 @@ describe("StudentsPage", () => {
       const card = document.querySelector("[data-qr-card]") as HTMLElement;
       expect(card).not.toBeNull();
       const header = card.firstElementChild as HTMLElement;
+      expect(header.style.backgroundColor).toBe("rgb(244, 180, 0)");
+    });
+  });
+
+  it("BatchQrModal dialog has sm:max-w-4xl class when cols defaults to 4", async () => {
+    const user = userEvent.setup();
+    render(<StudentsPage />);
+    await screen.findByText("Maria Santos");
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[0]);
+    await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveClass("sm:max-w-4xl");
+  });
+
+  it("BatchQrModal dialog shrinks to sm:max-w-2xl when cols is changed to 3", async () => {
+    const user = userEvent.setup();
+    render(<StudentsPage />);
+    await screen.findByText("Maria Santos");
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[0]);
+    await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+    await user.click(screen.getByRole("button", { name: "3" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveClass("sm:max-w-2xl");
+    expect(dialog).not.toHaveClass("sm:max-w-4xl");
+  });
+
+  it("BatchQrModal defaults to 4 cards per row with button 4 highlighted", async () => {
+    const user = userEvent.setup();
+    render(<StudentsPage />);
+    await screen.findByText("Maria Santos");
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[0]);
+    await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+    const btn4 = screen.getByRole("button", { name: "4" });
+    expect(btn4).toHaveClass("font-semibold");
+
+    const btn2 = screen.getByRole("button", { name: "2" });
+    expect(btn2).not.toHaveClass("font-semibold");
+  });
+
+  describe("QrCard preview colors in batch print modal", () => {
+    it("renders a red header in preview for subscription students", async () => {
+      const user = userEvent.setup();
+      render(<StudentsPage />);
+      await screen.findByText("Maria Santos");
+
+      const checkboxes = screen.getAllByRole("checkbox");
+      await user.click(checkboxes[0]);
+      await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+      const previewCard = document.querySelector(
+        "[data-qr-preview-card]",
+      ) as HTMLElement;
+      expect(previewCard).not.toBeNull();
+      const header = previewCard.firstElementChild as HTMLElement;
+      expect(header.style.backgroundColor).toBe("rgb(229, 50, 42)");
+    });
+
+    it("renders a yellow header in preview for non-subscription students", async () => {
+      const user = userEvent.setup();
+      render(<StudentsPage />);
+      await screen.findByText("Carlo Mendoza");
+
+      const tabs = screen.getAllByRole("button", { name: /non-subscription/i });
+      const nonSubTab = tabs.find((t) =>
+        t.textContent?.toLowerCase().includes("non-subscription ("),
+      );
+      if (nonSubTab) await user.click(nonSubTab);
+
+      const checkboxes = screen.getAllByRole("checkbox");
+      await user.click(checkboxes[0]);
+      await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+      const previewCard = document.querySelector(
+        "[data-qr-preview-card]",
+      ) as HTMLElement;
+      expect(previewCard).not.toBeNull();
+      const header = previewCard.firstElementChild as HTMLElement;
       expect(header.style.backgroundColor).toBe("rgb(244, 180, 0)");
     });
   });
