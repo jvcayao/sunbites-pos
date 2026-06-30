@@ -292,6 +292,35 @@ describe("StudentsPage", () => {
     });
   });
 
+  it("BatchQrModal dialog has sm:max-w-4xl class when cols defaults to 4", async () => {
+    const user = userEvent.setup();
+    render(<StudentsPage />);
+    await screen.findByText("Maria Santos");
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[0]);
+    await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveClass("sm:max-w-4xl");
+  });
+
+  it("BatchQrModal dialog shrinks to sm:max-w-2xl when cols is changed to 3", async () => {
+    const user = userEvent.setup();
+    render(<StudentsPage />);
+    await screen.findByText("Maria Santos");
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[0]);
+    await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+    await user.click(screen.getByRole("button", { name: "3" }));
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveClass("sm:max-w-2xl");
+    expect(dialog).not.toHaveClass("sm:max-w-4xl");
+  });
+
   it("BatchQrModal defaults to 4 cards per row with button 4 highlighted", async () => {
     const user = userEvent.setup();
     render(<StudentsPage />);

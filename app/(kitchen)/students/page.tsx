@@ -817,6 +817,13 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
   const [cols, setCols] = useState<1 | 2 | 3 | 4>(4);
   const [printRoot, setPrintRoot] = useState<HTMLDivElement | null>(null);
 
+  const dialogWidthClass: Record<1 | 2 | 3 | 4, string> = {
+    1: "sm:max-w-sm",
+    2: "sm:max-w-xl",
+    3: "sm:max-w-2xl",
+    4: "sm:max-w-4xl",
+  };
+
   // Mount a dedicated print container directly on <body> so window.print()
   // only shows the cards — not the dialog chrome.
   useEffect(() => {
@@ -860,7 +867,7 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className={dialogWidthClass[cols]}>
           <DialogHeader>
             <DialogTitle>
               Print QR Codes ({students.length} selected)
@@ -889,23 +896,25 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
           </div>
 
           {/* Screen preview — portrait card aspect ratio */}
-          <div
-            className={cn(
-              "grid gap-3 mt-2 justify-items-center",
-              cols === 1
-                ? "grid-cols-1"
-                : cols === 2
-                  ? "grid-cols-2"
-                  : cols === 3
-                    ? "grid-cols-3"
-                    : "grid-cols-4",
-            )}
-          >
-            {students.map((s) => (
-              <div key={s.id} className="w-[152px] h-[240px]">
-                <QrCard student={s} />
-              </div>
-            ))}
+          <div className="overflow-y-auto max-h-[60vh]">
+            <div
+              className={cn(
+                "grid gap-3 mt-2 justify-items-center",
+                cols === 1
+                  ? "grid-cols-1"
+                  : cols === 2
+                    ? "grid-cols-2"
+                    : cols === 3
+                      ? "grid-cols-3"
+                      : "grid-cols-4",
+              )}
+            >
+              {students.map((s) => (
+                <div key={s.id} className="w-[152px] h-[240px]">
+                  <QrCard student={s} />
+                </div>
+              ))}
+            </div>
           </div>
 
           <DialogFooter>
