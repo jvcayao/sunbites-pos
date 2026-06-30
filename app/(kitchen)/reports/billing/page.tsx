@@ -110,17 +110,22 @@ function SummaryCard({
   );
 }
 
-function StatusBadge({ status }: { status: "paid" | "unpaid" }) {
+function StatusBadge({ status }: { status: "paid" | "unpaid" | "voided" }) {
+  const map: Record<string, string> = {
+    paid: "bg-green-100 text-green-700 border-green-300",
+    unpaid: "bg-red-100 text-destructive border-red-300",
+    voided: "bg-muted text-muted-foreground border-border",
+  };
+  const label = status.charAt(0).toUpperCase() + status.slice(1);
   return (
     <span
       className={cn(
-        "text-[11px] font-bold px-2 py-0.5 rounded-full border capitalize",
-        status === "paid"
-          ? "bg-green-100 text-green-700 border-green-300"
-          : "bg-red-100 text-red-700 border-red-300",
+        "text-[11px] font-bold px-2 py-0.5 rounded-full border",
+        map[status] ?? map.voided,
+        status === "voided" && "line-through",
       )}
     >
-      {status}
+      {label}
     </span>
   );
 }
@@ -284,6 +289,7 @@ export default function BillingReportPage() {
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="paid">Paid</SelectItem>
             <SelectItem value="unpaid">Unpaid</SelectItem>
+            <SelectItem value="voided">Voided</SelectItem>
           </SelectContent>
         </Select>
 

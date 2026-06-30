@@ -231,7 +231,7 @@ export interface BillingPayment {
   id: number;
   school_month: string;
   year: number;
-  status: "paid" | "unpaid";
+  status: "paid" | "unpaid" | "voided";
   amount: number;
   recorded_at: string | null;
   student: {
