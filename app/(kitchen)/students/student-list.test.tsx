@@ -291,4 +291,46 @@ describe("StudentsPage", () => {
       expect(header.style.backgroundColor).toBe("rgb(244, 180, 0)");
     });
   });
+
+  describe("QrCard preview colors in batch print modal", () => {
+    it("renders a red header in preview for subscription students", async () => {
+      const user = userEvent.setup();
+      render(<StudentsPage />);
+      await screen.findByText("Maria Santos");
+
+      const checkboxes = screen.getAllByRole("checkbox");
+      await user.click(checkboxes[0]);
+      await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+      const previewCard = document.querySelector(
+        "[data-qr-preview-card]",
+      ) as HTMLElement;
+      expect(previewCard).not.toBeNull();
+      const header = previewCard.firstElementChild as HTMLElement;
+      expect(header.style.backgroundColor).toBe("rgb(229, 50, 42)");
+    });
+
+    it("renders a yellow header in preview for non-subscription students", async () => {
+      const user = userEvent.setup();
+      render(<StudentsPage />);
+      await screen.findByText("Carlo Mendoza");
+
+      const tabs = screen.getAllByRole("button", { name: /non-subscription/i });
+      const nonSubTab = tabs.find((t) =>
+        t.textContent?.toLowerCase().includes("non-subscription ("),
+      );
+      if (nonSubTab) await user.click(nonSubTab);
+
+      const checkboxes = screen.getAllByRole("checkbox");
+      await user.click(checkboxes[0]);
+      await user.click(screen.getByRole("button", { name: /print qr codes/i }));
+
+      const previewCard = document.querySelector(
+        "[data-qr-preview-card]",
+      ) as HTMLElement;
+      expect(previewCard).not.toBeNull();
+      const header = previewCard.firstElementChild as HTMLElement;
+      expect(header.style.backgroundColor).toBe("rgb(244, 180, 0)");
+    });
+  });
 });
