@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilterPillGroup } from "@/components/reports/filter-pill-group";
 import { exportReport, reportApi } from "@/lib/api/reports";
@@ -47,6 +54,23 @@ const GRADE_OPTIONS = GRADE_LEVELS.map((g) => ({ label: g, value: g }));
 const TYPE_OPTIONS = [
   { label: "Subscription", value: "subscription" },
   { label: "Non-Subscription", value: "non_subscription" },
+];
+
+const SCHOOL_MONTH_ORDER = [
+  "june", "july", "august", "september", "october",
+  "november", "december", "january", "february", "march",
+] as const;
+
+const MONTH_LABELS: Record<string, string> = {
+  june: "June", july: "July", august: "August", september: "September",
+  october: "October", november: "November", december: "December",
+  january: "January", february: "February", march: "March",
+};
+
+const PAYMENT_OPTIONS = [
+  { label: "Paid",   value: "paid" },
+  { label: "Unpaid", value: "unpaid" },
+  { label: "Void",   value: "voided" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -110,6 +134,10 @@ export default function StudentsReportPage() {
   const [page, setPage] = useState(1);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
+  const [paymentStatus, setPaymentStatus] = useState<string>("");
+  const [paymentFrom, setPaymentFrom]     = useState<string>("june");
+  const [paymentTo, setPaymentTo]         = useState<string>("march");
+
   useEffect(() => {
     const t = setTimeout(() => {
       setSearch(searchInput);
@@ -118,12 +146,26 @@ export default function StudentsReportPage() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
+  const hasActiveFilters =
+    searchInput !== "" ||
+    enrollmentStatus !== "" ||
+    gradeLevel !== "" ||
+    studentType !== "" ||
+    paymentStatus !== "";
+
   const params = {
     search: search || undefined,
     status: enrollmentStatus || undefined,
     grade: gradeLevel || undefined,
     type: studentType || undefined,
     page,
+    ...(studentType === "subscription" && paymentStatus
+      ? {
+          payment_status: paymentStatus,
+          payment_from:   paymentFrom,
+          payment_to:     paymentTo,
+        }
+      : {}),
   };
 
   const { data, isLoading, isError } = useQuery({
@@ -135,11 +177,37 @@ export default function StudentsReportPage() {
   const summary = data?.summary;
   const meta = data?.meta;
 
-  function handleFilterChange(setter: (v: string) => void) {
+  function handleFilterChange(setter: (v: string) => void, isType?: boolean) {
     return (v: string) => {
       setter(v);
       setPage(1);
+      if (isType && v !== "subscription") {
+        setPaymentStatus("");
+        setPaymentFrom("june");
+        setPaymentTo("march");
+      }
     };
+  }
+
+  function clearAllFilters() {
+    setSearchInput("");
+    setSearch("");
+    setEnrollmentStatus("");
+    setGradeLevel("");
+    setStudentType("");
+    setPaymentStatus("");
+    setPaymentFrom("june");
+    setPaymentTo("march");
+    setPage(1);
+    setExpandedRowId(null);
+  }
+
+  function handlePaymentFrom(value: string) {
+    setPaymentFrom(value);
+    const fromIdx = SCHOOL_MONTH_ORDER.indexOf(value as typeof SCHOOL_MONTH_ORDER[number]);
+    const toIdx   = SCHOOL_MONTH_ORDER.indexOf(paymentTo as typeof SCHOOL_MONTH_ORDER[number]);
+    if (fromIdx > toIdx) setPaymentTo(value);
+    setPage(1);
   }
 
   function toggleRow(id: number) {
@@ -160,10 +228,17 @@ export default function StudentsReportPage() {
             size="sm"
             onClick={() => {
               void exportReport("reports/students", {
-                search: search || undefined,
-                status: enrollmentStatus || undefined,
-                grade: gradeLevel || undefined,
-                type: studentType || undefined,
+                search:  search || undefined,
+                status:  enrollmentStatus || undefined,
+                grade:   gradeLevel || undefined,
+                type:    studentType || undefined,
+                ...(studentType === "subscription" && paymentStatus
+                  ? {
+                      payment_status: paymentStatus,
+                      payment_from:   paymentFrom,
+                      payment_to:     paymentTo,
+                    }
+                  : {}),
               });
             }}
           >
@@ -175,18 +250,31 @@ export default function StudentsReportPage() {
 
       {/* Search + Filter toolbar */}
       <div className="space-y-2.5">
-        <div className="relative">
-          <Search
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <Input
-            className="h-9 pl-9 text-sm"
-            placeholder="Search by name, student number, or section..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            aria-label="Search students"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              className="h-9 pl-9 text-sm"
+              placeholder="Search by name, student number, or section..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              aria-label="Search students"
+            />
+          </div>
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+            >
+              <X className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              Clear filters
+            </Button>
+          )}
         </div>
 
         <FilterPillGroup
@@ -205,8 +293,49 @@ export default function StudentsReportPage() {
           label="Type"
           options={TYPE_OPTIONS}
           value={studentType}
-          onChange={handleFilterChange(setStudentType)}
+          onChange={handleFilterChange(setStudentType, true)}
         />
+
+        {studentType === "subscription" && (
+          <div className="space-y-1.5">
+            <FilterPillGroup
+              label="Payment"
+              options={PAYMENT_OPTIONS}
+              value={paymentStatus}
+              onChange={(v) => { setPaymentStatus(v); setPage(1); }}
+            />
+            {paymentStatus !== "" && (
+              <div className="flex items-center gap-2 pl-16">
+                <span className="text-xs text-muted-foreground">From</span>
+                <Select value={paymentFrom} onValueChange={(v) => { if (v !== null) handlePaymentFrom(v); }}>
+                  <SelectTrigger className="h-8 w-32 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SCHOOL_MONTH_ORDER.map((m) => (
+                      <SelectItem key={m} value={m} className="text-xs">
+                        {MONTH_LABELS[m]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-xs text-muted-foreground">To</span>
+                <Select value={paymentTo} onValueChange={(v) => { if (v !== null) { setPaymentTo(v); setPage(1); } }}>
+                  <SelectTrigger className="h-8 w-32 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SCHOOL_MONTH_ORDER.map((m) => (
+                      <SelectItem key={m} value={m} className="text-xs">
+                        {MONTH_LABELS[m]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Summary */}
