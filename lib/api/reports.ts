@@ -93,6 +93,13 @@ export interface SalesOrder {
   total: number;
 }
 
+export interface PaymentHistoryEntry {
+  month: string;
+  month_label: string;
+  year: number;
+  status: "paid" | "unpaid" | "voided" | "no_record";
+}
+
 export interface StudentReportRow {
   id: number;
   full_name: string;
@@ -104,6 +111,7 @@ export interface StudentReportRow {
   total_spent: number;
   notes: string | null;
   allergies: string | null;
+  payment_history: PaymentHistoryEntry[] | null;
 }
 
 export interface StudentReportSummary {
