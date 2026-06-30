@@ -248,6 +248,8 @@ export const studentFixture: Student = {
       status: "paid",
       amount: "2970.00",
       recorded_at: "2025-06-15T08:00:00Z",
+      voided_at: null,
+      void_reason: null,
     },
     {
       id: 2,
@@ -257,6 +259,8 @@ export const studentFixture: Student = {
       status: "unpaid",
       amount: "2970.00",
       recorded_at: null,
+      voided_at: null,
+      void_reason: null,
     },
   ],
 };
@@ -293,6 +297,8 @@ export const paymentsFixture: MonthlyPayment[] = [
     status: "paid",
     amount: "2970.00",
     recorded_at: "2025-06-15T08:00:00Z",
+    voided_at: null,
+    void_reason: null,
   },
   {
     id: 2,
@@ -302,6 +308,8 @@ export const paymentsFixture: MonthlyPayment[] = [
     status: "unpaid",
     amount: "2970.00",
     recorded_at: null,
+    voided_at: null,
+    void_reason: null,
   },
 ];
 
