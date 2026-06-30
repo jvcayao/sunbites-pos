@@ -536,6 +536,121 @@ function WalletTopUpModal({
 }
 
 // ---------------------------------------------------------------------------
+// DowngradeConfirmDialog
+// ---------------------------------------------------------------------------
+
+interface DowngradeConfirmDialogProps {
+  open: boolean;
+  onClose: () => void;
+  studentId: number;
+}
+
+function DowngradeConfirmDialog({
+  open,
+  onClose,
+  studentId,
+}: DowngradeConfirmDialogProps) {
+  const queryClient = useQueryClient();
+
+  const { data: preview, isLoading: previewLoading } = useQuery({
+    queryKey: ["student-downgrade-preview", studentId],
+    queryFn: () => studentApi.downgradeSubscriptionPreview(studentId),
+    enabled: open,
+  });
+
+  const mutation = useMutation({
+    mutationFn: () => studentApi.downgradeSubscription(studentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["student-payments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["students", "subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["students", "non_subscription"] });
+      toast.success("Student switched to non-subscription.");
+      onClose();
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to downgrade student.");
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Switch to Non-Subscription (Wallet)</DialogTitle>
+          <DialogDescription>
+            Review what will happen to this student&apos;s monthly payment records.
+          </DialogDescription>
+        </DialogHeader>
+
+        {previewLoading ? (
+          <div className="space-y-2 py-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        ) : preview ? (
+          <div className="space-y-3 text-sm py-1">
+            {preview.unpaid_months_to_delete_count > 0 && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1">
+                <p className="font-semibold text-destructive">
+                  {preview.unpaid_months_to_delete_count} unpaid month
+                  {preview.unpaid_months_to_delete_count > 1 ? "s" : ""} will be permanently deleted:
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {preview.unpaid_months_to_delete.join(", ")}
+                </p>
+              </div>
+            )}
+
+            {preview.paid_months_retained.length > 0 && (
+              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
+                <p className="font-semibold">
+                  {preview.paid_months_retained.length} paid month
+                  {preview.paid_months_retained.length > 1 ? "s" : ""} kept as history (cannot be voided):
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {preview.paid_months_retained.map((m) => m.label).join(", ")}
+                </p>
+              </div>
+            )}
+
+            {preview.paid_voidable_months.length > 0 && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 space-y-1">
+                <p className="font-semibold text-amber-800">
+                  {preview.paid_voidable_months.length} paid month
+                  {preview.paid_voidable_months.length > 1 ? "s" : ""} can be voided from the Payments tab:
+                </p>
+                <p className="text-amber-700 text-xs">
+                  {preview.paid_voidable_months.map((m) => m.label).join(", ")} — use wallet top-up to issue refunds.
+                </p>
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground">
+              Current wallet balance: ₱{preview.wallet_balance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+        ) : null}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => mutation.mutate()}
+            disabled={previewLoading || mutation.isPending}
+          >
+            {mutation.isPending ? "Switching…" : "Confirm Switch"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // ChangeTypeDialog
 // ---------------------------------------------------------------------------
 
@@ -552,18 +667,25 @@ function ChangeTypeDialog({
   studentId,
   currentType,
 }: ChangeTypeDialogProps) {
-  const queryClient = useQueryClient();
-  const newType =
-    currentType === "subscription" ? "non_subscription" : "subscription";
-  const changeLabel =
-    currentType === "subscription"
-      ? "Switch from Subscription to Wallet (Pay-per-meal)"
-      : "Switch from Wallet (Pay-per-meal) to Subscription";
+  // For the downgrade direction, use the dedicated dialog
+  if (currentType === "subscription") {
+    return (
+      <DowngradeConfirmDialog
+        open={open}
+        onClose={onClose}
+        studentId={studentId}
+      />
+    );
+  }
 
+  // Upgrade path: simple toggle (non_subscription → subscription)
+  const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: () => studentApi.updateType(studentId, newType),
+    mutationFn: () => studentApi.updateType(studentId, "subscription"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["students", "subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["students", "non_subscription"] });
       toast.success("Student type updated successfully.");
       onClose();
     },
@@ -577,24 +699,16 @@ function ChangeTypeDialog({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>{changeLabel}</DialogTitle>
+          <DialogTitle>Switch from Wallet (Pay-per-meal) to Subscription</DialogTitle>
           <DialogDescription>
-            Ensure all pending subscription balances are settled before
-            switching. This cannot be undone automatically.
+            After switching, use the Payments tab to add a subscription period.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={mutation.isPending}
-          >
+          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
             Cancel
           </Button>
-          <Button
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
-          >
+          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
             {mutation.isPending ? "Updating…" : "Confirm"}
           </Button>
         </DialogFooter>
