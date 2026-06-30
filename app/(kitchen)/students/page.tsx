@@ -813,16 +813,23 @@ function QrCard({ student }: { student: Student }) {
   );
 }
 
+const DIALOG_WIDTH_CLASS: Record<1 | 2 | 3 | 4, string> = {
+  1: "sm:max-w-sm",
+  2: "sm:max-w-xl",
+  3: "sm:max-w-2xl",
+  4: "sm:max-w-4xl",
+};
+
+const GRID_COLS_CLASS: Record<1 | 2 | 3 | 4, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+};
+
 function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
   const [cols, setCols] = useState<1 | 2 | 3 | 4>(4);
   const [printRoot, setPrintRoot] = useState<HTMLDivElement | null>(null);
-
-  const dialogWidthClass: Record<1 | 2 | 3 | 4, string> = {
-    1: "sm:max-w-sm",
-    2: "sm:max-w-xl",
-    3: "sm:max-w-2xl",
-    4: "sm:max-w-4xl",
-  };
 
   // Mount a dedicated print container directly on <body> so window.print()
   // only shows the cards — not the dialog chrome.
@@ -867,7 +874,7 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className={dialogWidthClass[cols]}>
+        <DialogContent className={DIALOG_WIDTH_CLASS[cols]}>
           <DialogHeader>
             <DialogTitle>
               Print QR Codes ({students.length} selected)
@@ -900,13 +907,7 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
             <div
               className={cn(
                 "grid gap-3 mt-2 justify-items-center",
-                cols === 1
-                  ? "grid-cols-1"
-                  : cols === 2
-                    ? "grid-cols-2"
-                    : cols === 3
-                      ? "grid-cols-3"
-                      : "grid-cols-4",
+                GRID_COLS_CLASS[cols],
               )}
             >
               {students.map((s) => (
