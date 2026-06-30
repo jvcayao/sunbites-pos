@@ -20,7 +20,7 @@ function fmt(n: number) {
 }
 
 const RANGE_COLORS: Record<string, string> = {
-  "₱1–₱100":   "#10b981",
+  "₱1–₱100": "#10b981",
   "₱101–₱200": "#f59e0b",
   "₱201–₱300": "#ef4444",
 };
@@ -59,7 +59,9 @@ export function SectionCredits({ data }: Props) {
       </div>
 
       <div className="rounded-xl border bg-card p-5">
-        <p className="mb-4 text-sm font-semibold">Credit Balance Distribution</p>
+        <p className="mb-4 text-sm font-semibold">
+          Credit Balance Distribution
+        </p>
         {distribution.length === 0 ? (
           <p className="text-muted-foreground py-8 text-center text-sm">
             No students currently on credit
@@ -69,27 +71,33 @@ export function SectionCredits({ data }: Props) {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={distribution}>
                 <XAxis dataKey="range" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} width={30} allowDecimals={false} />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  width={30}
+                  allowDecimals={false}
+                />
                 <Tooltip formatter={(v) => [v, "Students"]} />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {distribution.map((d, i) => (
-                    <Cell
-                      key={i}
-                      fill={RANGE_COLORS[d.range] ?? "#6b7280"}
-                    />
+                    <Cell key={i} fill={RANGE_COLORS[d.range] ?? "#6b7280"} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
             <ul className="shrink-0 space-y-2 text-sm">
               {distribution.map((d) => (
-                <li key={d.range} className="flex items-center gap-2 whitespace-nowrap">
+                <li
+                  key={d.range}
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
                   <span
                     className="inline-block h-2.5 w-2.5 rounded-full"
                     style={{ background: RANGE_COLORS[d.range] ?? "#6b7280" }}
                   />
                   <span>{d.range}</span>
-                  <span className="text-muted-foreground tabular-nums">{d.count}</span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {d.count}
+                  </span>
                 </li>
               ))}
             </ul>

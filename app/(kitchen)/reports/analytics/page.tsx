@@ -20,12 +20,13 @@ import type { AnalyticsParams } from "@/types/analytics";
 
 function defaultParams(): AnalyticsParams {
   const now = new Date();
-  const syStart = now.getMonth() + 1 >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+  const syStart =
+    now.getMonth() + 1 >= 6 ? now.getFullYear() : now.getFullYear() - 1;
   return {
     from_month: "june",
-    from_year:  syStart,
-    to_month:   "march",
-    to_year:    syStart + 1,
+    from_year: syStart,
+    to_month: "march",
+    to_year: syStart + 1,
   };
 }
 
@@ -79,7 +80,8 @@ export default function AnalyticsPage() {
       {/* Period label */}
       {data && data.period.months.length > 0 && (
         <p className="text-muted-foreground text-sm">
-          {data.period.months[0]} — {data.period.months[data.period.months.length - 1]}
+          {data.period.months[0]} —{" "}
+          {data.period.months[data.period.months.length - 1]}
           &nbsp;·&nbsp;{data.period.months.length} month
           {data.period.months.length !== 1 ? "s" : ""}
         </p>
@@ -98,12 +100,12 @@ export default function AnalyticsPage() {
       {/* Sections */}
       {data && (
         <div className="space-y-10">
-          <SectionSales      data={data.sales}     />
-          <SectionStudents   data={data.students}  />
-          <SectionBilling    data={data.billing}   />
-          <SectionWallet     data={data.wallet}    />
-          <SectionCredits    data={data.credits}   />
-          <SectionInventory  data={data.inventory} />
+          <SectionSales data={data.sales} />
+          <SectionStudents data={data.students} />
+          <SectionBilling data={data.billing} />
+          <SectionWallet data={data.wallet} />
+          <SectionCredits data={data.credits} />
+          <SectionInventory data={data.inventory} />
         </div>
       )}
     </div>

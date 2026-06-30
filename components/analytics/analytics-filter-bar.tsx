@@ -17,16 +17,16 @@ import type { AnalyticsParams } from "@/types/analytics";
 // ---------------------------------------------------------------------------
 
 const SCHOOL_MONTHS = [
-  { value: "june",      label: "June",     num: 6  },
-  { value: "july",      label: "July",     num: 7  },
-  { value: "august",    label: "August",   num: 8  },
-  { value: "september", label: "September",num: 9  },
-  { value: "october",   label: "October",  num: 10 },
-  { value: "november",  label: "November", num: 11 },
-  { value: "december",  label: "December", num: 12 },
-  { value: "january",   label: "January",  num: 1  },
-  { value: "february",  label: "February", num: 2  },
-  { value: "march",     label: "March",    num: 3  },
+  { value: "june", label: "June", num: 6 },
+  { value: "july", label: "July", num: 7 },
+  { value: "august", label: "August", num: 8 },
+  { value: "september", label: "September", num: 9 },
+  { value: "october", label: "October", num: 10 },
+  { value: "november", label: "November", num: 11 },
+  { value: "december", label: "December", num: 12 },
+  { value: "january", label: "January", num: 1 },
+  { value: "february", label: "February", num: 2 },
+  { value: "march", label: "March", num: 3 },
 ] as const;
 
 type SchoolMonthValue = (typeof SCHOOL_MONTHS)[number]["value"];
@@ -38,29 +38,49 @@ function currentSchoolYear(): number {
 
 function thisSchoolYearPreset(): AnalyticsParams {
   const sy = currentSchoolYear();
-  return { from_month: "june", from_year: sy, to_month: "march", to_year: sy + 1 };
+  return {
+    from_month: "june",
+    from_year: sy,
+    to_month: "march",
+    to_year: sy + 1,
+  };
 }
 
 function lastSchoolYearPreset(): AnalyticsParams {
   const sy = currentSchoolYear() - 1;
-  return { from_month: "june", from_year: sy, to_month: "march", to_year: sy + 1 };
+  return {
+    from_month: "june",
+    from_year: sy,
+    to_month: "march",
+    to_year: sy + 1,
+  };
 }
 
 function firstHalfPreset(): AnalyticsParams {
   const sy = currentSchoolYear();
-  return { from_month: "june", from_year: sy, to_month: "october", to_year: sy };
+  return {
+    from_month: "june",
+    from_year: sy,
+    to_month: "october",
+    to_year: sy,
+  };
 }
 
 function secondHalfPreset(): AnalyticsParams {
   const sy = currentSchoolYear();
-  return { from_month: "november", from_year: sy, to_month: "march", to_year: sy + 1 };
+  return {
+    from_month: "november",
+    from_year: sy,
+    to_month: "march",
+    to_year: sy + 1,
+  };
 }
 
 const PRESETS: { label: string; fn: () => AnalyticsParams }[] = [
   { label: "This School Year", fn: thisSchoolYearPreset },
   { label: "Last School Year", fn: lastSchoolYearPreset },
-  { label: "First Half",       fn: firstHalfPreset },
-  { label: "Second Half",      fn: secondHalfPreset },
+  { label: "First Half", fn: firstHalfPreset },
+  { label: "Second Half", fn: secondHalfPreset },
 ];
 
 // ---------------------------------------------------------------------------

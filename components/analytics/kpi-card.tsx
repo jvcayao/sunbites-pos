@@ -15,7 +15,13 @@ const accentClasses = {
   danger: "border-red-500",
 };
 
-export function KpiCard({ label, value, sub, accent = "default", className }: Props) {
+export function KpiCard({
+  label,
+  value,
+  sub,
+  accent = "default",
+  className,
+}: Props) {
   return (
     <div
       className={cn(
