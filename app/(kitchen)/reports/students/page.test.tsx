@@ -5,6 +5,7 @@ import { render, screen, waitFor } from "@/__tests__/test-utils";
 import userEvent from "@testing-library/user-event";
 import { server } from "@/__tests__/mocks/server";
 import { useAuthStore, type AuthState } from "@/lib/store/auth";
+import type { StudentReportRow } from "@/lib/api/reports";
 
 // ---------------------------------------------------------------------------
 // Mock next/navigation (page doesn't use it but some deps might)
@@ -121,7 +122,7 @@ const summaryWithTotal = {
   status_breakdown: { enrolled: 5 },
 };
 
-const studentRowBase = {
+const studentRowBase: StudentReportRow = {
   id: 1,
   full_name: "Maria Santos",
   student_number: "ANT-2026-001",
@@ -164,7 +165,7 @@ function setupEmptyReport() {
 }
 
 function setupReportWith(
-  rows: typeof studentRowBase[],
+  rows: StudentReportRow[],
   summary = summaryWithTotal,
 ) {
   server.use(
