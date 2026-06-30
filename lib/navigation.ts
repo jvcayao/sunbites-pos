@@ -19,6 +19,7 @@ import {
   CreditCard,
   Bell,
   Megaphone,
+  TrendingUp,
 } from "lucide-react";
 
 export interface NavItem {
@@ -43,6 +44,7 @@ export const mainNav: NavItem[] = [
 ];
 
 export const reportsNav: NavItem[] = [
+  { label: "Analytics", href: "/reports/analytics", icon: TrendingUp },
   { label: "Sales", href: "/reports/sales", icon: BarChart2 },
   { label: "Students", href: "/reports/students", icon: Users },
   { label: "Wallet", href: "/reports/wallet", icon: Wallet },
