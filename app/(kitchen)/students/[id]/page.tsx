@@ -562,9 +562,13 @@ function DowngradeConfirmDialog({
     mutationFn: () => studentApi.downgradeSubscription(studentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["student", studentId] });
-      queryClient.invalidateQueries({ queryKey: ["student-payments", studentId] });
+      queryClient.invalidateQueries({
+        queryKey: ["student-payments", studentId],
+      });
       queryClient.invalidateQueries({ queryKey: ["students", "subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["students", "non_subscription"] });
+      queryClient.invalidateQueries({
+        queryKey: ["students", "non_subscription"],
+      });
       toast.success("Student switched to non-subscription.");
       onClose();
     },
@@ -579,7 +583,8 @@ function DowngradeConfirmDialog({
         <DialogHeader>
           <DialogTitle>Switch to Non-Subscription (Wallet)</DialogTitle>
           <DialogDescription>
-            Review what will happen to this student&apos;s monthly payment records.
+            Review what will happen to this student&apos;s monthly payment
+            records.
           </DialogDescription>
         </DialogHeader>
 
@@ -595,7 +600,8 @@ function DowngradeConfirmDialog({
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1">
                 <p className="font-semibold text-destructive">
                   {preview.unpaid_months_to_delete_count} unpaid month
-                  {preview.unpaid_months_to_delete_count > 1 ? "s" : ""} will be permanently deleted:
+                  {preview.unpaid_months_to_delete_count > 1 ? "s" : ""} will be
+                  permanently deleted:
                 </p>
                 <p className="text-muted-foreground text-xs">
                   {preview.unpaid_months_to_delete.join(", ")}
@@ -607,7 +613,8 @@ function DowngradeConfirmDialog({
               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
                 <p className="font-semibold">
                   {preview.paid_months_retained.length} paid month
-                  {preview.paid_months_retained.length > 1 ? "s" : ""} kept as history (cannot be voided):
+                  {preview.paid_months_retained.length > 1 ? "s" : ""} kept as
+                  history (cannot be voided):
                 </p>
                 <p className="text-muted-foreground text-xs">
                   {preview.paid_months_retained.map((m) => m.label).join(", ")}
@@ -619,28 +626,37 @@ function DowngradeConfirmDialog({
               <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 space-y-1">
                 <p className="font-semibold text-amber-800">
                   {preview.paid_voidable_months.length} paid month
-                  {preview.paid_voidable_months.length > 1 ? "s" : ""} can be voided from the Payments tab:
+                  {preview.paid_voidable_months.length > 1 ? "s" : ""} can be
+                  voided from the Payments tab:
                 </p>
                 <p className="text-amber-700 text-xs">
-                  {preview.paid_voidable_months.map((m) => m.label).join(", ")} — use wallet top-up to issue refunds.
+                  {preview.paid_voidable_months.map((m) => m.label).join(", ")}{" "}
+                  — use wallet top-up to issue refunds.
                 </p>
               </div>
             )}
 
             <p className="text-xs text-muted-foreground">
-              Current wallet balance: ₱{preview.wallet_balance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+              Current wallet balance: ₱
+              {preview.wallet_balance.toLocaleString("en-PH", {
+                minimumFractionDigits: 2,
+              })}
             </p>
           </div>
         ) : null}
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={mutation.isPending}
+          >
             Cancel
           </Button>
           <Button
             variant="destructive"
             onClick={() => mutation.mutate()}
-            disabled={previewLoading || mutation.isPending}
+            disabled={!preview || previewLoading || mutation.isPending}
           >
             {mutation.isPending ? "Switching…" : "Confirm Switch"}
           </Button>
@@ -667,7 +683,27 @@ function ChangeTypeDialog({
   studentId,
   currentType,
 }: ChangeTypeDialogProps) {
-  // For the downgrade direction, use the dedicated dialog
+  // Upgrade path: simple toggle (non_subscription → subscription)
+  // Hooks must be declared unconditionally before any early returns.
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: () => studentApi.updateType(studentId, "subscription"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["students", "subscription"] });
+      queryClient.invalidateQueries({
+        queryKey: ["students", "non_subscription"],
+      });
+      toast.success("Student type updated successfully.");
+      onClose();
+    },
+    onError: (err: ApiError) => {
+      toast.error(err.message ?? "Failed to update student type.");
+      onClose();
+    },
+  });
+
+  // For the downgrade direction, delegate to the dedicated dialog.
   if (currentType === "subscription") {
     return (
       <DowngradeConfirmDialog
@@ -678,37 +714,29 @@ function ChangeTypeDialog({
     );
   }
 
-  // Upgrade path: simple toggle (non_subscription → subscription)
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: () => studentApi.updateType(studentId, "subscription"),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["student", studentId] });
-      queryClient.invalidateQueries({ queryKey: ["students", "subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["students", "non_subscription"] });
-      toast.success("Student type updated successfully.");
-      onClose();
-    },
-    onError: (err: ApiError) => {
-      toast.error(err.message ?? "Failed to update student type.");
-      onClose();
-    },
-  });
-
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Switch from Wallet (Pay-per-meal) to Subscription</DialogTitle>
+          <DialogTitle>
+            Switch from Wallet (Pay-per-meal) to Subscription
+          </DialogTitle>
           <DialogDescription>
             After switching, use the Payments tab to add a subscription period.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={mutation.isPending}
+          >
             Cancel
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending}
+          >
             {mutation.isPending ? "Updating…" : "Confirm"}
           </Button>
         </DialogFooter>
