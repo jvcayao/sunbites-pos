@@ -343,7 +343,7 @@ export default function StudentsReportPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Total Enrolled
+              {hasActiveFilters ? "Matching Students" : "Total Enrolled"}
             </p>
             <p className="mt-1 text-2xl font-extrabold text-foreground">
               {summary.total}
@@ -499,30 +499,66 @@ export default function StudentsReportPage() {
                     ? [
                         <tr key={`${row.id}-detail`} className="bg-muted/10">
                           <td colSpan={8} className="px-6 py-4">
-                            {row.notes || row.allergies ? (
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="rounded-lg border bg-card p-3">
-                                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    Allergies
-                                  </p>
-                                  <p className="text-sm text-foreground">
-                                    {row.allergies ?? "None recorded"}
-                                  </p>
+                            <div className="space-y-4">
+                              {/* Allergies + Notes */}
+                              {row.notes || row.allergies ? (
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="rounded-lg border bg-card p-3">
+                                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                      Allergies
+                                    </p>
+                                    <p className="text-sm text-foreground">
+                                      {row.allergies ?? "None recorded"}
+                                    </p>
+                                  </div>
+                                  <div className="rounded-lg border bg-card p-3">
+                                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                      Notes
+                                    </p>
+                                    <p className="text-sm text-foreground">
+                                      {row.notes ?? "None recorded"}
+                                    </p>
+                                  </div>
                                 </div>
-                                <div className="rounded-lg border bg-card p-3">
-                                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    Notes
+                              ) : (
+                                <p className="text-center text-sm text-muted-foreground">
+                                  No notes or allergies recorded for this student.
+                                </p>
+                              )}
+
+                              {/* Payment history — subscription students only */}
+                              {row.payment_history !== null && (
+                                <div>
+                                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Payment History
                                   </p>
-                                  <p className="text-sm text-foreground">
-                                    {row.notes ?? "None recorded"}
-                                  </p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {row.payment_history.map((entry) => (
+                                      <div
+                                        key={`${entry.month}-${entry.year}`}
+                                        className={cn(
+                                          "flex flex-col items-center rounded-md border px-2.5 py-1.5 text-center",
+                                          entry.status === "paid" && "border-green-300 bg-green-50 text-green-700",
+                                          entry.status === "unpaid" && "border-red-300 bg-red-50 text-red-700",
+                                          entry.status === "voided" && "border-border bg-muted text-muted-foreground line-through",
+                                          entry.status === "no_record" && "border-border bg-muted/40 text-muted-foreground",
+                                        )}
+                                      >
+                                        <span className="text-[10px] font-semibold">
+                                          {entry.month_label.slice(0, 3)}
+                                        </span>
+                                        <span className="text-[10px]">
+                                          {entry.status === "paid" && "✓"}
+                                          {entry.status === "unpaid" && "✗"}
+                                          {entry.status === "voided" && "—"}
+                                          {entry.status === "no_record" && "–"}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            ) : (
-                              <p className="text-center text-sm text-muted-foreground">
-                                No notes or allergies recorded for this student.
-                              </p>
-                            )}
+                              )}
+                            </div>
                           </td>
                         </tr>,
                       ]
