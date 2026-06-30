@@ -1033,184 +1033,6 @@ function DeletedStudentCard({ student }: { student: Student }) {
 }
 
 // ---------------------------------------------------------------------------
-// StudentCard
-// ---------------------------------------------------------------------------
-
-interface StudentCardProps {
-  student: Student;
-  selected: boolean;
-  onSelect: (student: Student, selected: boolean) => void;
-  onTopUp: (student: Student) => void;
-  onStatusClick: (student: Student) => void;
-  onRemove: (student: Student) => void;
-  canTogglePayment: boolean;
-}
-
-function StudentCard({
-  student,
-  selected,
-  onSelect,
-  onTopUp,
-  onStatusClick,
-  onRemove,
-  canTogglePayment,
-}: StudentCardProps) {
-  const isSubscription = student.student_type === "subscription";
-  const primaryContact = student.contacts?.find((c) => c.is_primary);
-  const statusConfig = ENROLLMENT_STATUS_CONFIG[student.enrollment_status];
-  const creditOwed = parseFloat(student.credit_balance) > 0;
-
-  const [photoSrc, setPhotoSrc] = useState<string | null>(null);
-  useEffect(() => {
-    if (!student.photo_url) return;
-    let objectUrl: string | null = null;
-    const { token, activeBranch } = useAuthStore.getState();
-    const headers: Record<string, string> = { Accept: "image/*" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    if (activeBranch) headers["X-Branch-Id"] = String(activeBranch.id);
-    fetch(student.photo_url, { headers })
-      .then((res) => res.blob())
-      .then((blob) => {
-        objectUrl = URL.createObjectURL(blob);
-        setPhotoSrc(objectUrl);
-      })
-      .catch(() => {});
-    return () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [student.photo_url]);
-
-  return (
-    <div
-      className={cn(
-        "rounded-xl border border-border bg-card p-4 relative",
-        isSubscription
-          ? "border-l-4 border-l-orange-400"
-          : "border-l-4 border-l-purple-500",
-      )}
-    >
-      {/* Checkbox */}
-      <div className="absolute top-3 left-3">
-        <Checkbox
-          checked={selected}
-          onCheckedChange={(checked) => onSelect(student, !!checked)}
-          aria-label={`Select ${student.full_name}`}
-        />
-      </div>
-
-      {/* Header */}
-      <div className="flex items-start gap-3 pl-7">
-        {photoSrc ? (
-          <img
-            src={photoSrc}
-            alt={student.full_name}
-            className="h-10 w-10 shrink-0 rounded-full object-cover border border-primary/20"
-          />
-        ) : (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-            {student.first_name.charAt(0).toUpperCase()}
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-foreground truncate">
-              {student.full_name}
-            </p>
-            <button
-              type="button"
-              onClick={() => onStatusClick(student)}
-              className={statusConfig.className}
-            >
-              {statusConfig.label}
-            </button>
-            <span
-              className={cn(
-                "text-[11px] font-bold px-3 py-1 rounded-full border",
-                isSubscription
-                  ? "bg-orange-100 text-orange-700 border-orange-300"
-                  : "bg-purple-100 text-purple-700 border-purple-300",
-              )}
-            >
-              {student.student_type_label}
-            </span>
-            {creditOwed && (
-              <span className="text-[11px] font-bold px-3 py-1 rounded-full border bg-red-100 text-destructive border-red-300">
-                ₱{student.credit_balance} Credit Owed
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {student.grade_level}
-            {student.section ? ` · ${student.section}` : ""}
-            {primaryContact ? ` · ${primaryContact.full_name}` : ""}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Enrolled {student.enrollment_date} · Wallet: ₱
-            {(student.wallet_balance ?? 0).toFixed(2)} · {student.points} pts
-          </p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex shrink-0 gap-1.5 flex-wrap">
-          <Link
-            href={`/students/${student.id}`}
-            className="rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted/40"
-          >
-            Edit
-          </Link>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => onTopUp(student)}
-          >
-            Wallet
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => onRemove(student)}
-            className="text-destructive border-destructive/40 hover:bg-destructive/10"
-          >
-            Remove
-          </Button>
-        </div>
-      </div>
-
-      <div className="border-t border-border mt-3 pt-3">
-        {isSubscription ? (
-          <>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-              Monthly Subscription
-            </p>
-            <MonthBadges
-              studentId={student.id}
-              payments={student.monthly_payments ?? []}
-              canToggle={canTogglePayment}
-            />
-          </>
-        ) : (
-          <div className="flex items-center justify-between gap-3">
-            <div className="rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs text-purple-700 flex-1">
-              Wallet-only account — loads wallet to purchase food items
-            </div>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => onTopUp(student)}
-              className="bg-purple-600 text-white hover:bg-purple-700 shrink-0"
-            >
-              Load Wallet
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // RemoveStudentDialog
 // ---------------------------------------------------------------------------
 
@@ -1505,10 +1327,6 @@ export default function StudentsPage() {
   const canTogglePayment =
     !!user && (user.roles.includes("admin") || user.roles.includes("manager"));
 
-  const handleStatusClick = useCallback((st: Student) => {
-    setStatusPickerState({ studentId: st.id, current: st.enrollment_status });
-  }, []);
-
   const [showDeleted, setShowDeleted] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("all");
   const [search, setSearch] = useState("");
@@ -1529,6 +1347,10 @@ export default function StudentsPage() {
     current: EnrollmentStatus;
   } | null>(null);
   const [removeStudent, setRemoveStudent] = useState<Student | null>(null);
+
+  const handleStatusClick = useCallback((st: Student) => {
+    setStatusPickerState({ studentId: st.id, current: st.enrollment_status });
+  }, []);
 
   const subQuery = useQuery({
     queryKey: [
