@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useState, useEffect } from "react";
+import { startTransition, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -636,19 +636,22 @@ function QrCard({ student }: { student: Student }) {
     };
   }, [student.photo_url]);
 
+  const colors = getCardAccentColors(student.student_type);
+
   const parts = student.enrollment_date?.split("-") ?? [];
   const enrolledFormatted =
     parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : null;
 
   return (
     <div
+      data-qr-preview-card
       style={{
         display: "flex",
         flexDirection: "column",
         width: "100%",
         height: "100%",
         borderRadius: "6px",
-        border: "2px solid oklch(0.577 0.245 27.325)",
+        border: `2px solid ${colors.borderColor}`,
         overflow: "hidden",
         backgroundColor: "white",
         fontFamily: "sans-serif",
@@ -659,13 +662,13 @@ function QrCard({ student }: { student: Student }) {
       <div
         style={{
           flexShrink: 0,
-          backgroundColor: "oklch(0.577 0.245 27.325)",
+          backgroundColor: colors.headerBg,
           padding: "4px 6px",
         }}
       >
         <p
           style={{
-            color: "white",
+            color: colors.headerText,
             fontWeight: 800,
             fontSize: "8px",
             letterSpacing: "0.3px",
@@ -676,7 +679,7 @@ function QrCard({ student }: { student: Student }) {
         </p>
         <p
           style={{
-            color: "rgba(255,255,255,0.85)",
+            color: colors.headerSubText,
             fontSize: "6.5px",
             margin: "1px 0 0",
           }}
@@ -706,7 +709,7 @@ function QrCard({ student }: { student: Student }) {
               height: "44px",
               objectFit: "cover",
               borderRadius: "5px",
-              border: "2px solid oklch(0.577 0.245 27.325)",
+              border: `2px solid ${colors.borderColor}`,
               flexShrink: 0,
             }}
           />
@@ -716,14 +719,14 @@ function QrCard({ student }: { student: Student }) {
               width: "44px",
               height: "44px",
               borderRadius: "5px",
-              border: "2px solid oklch(0.577 0.245 27.325)",
-              backgroundColor: "#fff3f0",
+              border: `2px solid ${colors.borderColor}`,
+              backgroundColor: colors.avatarBg,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontWeight: 800,
               fontSize: "16px",
-              color: "oklch(0.577 0.245 27.325)",
+              color: colors.accentColor,
               flexShrink: 0,
             }}
           >
@@ -742,7 +745,7 @@ function QrCard({ student }: { student: Student }) {
         </p>
         <p
           style={{
-            color: "oklch(0.577 0.245 27.325)",
+            color: colors.accentColor,
             fontSize: "8px",
             margin: 0,
             fontWeight: 700,
@@ -787,8 +790,8 @@ function QrCard({ student }: { student: Student }) {
       <div
         style={{
           flexShrink: 0,
-          backgroundColor: "#fff3f0",
-          borderTop: "1px solid #fdd8cc",
+          backgroundColor: colors.footerBg,
+          borderTop: `1px solid ${colors.footerBorder}`,
           padding: "3px 4px",
         }}
       >
@@ -810,8 +813,22 @@ function QrCard({ student }: { student: Student }) {
   );
 }
 
+const DIALOG_WIDTH_CLASS: Record<1 | 2 | 3 | 4, string> = {
+  1: "sm:max-w-sm",
+  2: "sm:max-w-xl",
+  3: "sm:max-w-2xl",
+  4: "sm:max-w-4xl",
+};
+
+const GRID_COLS_CLASS: Record<1 | 2 | 3 | 4, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+};
+
 function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
-  const [cols, setCols] = useState<1 | 2 | 3>(2);
+  const [cols, setCols] = useState<1 | 2 | 3 | 4>(4);
   const [printRoot, setPrintRoot] = useState<HTMLDivElement | null>(null);
 
   // Mount a dedicated print container directly on <body> so window.print()
@@ -857,7 +874,7 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className={DIALOG_WIDTH_CLASS[cols]}>
           <DialogHeader>
             <DialogTitle>
               Print QR Codes ({students.length} selected)
@@ -868,7 +885,7 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
             <span className="text-sm text-muted-foreground">
               Cards per row:
             </span>
-            {([1, 2, 3] as const).map((n) => (
+            {([4, 3, 2, 1] as const).map((n) => (
               <button
                 key={n}
                 type="button"
@@ -886,21 +903,19 @@ function BatchQrModal({ open, onClose, students }: BatchQrModalProps) {
           </div>
 
           {/* Screen preview — portrait card aspect ratio */}
-          <div
-            className={cn(
-              "grid gap-3 mt-2 justify-items-center",
-              cols === 1
-                ? "grid-cols-1"
-                : cols === 2
-                  ? "grid-cols-2"
-                  : "grid-cols-3",
-            )}
-          >
-            {students.map((s) => (
-              <div key={s.id} className="w-[152px] h-[240px]">
-                <QrCard student={s} />
-              </div>
-            ))}
+          <div className="overflow-y-auto max-h-[60vh]">
+            <div
+              className={cn(
+                "grid gap-3 mt-2 justify-items-center",
+                GRID_COLS_CLASS[cols],
+              )}
+            >
+              {students.map((s) => (
+                <div key={s.id} className="w-[152px] h-[240px]">
+                  <QrCard student={s} />
+                </div>
+              ))}
+            </div>
           </div>
 
           <DialogFooter>
@@ -1033,184 +1048,6 @@ function DeletedStudentCard({ student }: { student: Student }) {
 }
 
 // ---------------------------------------------------------------------------
-// StudentCard
-// ---------------------------------------------------------------------------
-
-interface StudentCardProps {
-  student: Student;
-  selected: boolean;
-  onSelect: (id: number, selected: boolean) => void;
-  onTopUp: (student: Student) => void;
-  onStatusClick: (student: Student) => void;
-  onRemove: (student: Student) => void;
-  canTogglePayment: boolean;
-}
-
-function StudentCard({
-  student,
-  selected,
-  onSelect,
-  onTopUp,
-  onStatusClick,
-  onRemove,
-  canTogglePayment,
-}: StudentCardProps) {
-  const isSubscription = student.student_type === "subscription";
-  const primaryContact = student.contacts?.find((c) => c.is_primary);
-  const statusConfig = ENROLLMENT_STATUS_CONFIG[student.enrollment_status];
-  const creditOwed = parseFloat(student.credit_balance) > 0;
-
-  const [photoSrc, setPhotoSrc] = useState<string | null>(null);
-  useEffect(() => {
-    if (!student.photo_url) return;
-    let objectUrl: string | null = null;
-    const { token, activeBranch } = useAuthStore.getState();
-    const headers: Record<string, string> = { Accept: "image/*" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    if (activeBranch) headers["X-Branch-Id"] = String(activeBranch.id);
-    fetch(student.photo_url, { headers })
-      .then((res) => res.blob())
-      .then((blob) => {
-        objectUrl = URL.createObjectURL(blob);
-        setPhotoSrc(objectUrl);
-      })
-      .catch(() => {});
-    return () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [student.photo_url]);
-
-  return (
-    <div
-      className={cn(
-        "rounded-xl border border-border bg-card p-4 relative",
-        isSubscription
-          ? "border-l-4 border-l-orange-400"
-          : "border-l-4 border-l-purple-500",
-      )}
-    >
-      {/* Checkbox */}
-      <div className="absolute top-3 left-3">
-        <Checkbox
-          checked={selected}
-          onCheckedChange={(checked) => onSelect(student.id, !!checked)}
-          aria-label={`Select ${student.full_name}`}
-        />
-      </div>
-
-      {/* Header */}
-      <div className="flex items-start gap-3 pl-7">
-        {photoSrc ? (
-          <img
-            src={photoSrc}
-            alt={student.full_name}
-            className="h-10 w-10 shrink-0 rounded-full object-cover border border-primary/20"
-          />
-        ) : (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-            {student.first_name.charAt(0).toUpperCase()}
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-foreground truncate">
-              {student.full_name}
-            </p>
-            <button
-              type="button"
-              onClick={() => onStatusClick(student)}
-              className={statusConfig.className}
-            >
-              {statusConfig.label}
-            </button>
-            <span
-              className={cn(
-                "text-[11px] font-bold px-3 py-1 rounded-full border",
-                isSubscription
-                  ? "bg-orange-100 text-orange-700 border-orange-300"
-                  : "bg-purple-100 text-purple-700 border-purple-300",
-              )}
-            >
-              {student.student_type_label}
-            </span>
-            {creditOwed && (
-              <span className="text-[11px] font-bold px-3 py-1 rounded-full border bg-red-100 text-destructive border-red-300">
-                ₱{student.credit_balance} Credit Owed
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {student.grade_level}
-            {student.section ? ` · ${student.section}` : ""}
-            {primaryContact ? ` · ${primaryContact.full_name}` : ""}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Enrolled {student.enrollment_date} · Wallet: ₱
-            {(student.wallet_balance ?? 0).toFixed(2)} · {student.points} pts
-          </p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex shrink-0 gap-1.5 flex-wrap">
-          <Link
-            href={`/students/${student.id}`}
-            className="rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted/40"
-          >
-            Edit
-          </Link>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => onTopUp(student)}
-          >
-            Wallet
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => onRemove(student)}
-            className="text-destructive border-destructive/40 hover:bg-destructive/10"
-          >
-            Remove
-          </Button>
-        </div>
-      </div>
-
-      <div className="border-t border-border mt-3 pt-3">
-        {isSubscription ? (
-          <>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-              Monthly Subscription
-            </p>
-            <MonthBadges
-              studentId={student.id}
-              payments={student.monthly_payments ?? []}
-              canToggle={canTogglePayment}
-            />
-          </>
-        ) : (
-          <div className="flex items-center justify-between gap-3">
-            <div className="rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs text-purple-700 flex-1">
-              Wallet-only account — loads wallet to purchase food items
-            </div>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => onTopUp(student)}
-              className="bg-purple-600 text-white hover:bg-purple-700 shrink-0"
-            >
-              Load Wallet
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // RemoveStudentDialog
 // ---------------------------------------------------------------------------
 
@@ -1262,6 +1099,238 @@ function RemoveStudentDialog({
 }
 
 // ---------------------------------------------------------------------------
+// StudentRow
+// ---------------------------------------------------------------------------
+
+interface StudentRowProps {
+  student: Student;
+  selected: boolean;
+  onSelect: (student: Student, selected: boolean) => void;
+  onTopUp: (student: Student) => void;
+  onStatusClick: (student: Student) => void;
+  onRemove: (student: Student) => void;
+  canTogglePayment: boolean;
+  accentColor: string;
+}
+
+function StudentRow({
+  student,
+  selected,
+  onSelect,
+  onTopUp,
+  onStatusClick,
+  onRemove,
+  canTogglePayment,
+  accentColor,
+}: StudentRowProps) {
+  const isSubscription = student.student_type === "subscription";
+  const statusConfig = ENROLLMENT_STATUS_CONFIG[student.enrollment_status];
+  const creditOwed = parseFloat(student.credit_balance) > 0;
+
+  const [photoSrc, setPhotoSrc] = useState<string | null>(null);
+  useEffect(() => {
+    if (!student.photo_url) return;
+    let objectUrl: string | null = null;
+    const { token, activeBranch } = useAuthStore.getState();
+    const headers: Record<string, string> = { Accept: "image/*" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (activeBranch) headers["X-Branch-Id"] = String(activeBranch.id);
+    fetch(student.photo_url, { headers })
+      .then((res) => res.blob())
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setPhotoSrc(objectUrl);
+      })
+      .catch(() => {});
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [student.photo_url]);
+
+  return (
+    <div
+      className="rounded-xl border border-border bg-card px-4 py-3 flex items-start gap-3"
+      style={{ borderLeftWidth: 4, borderLeftColor: accentColor }}
+    >
+      <div className="pt-0.5 shrink-0">
+        <Checkbox
+          checked={selected}
+          onCheckedChange={(checked) => onSelect(student, !!checked)}
+          aria-label={`Select ${student.full_name}`}
+        />
+      </div>
+
+      {photoSrc ? (
+        <img
+          src={photoSrc}
+          alt={student.full_name}
+          className="h-9 w-9 shrink-0 rounded-full object-cover border border-primary/20"
+        />
+      ) : (
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+          {student.first_name.charAt(0).toUpperCase()}
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold text-foreground truncate">
+            {student.full_name}
+          </span>
+          <button
+            type="button"
+            onClick={() => onStatusClick(student)}
+            className={statusConfig.className}
+          >
+            {statusConfig.label}
+          </button>
+          {creditOwed && (
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-red-100 text-destructive border-red-300">
+              ₱{student.credit_balance} Credit Owed
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {student.grade_level}
+          {student.section ? ` · ${student.section}` : ""}
+        </p>
+        {isSubscription && (
+          <div className="mt-2">
+            <MonthBadges
+              studentId={student.id}
+              payments={student.monthly_payments ?? []}
+              canToggle={canTogglePayment}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2 ml-auto flex-wrap justify-end">
+        <span className="text-sm font-bold text-foreground tabular-nums">
+          ₱{(student.wallet_balance ?? 0).toFixed(2)}
+        </span>
+        <Link
+          href={`/students/${student.id}`}
+          className="rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted/40"
+        >
+          Edit
+        </Link>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => onTopUp(student)}
+        >
+          Wallet
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => onRemove(student)}
+          className="text-destructive border-destructive/40 hover:bg-destructive/10"
+        >
+          Remove
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pagination
+// ---------------------------------------------------------------------------
+
+interface PaginationProps {
+  currentPage: number;
+  lastPage: number;
+  from: number | null;
+  to: number | null;
+  total: number;
+  onPageChange: (page: number) => void;
+}
+
+function Pagination({
+  currentPage,
+  lastPage,
+  from,
+  to,
+  total,
+  onPageChange,
+}: PaginationProps) {
+  if (lastPage <= 1) return null;
+
+  const pages: (number | "…")[] = [];
+  for (let i = 1; i <= lastPage; i++) {
+    if (
+      i === 1 ||
+      i === lastPage ||
+      (i >= currentPage - 1 && i <= currentPage + 1)
+    ) {
+      pages.push(i);
+    } else if (
+      (i === currentPage - 2 && currentPage > 3) ||
+      (i === currentPage + 2 && currentPage < lastPage - 2)
+    ) {
+      pages.push("…");
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between pt-3 border-t border-border">
+      <p className="text-xs text-muted-foreground">
+        Showing {from ?? 0}–{to ?? 0} of {total}
+      </p>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="rounded px-2 py-1 text-sm text-muted-foreground hover:bg-muted/40 disabled:opacity-40"
+          aria-label="Previous page"
+        >
+          ←
+        </button>
+        {pages.map((p, idx) =>
+          p === "…" ? (
+            <span
+              key={`ellipsis-${idx}`}
+              className="px-2 text-muted-foreground text-sm"
+            >
+              …
+            </span>
+          ) : (
+            <button
+              key={p}
+              type="button"
+              onClick={() => onPageChange(p as number)}
+              className={cn(
+                "rounded px-2.5 py-1 text-sm transition-colors",
+                p === currentPage
+                  ? "bg-primary text-primary-foreground font-bold"
+                  : "text-muted-foreground hover:bg-muted/40",
+              )}
+              aria-current={p === currentPage ? "page" : undefined}
+            >
+              {p}
+            </button>
+          ),
+        )}
+        <button
+          type="button"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === lastPage}
+          className="rounded px-2 py-1 text-sm text-muted-foreground hover:bg-muted/40 disabled:opacity-40"
+          aria-label="Next page"
+        >
+          →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -1271,9 +1340,7 @@ export default function StudentsPage() {
   const user = useAuthStore((s) => s.user);
 
   const canTogglePayment =
-    user?.roles.includes("admin") || user?.roles.includes("manager")
-      ? true
-      : false;
+    !!user && (user.roles.includes("admin") || user.roles.includes("manager"));
 
   const [showDeleted, setShowDeleted] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("all");
@@ -1283,7 +1350,11 @@ export default function StudentsPage() {
   const [monthFilter, setMonthFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedStudents, setSelectedStudents] = useState<
+    Map<number, Student>
+  >(new Map());
+  const [subPage, setSubPage] = useState(1);
+  const [nonSubPage, setNonSubPage] = useState(1);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [topUpStudent, setTopUpStudent] = useState<Student | null>(null);
   const [statusPickerState, setStatusPickerState] = useState<{
@@ -1292,12 +1363,16 @@ export default function StudentsPage() {
   } | null>(null);
   const [removeStudent, setRemoveStudent] = useState<Student | null>(null);
 
-  const { data, isLoading, isError } = useQuery({
+  const handleStatusClick = useCallback((st: Student) => {
+    setStatusPickerState({ studentId: st.id, current: st.enrollment_status });
+  }, []);
+
+  const subQuery = useQuery({
     queryKey: [
       "students",
+      "subscription",
       {
-        showDeleted,
-        activeTab,
+        subPage,
         search,
         gradeFilter,
         statusFilter,
@@ -1307,66 +1382,146 @@ export default function StudentsPage() {
       },
     ],
     queryFn: () =>
-      studentApi.list(
-        showDeleted
-          ? {
-              deleted: 1,
-              search: search || undefined,
-              grade: gradeFilter || undefined,
-            }
-          : {
-              search: search || undefined,
-              grade: gradeFilter || undefined,
-              status: statusFilter || undefined,
-              type: activeTab !== "all" ? activeTab : undefined,
-              month:
-                activeTab === "subscription" && monthFilter
-                  ? (monthFilter as SchoolMonth)
-                  : undefined,
-              year:
-                activeTab === "subscription" && yearFilter
-                  ? Number(yearFilter)
-                  : undefined,
-              payment_status:
-                activeTab === "subscription" && paymentStatusFilter
-                  ? paymentStatusFilter
-                  : undefined,
-            },
-      ),
+      studentApi.list({
+        type: "subscription",
+        page: subPage,
+        search: search || undefined,
+        grade: gradeFilter || undefined,
+        status: statusFilter || undefined,
+        month: monthFilter ? (monthFilter as SchoolMonth) : undefined,
+        year: yearFilter ? Number(yearFilter) : undefined,
+        payment_status: paymentStatusFilter || undefined,
+      }),
+    enabled: !showDeleted,
   });
 
-  const allStudents = data?.data ?? [];
-  const subscriptionStudents = allStudents.filter(
-    (s) => s.student_type === "subscription",
-  );
-  const nonSubStudents = allStudents.filter(
-    (s) => s.student_type === "non_subscription",
-  );
+  const nonSubQuery = useQuery({
+    queryKey: [
+      "students",
+      "non_subscription",
+      {
+        nonSubPage,
+        search,
+        gradeFilter,
+        statusFilter,
+      },
+    ],
+    queryFn: () =>
+      studentApi.list({
+        type: "non_subscription",
+        page: nonSubPage,
+        search: search || undefined,
+        grade: gradeFilter || undefined,
+        status: statusFilter || undefined,
+      }),
+    enabled: !showDeleted,
+  });
 
-  const selectedStudents = allStudents.filter((s) => selectedIds.has(s.id));
+  const deletedQuery = useQuery({
+    queryKey: ["students", "deleted", { search, gradeFilter }],
+    queryFn: () =>
+      studentApi.list({
+        deleted: 1,
+        search: search || undefined,
+        grade: gradeFilter || undefined,
+      }),
+    enabled: showDeleted,
+  });
 
-  function toggleSelect(id: number, checked: boolean) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
+  const subStudents = subQuery.data?.data ?? [];
+  const nonSubStudents = nonSubQuery.data?.data ?? [];
+  const deletedStudents = deletedQuery.data?.data ?? [];
+
+  const subMeta = subQuery.data?.meta;
+  const nonSubMeta = nonSubQuery.data?.meta;
+
+  const isLoading = showDeleted
+    ? deletedQuery.isLoading
+    : subQuery.isLoading || nonSubQuery.isLoading;
+
+  const isError = showDeleted
+    ? deletedQuery.isError
+    : subQuery.isError || nonSubQuery.isError;
+
+  function toggleSelect(student: Student, checked: boolean) {
+    setSelectedStudents((prev) => {
+      const next = new Map(prev);
       if (checked) {
-        next.add(id);
+        next.set(student.id, student);
       } else {
-        next.delete(id);
+        next.delete(student.id);
       }
       return next;
     });
   }
 
   function clearSelection() {
-    setSelectedIds(new Set());
+    setSelectedStudents(new Map());
   }
 
-  const displayedStudents =
-    activeTab === "all"
-      ? allStudents
-      : activeTab === "subscription"
-        ? subscriptionStudents
-        : nonSubStudents;
+  function renderStudentSection(
+    students: Student[],
+    meta:
+      | {
+          current_page: number;
+          last_page: number;
+          from: number | null;
+          to: number | null;
+          total: number;
+        }
+      | undefined,
+    loading: boolean,
+    accentColor: string,
+    onPageChange: (p: number) => void,
+    skeletonRows = 3,
+    emptyMessage = "No students found.",
+  ) {
+    if (loading) {
+      return (
+        <div className="space-y-2">
+          {Array.from({ length: skeletonRows }, (_, k) => (
+            <div key={k} className="h-14 animate-pulse rounded-lg bg-muted" />
+          ))}
+        </div>
+      );
+    }
+    if (students.length === 0) {
+      return (
+        <p className="text-sm text-muted-foreground py-6 text-center">
+          {emptyMessage}
+        </p>
+      );
+    }
+    return (
+      <>
+        <div className="space-y-2">
+          {students.map((s) => (
+            <StudentRow
+              key={s.id}
+              student={s}
+              selected={selectedStudents.has(s.id)}
+              onSelect={toggleSelect}
+              onTopUp={setTopUpStudent}
+              onStatusClick={handleStatusClick}
+              onRemove={setRemoveStudent}
+              canTogglePayment={canTogglePayment}
+              accentColor={accentColor}
+            />
+          ))}
+        </div>
+        {meta && (
+          <Pagination
+            currentPage={meta.current_page}
+            lastPage={meta.last_page}
+            from={meta.from}
+            to={meta.to}
+            total={meta.total}
+            onPageChange={onPageChange}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="p-6 space-y-4">
@@ -1535,11 +1690,11 @@ export default function StudentsPage() {
               { value: "all", label: "All" },
               {
                 value: "subscription",
-                label: `Subscription (${subscriptionStudents.length})`,
+                label: `Subscription (${subMeta?.total ?? 0})`,
               },
               {
                 value: "non_subscription",
-                label: `Non-Subscription (${nonSubStudents.length})`,
+                label: `Non-Subscription (${nonSubMeta?.total ?? 0})`,
               },
             ] as const
           ).map((tab) => (
@@ -1572,100 +1727,76 @@ export default function StudentsPage() {
           ))}
         </div>
       ) : showDeleted ? (
-        !allStudents.length ? (
+        !deletedStudents.length ? (
           <div className="rounded-xl border border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
             No removed students found.
           </div>
         ) : (
           <div className="space-y-3">
-            {allStudents.map((s) => (
+            {deletedStudents.map((s) => (
               <DeletedStudentCard key={s.id} student={s} />
             ))}
           </div>
         )
-      ) : !displayedStudents.length ? (
-        <div className="rounded-xl border border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
-          No students found.
-        </div>
       ) : activeTab === "all" ? (
         <div className="space-y-6">
-          {subscriptionStudents.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-sm font-extrabold uppercase tracking-wider text-orange-600">
-                Subscription Students ({subscriptionStudents.length})
-              </h2>
-              {subscriptionStudents.map((s) => (
-                <StudentCard
-                  key={s.id}
-                  student={s}
-                  selected={selectedIds.has(s.id)}
-                  onSelect={toggleSelect}
-                  onTopUp={setTopUpStudent}
-                  onStatusClick={(st) =>
-                    setStatusPickerState({
-                      studentId: st.id,
-                      current: st.enrollment_status,
-                    })
-                  }
-                  onRemove={setRemoveStudent}
-                  canTogglePayment={canTogglePayment}
-                />
-              ))}
-            </div>
-          )}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <h2 className="text-sm font-extrabold uppercase tracking-wider text-amber-600">
+              Subscription Students ({subMeta?.total ?? 0})
+            </h2>
+            {renderStudentSection(
+              subStudents,
+              subMeta,
+              subQuery.isLoading,
+              "#F59E0B",
+              setSubPage,
+              2,
+              "No subscription students found.",
+            )}
+          </div>
 
-          {nonSubStudents.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-sm font-extrabold uppercase tracking-wider text-purple-600">
-                Non-Subscription Students ({nonSubStudents.length})
-              </h2>
-              {nonSubStudents.map((s) => (
-                <StudentCard
-                  key={s.id}
-                  student={s}
-                  selected={selectedIds.has(s.id)}
-                  onSelect={toggleSelect}
-                  onTopUp={setTopUpStudent}
-                  onStatusClick={(st) =>
-                    setStatusPickerState({
-                      studentId: st.id,
-                      current: st.enrollment_status,
-                    })
-                  }
-                  onRemove={setRemoveStudent}
-                  canTogglePayment={canTogglePayment}
-                />
-              ))}
-            </div>
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <h2 className="text-sm font-extrabold uppercase tracking-wider text-violet-600">
+              Non-Subscription Students ({nonSubMeta?.total ?? 0})
+            </h2>
+            {renderStudentSection(
+              nonSubStudents,
+              nonSubMeta,
+              nonSubQuery.isLoading,
+              "#8B5CF6",
+              setNonSubPage,
+              2,
+              "No non-subscription students found.",
+            )}
+          </div>
+        </div>
+      ) : activeTab === "subscription" ? (
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          {renderStudentSection(
+            subStudents,
+            subMeta,
+            subQuery.isLoading,
+            "#F59E0B",
+            setSubPage,
           )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {displayedStudents.map((s) => (
-            <StudentCard
-              key={s.id}
-              student={s}
-              selected={selectedIds.has(s.id)}
-              onSelect={toggleSelect}
-              onTopUp={setTopUpStudent}
-              onStatusClick={(st) =>
-                setStatusPickerState({
-                  studentId: st.id,
-                  current: st.enrollment_status,
-                })
-              }
-              onRemove={setRemoveStudent}
-              canTogglePayment={canTogglePayment}
-            />
-          ))}
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          {renderStudentSection(
+            nonSubStudents,
+            nonSubMeta,
+            nonSubQuery.isLoading,
+            "#8B5CF6",
+            setNonSubPage,
+          )}
         </div>
       )}
 
       {/* Floating action bar */}
-      {selectedIds.size >= 1 && (
+      {selectedStudents.size >= 1 && (
         <div className="no-print fixed bottom-6 left-1/2 -translate-x-1/2 shadow-lg border border-border rounded-2xl bg-white px-6 py-3 flex items-center gap-4 z-50">
           <span className="bg-primary text-primary-foreground rounded-full px-3 py-0.5 text-sm font-bold">
-            {selectedIds.size}
+            {selectedStudents.size}
           </span>
           <Button
             type="button"
@@ -1690,7 +1821,7 @@ export default function StudentsPage() {
       <BatchQrModal
         open={showBatchModal}
         onClose={() => setShowBatchModal(false)}
-        students={selectedStudents}
+        students={Array.from(selectedStudents.values())}
       />
 
       {topUpStudent && (

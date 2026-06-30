@@ -93,6 +93,13 @@ export interface SalesOrder {
   total: number;
 }
 
+export interface PaymentHistoryEntry {
+  month: string;
+  month_label: string;
+  year: number;
+  status: "paid" | "unpaid" | "voided" | "no_record";
+}
+
 export interface StudentReportRow {
   id: number;
   full_name: string;
@@ -102,6 +109,9 @@ export interface StudentReportRow {
   status: string;
   wallet_balance: number;
   total_spent: number;
+  notes: string | null;
+  allergies: string | null;
+  payment_history: PaymentHistoryEntry[] | null;
 }
 
 export interface StudentReportSummary {
@@ -231,7 +241,7 @@ export interface BillingPayment {
   id: number;
   school_month: string;
   year: number;
-  status: "paid" | "unpaid";
+  status: "paid" | "unpaid" | "voided";
   amount: number;
   recorded_at: string | null;
   student: {
@@ -263,6 +273,15 @@ export interface SubscriptionReportRow {
       extra: { allocated: number; used: number; remaining: number };
     };
   };
+}
+
+export interface HistoricalSubscriberRow {
+  id: number;
+  full_name: string;
+  student_number: string | null;
+  grade_level: string;
+  section: string | null;
+  payment_amount: number;
 }
 
 export interface DailySummaryData {
@@ -379,10 +398,11 @@ export const reportApi = {
     search?: string;
     page?: number;
   }) =>
-    apiClient.get<{ data: SubscriptionReportRow[]; meta: PaginatedMeta }>(
-      "/reports/subscription",
-      {
-        params: params as Record<string, string | number | boolean | undefined>,
-      },
-    ),
+    apiClient.get<{
+      data: SubscriptionReportRow[];
+      meta: PaginatedMeta;
+      historical_data: HistoricalSubscriberRow[];
+    }>("/reports/subscription", {
+      params: params as Record<string, string | number | boolean | undefined>,
+    }),
 };

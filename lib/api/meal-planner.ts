@@ -14,7 +14,10 @@ export const mealPlannerApi = {
     }),
 
   update: (payload: SaveMealPlanPayload) =>
-    apiClient.patch<{ message: string }>("/references/meal-planner", payload),
+    apiClient.patch<{ message: string }>("/references/meal-planner", {
+      ...payload,
+      month: payload.month.toLowerCase(),
+    }),
 
   reset: (month: SchoolMonthKey, week: number) =>
     apiClient.post<{ message: string }>("/references/meal-planner/reset", {

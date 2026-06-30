@@ -248,6 +248,8 @@ export const studentFixture: Student = {
       status: "paid",
       amount: "2970.00",
       recorded_at: "2025-06-15T08:00:00Z",
+      voided_at: null,
+      void_reason: null,
     },
     {
       id: 2,
@@ -257,6 +259,8 @@ export const studentFixture: Student = {
       status: "unpaid",
       amount: "2970.00",
       recorded_at: null,
+      voided_at: null,
+      void_reason: null,
     },
   ],
 };
@@ -293,6 +297,8 @@ export const paymentsFixture: MonthlyPayment[] = [
     status: "paid",
     amount: "2970.00",
     recorded_at: "2025-06-15T08:00:00Z",
+    voided_at: null,
+    void_reason: null,
   },
   {
     id: 2,
@@ -302,6 +308,8 @@ export const paymentsFixture: MonthlyPayment[] = [
     status: "unpaid",
     amount: "2970.00",
     recorded_at: null,
+    voided_at: null,
+    void_reason: null,
   },
 ];
 
@@ -410,6 +418,32 @@ export const paginatedStudentsFixture: PaginatedStudents = {
     total: 2,
     from: 1,
     to: 2,
+  },
+};
+
+export const paginatedSubscriptionFixture: PaginatedStudents = {
+  data: [studentFixture],
+  links: { first: null, last: null, prev: null, next: null },
+  meta: {
+    current_page: 1,
+    last_page: 1,
+    per_page: 8,
+    total: 1,
+    from: 1,
+    to: 1,
+  },
+};
+
+export const paginatedNonSubFixture: PaginatedStudents = {
+  data: [nonSubStudentFixture],
+  links: { first: null, last: null, prev: null, next: null },
+  meta: {
+    current_page: 1,
+    last_page: 1,
+    per_page: 8,
+    total: 1,
+    from: 1,
+    to: 1,
   },
 };
 
@@ -587,10 +621,18 @@ export const handlers = [
     HttpResponse.json(enrolledStudentFixture, { status: 201 }),
   ),
 
-  // Students
-  http.get(`${API}/students`, () =>
-    HttpResponse.json(paginatedStudentsFixture),
-  ),
+  // Students — dispatches by `type` query param for per-section queries
+  http.get(`${API}/students`, ({ request }) => {
+    const url = new URL(request.url);
+    const type = url.searchParams.get("type");
+    if (type === "subscription") {
+      return HttpResponse.json(paginatedSubscriptionFixture);
+    }
+    if (type === "non_subscription") {
+      return HttpResponse.json(paginatedNonSubFixture);
+    }
+    return HttpResponse.json(paginatedStudentsFixture);
+  }),
 
   http.get(`${API}/students/:id`, () =>
     HttpResponse.json({

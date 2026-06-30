@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { AlertCircle } from "lucide-react";
 
+import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 import { posMenuItemApi } from "@/lib/api/pos-menu-items";
 import { inventoryApi } from "@/lib/api/inventory";
@@ -35,6 +36,16 @@ import type {
 import type { InventoryIngredient, InventoryItem } from "@/types/inventory";
 
 const CATEGORIES: MenuCategory[] = ["meal", "snack", "drink", "extra"];
+
+type CategoryFilter = "all" | MenuCategory;
+
+const FILTER_CATEGORIES: { value: CategoryFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "meal", label: "Meal" },
+  { value: "snack", label: "Snack" },
+  { value: "drink", label: "Drink" },
+  { value: "extra", label: "Extra" },
+];
 
 const CATEGORY_BADGE_STYLES: Record<MenuCategory, string> = {
   meal: "bg-primary/10 text-primary",
@@ -409,6 +420,9 @@ export function MenuMgmtTab() {
   const [editSubscriptionItem, setEditSubscriptionItem] = useState<
     boolean | null
   >(null);
+  const [activeCategory, setActiveCategory] = useState<CategoryFilter>("all");
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
 
   const {
     data: items,
@@ -426,6 +440,15 @@ export function MenuMgmtTab() {
 
   const activeInventoryItems =
     inventoryItems?.filter((i) => !i.is_archived) ?? [];
+
+  const filteredItems = (items ?? []).filter((item) => {
+    const matchesCategory =
+      activeCategory === "all" || item.category === activeCategory;
+    const matchesSearch =
+      !debouncedSearch ||
+      item.name.toLowerCase().includes(debouncedSearch.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const addMutation = useMutation({
     mutationFn: posMenuItemApi.create,
@@ -639,6 +662,38 @@ export function MenuMgmtTab() {
         </form>
       </div>
 
+      <div className="space-y-3">
+        <div>
+          <Label htmlFor="menu-search" className="sr-only">
+            Search menu items
+          </Label>
+          <Input
+            id="menu-search"
+            placeholder="Search menu items…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {FILTER_CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              type="button"
+              aria-pressed={activeCategory === cat.value}
+              onClick={() => setActiveCategory(cat.value)}
+              className={cn(
+                "rounded-full px-3.5 py-1 text-sm font-medium transition-colors",
+                activeCategory === cat.value
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-background text-foreground hover:border-primary/50",
+              )}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((k) => (
@@ -650,9 +705,25 @@ export function MenuMgmtTab() {
         </div>
       ) : !items?.length ? (
         <p className="text-sm text-muted-foreground">No menu items yet.</p>
+      ) : !filteredItems.length ? (
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-sm text-muted-foreground">
+            No items match your search.
+          </p>
+          <button
+            type="button"
+            className="text-sm text-primary hover:underline"
+            onClick={() => {
+              setSearch("");
+              setActiveCategory("all");
+            }}
+          >
+            Clear filters
+          </button>
+        </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <MenuItemCard
               key={item.id}
               item={item}
