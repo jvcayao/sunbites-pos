@@ -123,8 +123,16 @@ const GRADE_LEVELS = [
 // ---------------------------------------------------------------------------
 
 const MONTH_TO_NUMBER: Record<string, number> = {
-  june: 6, july: 7, august: 8, september: 9, october: 10,
-  november: 11, december: 12, january: 1, february: 2, march: 3,
+  june: 6,
+  july: 7,
+  august: 8,
+  september: 9,
+  october: 10,
+  november: 11,
+  december: 12,
+  january: 1,
+  february: 2,
+  march: 3,
 };
 
 function monthToNumber(month: string): number {
@@ -1759,14 +1767,21 @@ interface VoidPaymentDialogProps {
   payment: MonthlyPayment | null;
 }
 
-function VoidPaymentDialog({ open, onClose, studentId, payment }: VoidPaymentDialogProps) {
+function VoidPaymentDialog({
+  open,
+  onClose,
+  studentId,
+  payment,
+}: VoidPaymentDialogProps) {
   const queryClient = useQueryClient();
   const [reason, setReason] = useState("");
 
   const mutation = useMutation({
     mutationFn: () => studentApi.voidPayment(studentId, payment!.id, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["student-payments", studentId] });
+      queryClient.invalidateQueries({
+        queryKey: ["student-payments", studentId],
+      });
       queryClient.invalidateQueries({ queryKey: ["student", studentId] });
       toast.success("Payment voided.");
       setReason("");
@@ -1778,12 +1793,23 @@ function VoidPaymentDialog({ open, onClose, studentId, payment }: VoidPaymentDia
   });
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { setReason(""); onClose(); } }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) {
+          setReason("");
+          onClose();
+        }
+      }}
+    >
       <DialogContent showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Void Payment — {payment?.school_month_label} {payment?.year}</DialogTitle>
+          <DialogTitle>
+            Void Payment — {payment?.school_month_label} {payment?.year}
+          </DialogTitle>
           <DialogDescription>
-            This marks the ₱{payment?.amount} payment as voided. Issue any refund separately via wallet top-up.
+            This marks the ₱{payment?.amount} payment as voided. Issue any
+            refund separately via wallet top-up.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
@@ -1797,7 +1823,11 @@ function VoidPaymentDialog({ open, onClose, studentId, payment }: VoidPaymentDia
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={mutation.isPending}
+          >
             Cancel
           </Button>
           <Button
@@ -1829,7 +1859,9 @@ function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
   const [editingPayment, setEditingPayment] = useState<MonthlyPayment | null>(
     null,
   );
-  const [voidingPayment, setVoidingPayment] = useState<MonthlyPayment | null>(null);
+  const [voidingPayment, setVoidingPayment] = useState<MonthlyPayment | null>(
+    null,
+  );
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ["student-payments", studentId],
@@ -1926,13 +1958,21 @@ function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
             {year}
           </p>
           {paymentsByYear[year].map((payment) => {
-            const isPaid    = payment.status === "paid";
-            const isVoided  = payment.status === "voided";
-            const isUnpaid  = payment.status === "unpaid";
+            const isPaid = payment.status === "paid";
+            const isVoided = payment.status === "voided";
+            const isUnpaid = payment.status === "unpaid";
 
-            const paymentDate = new Date(payment.year, monthToNumber(payment.school_month) - 1, 1);
-            const nowMonth    = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-            const isVoidable  = isPaid && paymentDate >= nowMonth;
+            const paymentDate = new Date(
+              payment.year,
+              monthToNumber(payment.school_month) - 1,
+              1,
+            );
+            const nowMonth = new Date(
+              new Date().getFullYear(),
+              new Date().getMonth(),
+              1,
+            );
+            const isVoidable = isPaid && paymentDate >= nowMonth;
 
             return (
               <div
@@ -1943,7 +1983,12 @@ function PaymentTab({ studentId, canToggle, studentType }: PaymentTabProps) {
                 )}
               >
                 <div>
-                  <p className={cn("text-sm font-medium", isVoided && "line-through text-muted-foreground")}>
+                  <p
+                    className={cn(
+                      "text-sm font-medium",
+                      isVoided && "line-through text-muted-foreground",
+                    )}
+                  >
                     {payment.school_month_label} {payment.year}
                   </p>
                   <p className="text-xs text-muted-foreground">

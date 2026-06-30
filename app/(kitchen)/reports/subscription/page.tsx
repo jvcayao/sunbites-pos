@@ -431,8 +431,10 @@ export default function SubscriptionReportPage() {
             onClick={() => setShowHistorical((v) => !v)}
             className="text-sm text-muted-foreground hover:text-foreground underline"
           >
-            {showHistorical ? "Hide" : "Show"} {data!.historical_data.length} former subscriber
-            {data!.historical_data.length > 1 ? "s" : ""} with paid records for this month
+            {showHistorical ? "Hide" : "Show"} {data!.historical_data.length}{" "}
+            former subscriber
+            {data!.historical_data.length > 1 ? "s" : ""} with paid records for
+            this month
           </button>
 
           {showHistorical && (
@@ -440,18 +442,28 @@ export default function SubscriptionReportPage() {
               <table className="w-full text-sm">
                 <thead className="bg-muted/40">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Student</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">Grade</th>
-                    <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">Amount Paid</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                      Student
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">
+                      Grade
+                    </th>
+                    <th className="px-4 py-2 text-right text-xs font-semibold text-muted-foreground">
+                      Amount Paid
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {data!.historical_data.map((row) => (
                     <tr key={row.id} className="hover:bg-muted/20">
                       <td className="px-4 py-2.5">
-                        <p className="font-medium text-foreground">{row.full_name}</p>
+                        <p className="font-medium text-foreground">
+                          {row.full_name}
+                        </p>
                         {row.student_number && (
-                          <p className="text-xs font-mono text-muted-foreground">{row.student_number}</p>
+                          <p className="text-xs font-mono text-muted-foreground">
+                            {row.student_number}
+                          </p>
                         )}
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
                           Switched
@@ -459,10 +471,15 @@ export default function SubscriptionReportPage() {
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground">
                         {row.grade_level}
-                        {row.section && <p className="text-xs">{row.section}</p>}
+                        {row.section && (
+                          <p className="text-xs">{row.section}</p>
+                        )}
                       </td>
                       <td className="px-4 py-2.5 text-right font-medium">
-                        ₱{row.payment_amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                        ₱
+                        {row.payment_amount.toLocaleString("en-PH", {
+                          minimumFractionDigits: 2,
+                        })}
                       </td>
                     </tr>
                   ))}
