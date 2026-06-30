@@ -4,6 +4,7 @@ import { useAuthStore } from "@/lib/store/auth";
 import type { ApiError } from "@/types/auth";
 import type {
   BranchMonthlyAmountConfig,
+  DowngradePreview,
   EnrolledStudentResponse,
   EnrollStudentPayload,
   MonthlyPayment,
@@ -68,6 +69,20 @@ export const studentApi = {
     apiClient.patch<Student>(`/students/${id}/type`, {
       student_type: studentType,
     }),
+
+  downgradeSubscriptionPreview: (id: number) =>
+    apiClient.get<DowngradePreview>(
+      `/students/${id}/subscription-downgrade-preview`,
+    ),
+
+  downgradeSubscription: (id: number) =>
+    apiClient.post<Student>(`/students/${id}/downgrade-subscription`),
+
+  voidPayment: (studentId: number, paymentId: number, reason: string) =>
+    apiClient.patch<MonthlyPayment>(
+      `/students/${studentId}/payments/${paymentId}/void`,
+      { reason },
+    ),
 
   topUp: (id: number, payload: WalletTopUpPayload) =>
     apiClient.post<{ message: string; new_balance: number }>(
