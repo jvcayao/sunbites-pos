@@ -35,7 +35,7 @@ export function SectionSales({ data }: Props) {
   return (
     <SectionWrapper title="Sales">
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard label="Total Revenue"    value={fmt(kpis.total_revenue)}    accent="success" />
         <KpiCard label="Net Revenue"      value={fmt(kpis.net_revenue)}      accent="success" />
         <KpiCard label="Total Orders"     value={kpis.total_orders} />
@@ -43,10 +43,10 @@ export function SectionSales({ data }: Props) {
         <KpiCard label="Total Discounts"  value={fmt(kpis.total_discounts)}  accent="warning" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         {/* Revenue + Orders trend */}
-        <div className="rounded-lg border bg-card p-4">
-          <p className="mb-3 text-sm font-medium">Revenue &amp; Orders Trend</p>
+        <div className="rounded-xl border bg-card p-5">
+          <p className="mb-4 text-sm font-semibold">Revenue &amp; Orders Trend</p>
           <ResponsiveContainer width="100%" height={220}>
             <ComposedChart data={revenue_trend}>
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -64,8 +64,8 @@ export function SectionSales({ data }: Props) {
         </div>
 
         {/* Payment methods donut */}
-        <div className="rounded-lg border bg-card p-4">
-          <p className="mb-3 text-sm font-medium">Payment Methods</p>
+        <div className="rounded-xl border bg-card p-5">
+          <p className="mb-4 text-sm font-semibold">Payment Methods</p>
           {payment_methods.length === 0 ? (
             <p className="text-muted-foreground py-16 text-center text-sm">No data</p>
           ) : (
@@ -103,8 +103,8 @@ export function SectionSales({ data }: Props) {
         </div>
 
         {/* Top items */}
-        <div className="rounded-lg border bg-card p-4">
-          <p className="mb-3 text-sm font-medium">Top Items by Quantity</p>
+        <div className="rounded-xl border bg-card p-5">
+          <p className="mb-4 text-sm font-semibold">Top Items by Quantity</p>
           {top_items.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">No data</p>
           ) : (
@@ -120,8 +120,8 @@ export function SectionSales({ data }: Props) {
         </div>
 
         {/* Peak hours */}
-        <div className="rounded-lg border bg-card p-4">
-          <p className="mb-3 text-sm font-medium">Peak Hours (avg orders/day)</p>
+        <div className="rounded-xl border bg-card p-5">
+          <p className="mb-4 text-sm font-semibold">Peak Hours (avg orders/day)</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={peak_hours}>
               <XAxis dataKey="hour" tick={{ fontSize: 11 }} />

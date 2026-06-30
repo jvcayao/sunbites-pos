@@ -32,7 +32,7 @@ export function SectionStudents({ data }: Props) {
 
   return (
     <SectionWrapper title="Students">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
         <KpiCard label="Total"          value={kpis.total_students} />
         <KpiCard label="Enrolled"       value={kpis.enrolled} accent="success" />
         <KpiCard label="Subscription"   value={kpis.subscription_count} />
@@ -42,10 +42,10 @@ export function SectionStudents({ data }: Props) {
         <KpiCard label="Downgrades"     value={kpis.subscription_downgrades} accent="warning" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3">
         {/* Type distribution donut */}
-        <div className="rounded-lg border bg-card p-4">
-          <p className="mb-3 text-sm font-medium">Student Type Distribution</p>
+        <div className="rounded-xl border bg-card p-5">
+          <p className="mb-4 text-sm font-semibold">Student Type Distribution</p>
           <div className="flex items-center gap-4">
             <PieChart width={140} height={140}>
               <Pie
@@ -76,8 +76,8 @@ export function SectionStudents({ data }: Props) {
         </div>
 
         {/* By grade */}
-        <div className="rounded-lg border bg-card p-4 lg:col-span-2">
-          <p className="mb-3 text-sm font-medium">Enrolled by Grade</p>
+        <div className="rounded-xl border bg-card p-5 lg:col-span-2">
+          <p className="mb-4 text-sm font-semibold">Enrolled by Grade</p>
           {by_grade.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">No data</p>
           ) : (
@@ -93,8 +93,8 @@ export function SectionStudents({ data }: Props) {
         </div>
 
         {/* Switch trend diverging bar */}
-        <div className="rounded-lg border bg-card p-4 lg:col-span-3">
-          <p className="mb-3 text-sm font-medium">Subscription Switch Trend</p>
+        <div className="rounded-xl border bg-card p-5 lg:col-span-3">
+          <p className="mb-4 text-sm font-semibold">Subscription Switch Trend</p>
           {switch_trend.every((p) => p.upgrades === 0 && p.downgrades === 0) ? (
             <p className="text-muted-foreground py-8 text-center text-sm">No switches in this period</p>
           ) : (

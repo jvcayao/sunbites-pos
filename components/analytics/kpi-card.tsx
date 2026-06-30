@@ -19,7 +19,7 @@ export function KpiCard({ label, value, sub, accent = "default", className }: Pr
   return (
     <div
       className={cn(
-        "rounded-lg border-l-4 bg-card px-4 py-3",
+        "rounded-xl border border-border border-l-4 bg-card px-4 py-4",
         accentClasses[accent],
         className,
       )}

@@ -35,9 +35,9 @@ function defaultParams(): AnalyticsParams {
 
 function AnalyticsSkeleton() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="space-y-3 rounded-xl border bg-card p-6">
+        <div key={i} className="space-y-4 rounded-xl border bg-card p-6">
           <Skeleton className="h-5 w-32" />
           <div className="grid grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, j) => (
@@ -61,17 +61,18 @@ export default function AnalyticsPage() {
   const { data, isLoading, isError, error } = useAnalytics(params);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 p-6 pb-12">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold">Analytics</h1>
+        <p className="text-xs text-muted-foreground">Reports</p>
+        <h1 className="text-xl font-bold">Analytics</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Branch-wide performance overview across all domains.
         </p>
       </div>
 
       {/* Sticky filter bar */}
-      <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 -mx-4 border-b px-4 py-3 backdrop-blur">
+      <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 -mx-6 border-b px-6 py-3 backdrop-blur">
         <AnalyticsFilterBar params={params} onChange={setParams} />
       </div>
 
@@ -96,7 +97,7 @@ export default function AnalyticsPage() {
 
       {/* Sections */}
       {data && (
-        <div className="space-y-8">
+        <div className="space-y-10">
           <SectionSales      data={data.sales}     />
           <SectionStudents   data={data.students}  />
           <SectionBilling    data={data.billing}   />

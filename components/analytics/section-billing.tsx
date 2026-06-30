@@ -37,7 +37,7 @@ export function SectionBilling({ data }: Props) {
 
   return (
     <SectionWrapper title="Billing">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
         <KpiCard label="Collected"       value={fmt(kpis.total_collected)}   accent="success" />
         <KpiCard label="Outstanding"     value={fmt(kpis.total_outstanding)} accent="danger"  />
         <KpiCard label="Void"            value={fmt(kpis.total_void)}        accent="warning" />
@@ -47,10 +47,10 @@ export function SectionBilling({ data }: Props) {
         <KpiCard label="Fully Paid"      value={kpis.fully_paid_count}       accent="success" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         {/* Monthly stacked bar */}
-        <div className="rounded-lg border bg-card p-4">
-          <p className="mb-3 text-sm font-medium">Monthly Payment Trend</p>
+        <div className="rounded-xl border bg-card p-5">
+          <p className="mb-4 text-sm font-semibold">Monthly Payment Trend</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthly_trend}>
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -64,8 +64,8 @@ export function SectionBilling({ data }: Props) {
         </div>
 
         {/* Collection rate area */}
-        <div className="rounded-lg border bg-card p-4">
-          <p className="mb-3 text-sm font-medium">Collection Rate Trend</p>
+        <div className="rounded-xl border bg-card p-5">
+          <p className="mb-4 text-sm font-semibold">Collection Rate Trend</p>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={monthly_trend}>
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -84,8 +84,8 @@ export function SectionBilling({ data }: Props) {
         </div>
 
         {/* By grade stacked bar */}
-        <div className="rounded-lg border bg-card p-4 lg:col-span-2">
-          <p className="mb-3 text-sm font-medium">Payments by Grade</p>
+        <div className="rounded-xl border bg-card p-5 lg:col-span-2">
+          <p className="mb-4 text-sm font-semibold">Payments by Grade</p>
           {by_grade.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">No data</p>
           ) : (

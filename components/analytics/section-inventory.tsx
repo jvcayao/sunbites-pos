@@ -23,7 +23,7 @@ export function SectionInventory({ data }: Props) {
 
   return (
     <SectionWrapper title="Inventory">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard label="Total Items"      value={kpis.total_items} />
         <KpiCard label="Low Stock"        value={kpis.low_stock_count}   accent={kpis.low_stock_count > 0 ? "warning" : "default"} />
         <KpiCard label="Out of Stock"     value={kpis.out_of_stock_count} accent={kpis.out_of_stock_count > 0 ? "danger" : "default"} />
@@ -35,10 +35,10 @@ export function SectionInventory({ data }: Props) {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         {/* Top consumed items */}
-        <div className="rounded-lg border bg-card p-4">
-          <p className="mb-3 text-sm font-medium">Top Consumed Items</p>
+        <div className="rounded-xl border bg-card p-5">
+          <p className="mb-4 text-sm font-semibold">Top Consumed Items</p>
           {top_consumed.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">No data</p>
           ) : (
@@ -64,8 +64,8 @@ export function SectionInventory({ data }: Props) {
         </div>
 
         {/* Stock event trend */}
-        <div className="rounded-lg border bg-card p-4">
-          <p className="mb-3 text-sm font-medium">Stock Events (Low / Out)</p>
+        <div className="rounded-xl border bg-card p-5">
+          <p className="mb-4 text-sm font-semibold">Stock Events (Low / Out)</p>
           {stock_events.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center text-sm">No data</p>
           ) : (

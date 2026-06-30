@@ -36,7 +36,7 @@ export function SectionCredits({ data }: Props) {
 
   return (
     <SectionWrapper title="Credits">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <KpiCard
           label="Total Credit Balance"
           value={fmt(kpis.total_credit_balance)}
@@ -58,8 +58,8 @@ export function SectionCredits({ data }: Props) {
         />
       </div>
 
-      <div className="rounded-lg border bg-card p-4">
-        <p className="mb-3 text-sm font-medium">Credit Balance Distribution</p>
+      <div className="rounded-xl border bg-card p-5">
+        <p className="mb-4 text-sm font-semibold">Credit Balance Distribution</p>
         {distribution.length === 0 ? (
           <p className="text-muted-foreground py-8 text-center text-sm">
             No students currently on credit
