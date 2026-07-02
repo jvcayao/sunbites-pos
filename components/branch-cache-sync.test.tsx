@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import {
   QueryClient,
   QueryClientProvider,
@@ -97,7 +97,7 @@ describe("BranchCacheSync", () => {
     expect(resetSpy).not.toHaveBeenCalled();
   });
 
-  it("clears the cache on logout (B -> null)", async () => {
+  it("clears the cache on logout (B -> null) using clear(), not resetQueries()", async () => {
     act(() => {
       useAuthStore.getState().login("token", user);
       useAuthStore.getState().setActiveBranch(branchA);
@@ -105,14 +105,16 @@ describe("BranchCacheSync", () => {
 
     const { queryClient } = renderWithClient();
     await screen.findByText("branch:1");
-    expect(queryClient.getQueryData(["probe"])).toBeDefined();
+
+    const clearSpy = jest.spyOn(queryClient, "clear");
+    const resetSpy = jest.spyOn(queryClient, "resetQueries");
 
     act(() => {
       useAuthStore.getState().logout(); // activeBranch -> null
     });
 
-    await waitFor(() =>
-      expect(queryClient.getQueryData(["probe"])).toBeUndefined(),
-    );
+    expect(clearSpy).toHaveBeenCalledTimes(1);
+    expect(resetSpy).not.toHaveBeenCalled();
+    expect(queryClient.getQueryData(["probe"])).toBeUndefined();
   });
 });
