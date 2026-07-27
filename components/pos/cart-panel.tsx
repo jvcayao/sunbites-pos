@@ -227,7 +227,10 @@ export function CartPanel({ onOrderComplete, className }: Props) {
         quantity: item.quantity,
       })),
       notes: notes || undefined,
-      discount_amount: discountAmount > 0 ? discountAmount : undefined,
+      // The API recomputes the discount from type + value; sending a derived
+      // amount would be ignored and the customer charged the full subtotal.
+      discount_type: discountAmount > 0 ? discountType : undefined,
+      discount_value: discountAmount > 0 ? discountValue : undefined,
       discount_reason: discountAmount > 0 ? discountReason : undefined,
       amount_tendered: paymentMethod === "cash" ? tendered : undefined,
       reference_number:
@@ -332,6 +335,7 @@ export function CartPanel({ onOrderComplete, className }: Props) {
             type="number"
             min="0"
             step="0.01"
+            aria-label="Discount amount"
             placeholder={discountType === "percent" ? "0%" : "₱0.00"}
             value={discountInput}
             onChange={(e) => {
@@ -343,6 +347,7 @@ export function CartPanel({ onOrderComplete, className }: Props) {
           {discountAmount > 0 && (
             <input
               type="text"
+              aria-label="Discount reason"
               placeholder="Discount reason (required)"
               value={discountReason}
               onChange={(e) => {
