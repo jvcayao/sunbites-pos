@@ -22,6 +22,13 @@ export interface Feedback {
   } | null;
 }
 
+/** Response shape of POST /references/feedback/{id}/reply. */
+export interface FeedbackReplyResponse {
+  id: number;
+  admin_reply: string;
+  replied_at: string;
+}
+
 export interface PaginatedFeedback {
   data: Feedback[];
   meta: {

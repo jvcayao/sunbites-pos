@@ -34,6 +34,10 @@ import type { Feedback, FeedbackCategory } from "@/types/feedback";
 // Constants
 // ---------------------------------------------------------------------------
 
+/** Kept in sync with the `reply` validation rules on the API. */
+const REPLY_MIN_LENGTH = 5;
+const REPLY_MAX_LENGTH = 2000;
+
 const CATEGORY_CONFIG: Record<
   FeedbackCategory,
   { label: string; className: string }
@@ -137,14 +141,25 @@ function FeedbackDetailSheet({
     }
   }, [feedback]);
 
+  /** Mirrors the API rules on `reply`: required, min 5, max 2000. */
+  function validateReply(value: string): string {
+    if (!value) return "Reply cannot be empty.";
+    if (value.length < REPLY_MIN_LENGTH) {
+      return `Reply must be at least ${REPLY_MIN_LENGTH} characters.`;
+    }
+    if (value.length > REPLY_MAX_LENGTH) {
+      return `Reply must not exceed ${REPLY_MAX_LENGTH} characters.`;
+    }
+    return "";
+  }
+
   function handleSubmitReply(e: React.FormEvent) {
     e.preventDefault();
-    if (!reply.trim()) {
-      setReplyError("Reply cannot be empty.");
-      return;
-    }
-    setReplyError("");
-    if (feedback) onReply(feedback.id, reply.trim());
+    const trimmed = reply.trim();
+    const error = validateReply(trimmed);
+    setReplyError(error);
+    if (error) return;
+    if (feedback) onReply(feedback.id, trimmed);
   }
 
   return (
