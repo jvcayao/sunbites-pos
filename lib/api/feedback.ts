@@ -1,6 +1,9 @@
 import { apiClient } from "./client";
 
-import type { PaginatedFeedback } from "@/types/feedback";
+import type {
+  FeedbackReplyResponse,
+  PaginatedFeedback,
+} from "@/types/feedback";
 
 interface FeedbackListParams {
   search?: string;
@@ -16,9 +19,9 @@ export const feedbackApi = {
       params: params as Record<string, string | number | boolean | undefined>,
     }),
 
-  reply: (id: number, admin_reply: string) =>
-    apiClient.post<{ message: string }>(`/references/feedback/${id}/reply`, {
-      admin_reply,
+  reply: (id: number, reply: string) =>
+    apiClient.post<FeedbackReplyResponse>(`/references/feedback/${id}/reply`, {
+      reply,
     }),
 
   markRead: (id: number) =>
