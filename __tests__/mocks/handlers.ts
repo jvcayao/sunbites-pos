@@ -671,7 +671,14 @@ export const handlers = [
   http.get(`${API}/students/:id/orders`, () =>
     HttpResponse.json({
       data: [],
-      meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 },
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        total: 0,
+        from: null,
+        to: null,
+      },
     }),
   ),
 

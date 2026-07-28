@@ -151,7 +151,9 @@ export interface CheckoutPayload {
   payment_method: OrderPaymentMethod;
   items: CheckoutItem[];
   notes?: string;
-  discount_amount?: number;
+  /** The API derives the peso discount from these two; it rejects a precomputed amount. */
+  discount_type?: "percent" | "fixed";
+  discount_value?: number;
   discount_reason?: string;
   amount_tendered?: number;
   reference_number?: string;
