@@ -61,10 +61,16 @@ function formatDateTime(iso: string): string {
   });
 }
 
-function TypeBadge({ type }: { type: "charged" | "settled" | "voided" }) {
+function TypeBadge({
+  type,
+}: {
+  type: "charged" | "settled" | "waived" | "voided";
+}) {
   const map = {
     charged: "bg-red-100 text-red-700 border-red-300",
     settled: "bg-green-100 text-green-700 border-green-300",
+    // Amber, deliberately distinct from settled: a waive collects no money.
+    waived: "bg-amber-100 text-amber-800 border-amber-300",
     voided: "bg-muted text-muted-foreground border-border",
   };
   return (
@@ -272,26 +278,69 @@ export default function CreditsReportPage() {
 
       {/* Summary cards */}
       {summary && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryCard
-            label="Total Charged"
-            value={formatPeso(summary.total_charged)}
-            colorClass="border-red-200 bg-red-50"
-          />
-          <SummaryCard
-            label="Total Settled"
-            value={formatPeso(summary.total_settled)}
-            colorClass="border-green-200 bg-green-50"
-          />
-          <SummaryCard
-            label="Total Voided"
-            value={formatPeso(summary.total_voided)}
-          />
-          <SummaryCard
-            label="Net Outstanding"
-            value={formatPeso(summary.net_outstanding)}
-            colorClass="border-amber-200 bg-amber-50"
-          />
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <SummaryCard
+              label="Total Charged"
+              value={formatPeso(summary.total_charged)}
+              colorClass="border-red-200 bg-red-50"
+            />
+            <SummaryCard
+              label="Total Settled"
+              value={formatPeso(summary.total_settled)}
+              colorClass="border-green-200 bg-green-50"
+            />
+            <SummaryCard
+              label="Total Waived"
+              value={formatPeso(summary.total_waived)}
+              colorClass="border-amber-200 bg-amber-50"
+            />
+            <SummaryCard
+              label="Total Voided"
+              value={formatPeso(summary.total_voided)}
+            />
+            <SummaryCard
+              label="Net Outstanding"
+              value={formatPeso(summary.net_outstanding)}
+              colorClass="border-amber-200 bg-amber-50"
+            />
+          </div>
+
+          {/*
+            How settlements were paid. "From wallet" is separated because it moves an
+            existing prepaid balance and brings no cash into the drawer — mixing it into
+            the cash figure is what makes a drawer fail to reconcile.
+          */}
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Settled by method
+              </span>
+              <span>
+                Cash{" "}
+                <strong>{formatPeso(summary.settled_by_method.cash)}</strong>
+              </span>
+              <span>
+                GCash{" "}
+                <strong>{formatPeso(summary.settled_by_method.gcash)}</strong>
+              </span>
+              <span>
+                Bank Transfer{" "}
+                <strong>
+                  {formatPeso(summary.settled_by_method.bank_transfer)}
+                </strong>
+              </span>
+              <span className="text-muted-foreground">
+                From wallet{" "}
+                <strong>{formatPeso(summary.settled_by_method.wallet)}</strong>{" "}
+                <span className="text-xs">(no cash)</span>
+              </span>
+              <span className="ml-auto rounded-md bg-green-50 px-2 py-1 text-green-800">
+                Cash collected{" "}
+                <strong>{formatPeso(summary.settled_bringing_in_cash)}</strong>
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -375,9 +424,7 @@ export default function CreditsReportPage() {
                       {row.notes ?? "—"}
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground">
-                      {row.performed_by
-                        ? `${row.performed_by.first_name} ${row.performed_by.last_name}`
-                        : "—"}
+                      {row.performed_by ?? "—"}
                     </td>
                   </tr>
                 ))

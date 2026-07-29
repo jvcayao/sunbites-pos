@@ -12,11 +12,16 @@ import type {
   RecordPaymentPayload,
   SchoolMonth,
   SchoolMonthDefault,
+  CreditMutationResponse,
+  SettleCreditPayload,
   Student,
+  StudentLedgerParams,
+  StudentLedgerResponse,
   StudentShowResponse,
   SubscriptionPeriodPayload,
   UpdateStatusPayload,
   UpdateStudentPayload,
+  WaiveCreditPayload,
   WalletTopUpPayload,
 } from "@/types/student";
 import type { PaginatedOrders } from "@/types/order";
@@ -91,23 +96,41 @@ export const studentApi = {
     ),
 
   /**
-   * Settle outstanding credit for a student.
+   * Record a payment against a student's outstanding credit.
    *
-   * AUTHORIZATION NOTE: This action must only be called from UI surfaces
-   * that have already confirmed the user holds the "admin" or "manager" role.
-   * The Laravel API enforces this server-side, but callers must also gate the
-   * UI to prevent supervisors and cashiers from triggering this mutation.
+   * Open to ALL staff, including cashiers — the person taking the money at the
+   * counter is usually a cashier. Every settlement records who performed it.
    *
-   * @example
-   * // Correct usage — always check role before calling:
-   * if (user?.roles.includes("admin") || user?.roles.includes("manager")) {
-   *   await studentApi.settleCredit(studentId);
-   * }
+   * Pass payment_method "wallet" to apply an existing wallet balance instead of
+   * collecting new money; the API rejects it when the balance is short.
    */
-  settleCredit: (id: number) =>
-    apiClient.post<{ message: string; amount_settled: number }>(
+  settleCredit: (id: number, payload: SettleCreditPayload) =>
+    apiClient.post<CreditMutationResponse>(
       `/students/${id}/credit/settle`,
+      payload,
     ),
+
+  /**
+   * Write off credit that will not be collected.
+   *
+   * AUTHORIZATION NOTE: admin only. The API enforces this with `role:admin`, but
+   * callers must also hide the UI from non-admins — a waive destroys a
+   * receivable rather than collecting it.
+   */
+  waiveCredit: (id: number, payload: WaiveCreditPayload) =>
+    apiClient.post<CreditMutationResponse>(
+      `/students/${id}/credit/waive`,
+      payload,
+    ),
+
+  /**
+   * The unified ledger: wallet movements and credit activity in one stream.
+   * Replaces the `wallet_transactions` array that `show()` used to return.
+   */
+  ledger: (id: number, params?: StudentLedgerParams) =>
+    apiClient.get<StudentLedgerResponse>(`/students/${id}/ledger`, {
+      params: params as Record<string, string | number | boolean | undefined>,
+    }),
 
   orders: (id: number, page = 1) =>
     apiClient.get<PaginatedOrders>(`/students/${id}/orders`, {

@@ -210,14 +210,19 @@ export default function WalletReportPage() {
 
       {/* Summary cards */}
       {summary && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {/*
+            Deliberately NOT "Total Credits". On this page the Credit column means debt
+            owed, so calling deposits "credits" put two opposite meanings of the same word
+            on one screen.
+          */}
           <SummaryCard
-            label="Total Credits"
+            label="Total Deposits"
             value={formatPeso(summary.total_credits)}
             colorClass="border-green-200 bg-green-50"
           />
           <SummaryCard
-            label="Total Debits"
+            label="Total Spent"
             value={formatPeso(summary.total_debits)}
             colorClass="border-red-200 bg-red-50"
           />
@@ -229,6 +234,11 @@ export default function WalletReportPage() {
             label="Students Below ₱100"
             value={String(summary.students_below_100)}
             colorClass="border-yellow-200 bg-yellow-50"
+          />
+          <SummaryCard
+            label={`Credit Owed · ${summary.students_with_credit} student${summary.students_with_credit === 1 ? "" : "s"}`}
+            value={formatPeso(summary.total_outstanding_credit)}
+            colorClass="border-red-200 bg-red-50"
           />
         </div>
       )}

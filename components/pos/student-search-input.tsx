@@ -397,50 +397,66 @@ export function StudentSearchInput({
 
   useEffect(() => {
     const SCAN_THRESHOLD_MS = 100;
+    // A rapid run this long can only come from a scanner. Shorter runs fall
+    // through to the manual search path so typing is never read as a scan.
+    const MIN_BURST_LENGTH = 8;
 
     function handleGlobalKeyDown(e: KeyboardEvent) {
       const now = performance.now();
       const elapsed = now - globalScanLastKeyRef.current;
       globalScanLastKeyRef.current = now;
 
-      if (e.key.length === 1 && elapsed < SCAN_THRESHOLD_MS) {
-        scanBufferRef.current += e.key;
-        // Always suppress fast keystrokes from the DOM — scanner chars must NEVER
-        // appear in the visible input regardless of which element has focus.
-        e.preventDefault();
-        return;
-      }
+      if (e.key.length === 1) {
+        const isBurstKey = elapsed < SCAN_THRESHOLD_MS;
 
-      if (e.key === "Enter") {
-        const buffer = scanBufferRef.current;
-        scanBufferRef.current = "";
+        // A scan's leading character is indistinguishable from a keystroke by
+        // timing, so it must seed the buffer — discarding it truncated every
+        // scanned code, so the lookup was never even sent.
+        scanBufferRef.current = isBurstKey
+          ? scanBufferRef.current + e.key
+          : e.key;
 
-        if (buffer.length === 0) {
-          // Empty buffer = plain manual Enter key — let it propagate normally.
-          return;
-        }
-
-        // Buffer has content from a scanner sequence. Always consume this Enter.
-        e.preventDefault();
-        setInputValue("");
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-
-        if (QR_PATTERN.test(buffer)) {
-          globalQrLookupRef.current.mutate({ type: "qr", value: buffer });
-        } else {
-          // Scanner fired but the QR code is not a student QR — show Not Found dialog.
-          setShowNotFoundDialog(true);
+        // Suppress only confirmed burst characters from the DOM. The seeding
+        // character still reaches the input so manual typing stays visible.
+        if (isBurstKey) {
+          e.preventDefault();
         }
         return;
       }
 
-      if (e.key.length === 1 && elapsed >= SCAN_THRESHOLD_MS) {
-        scanBufferRef.current = "";
+      if (e.key !== "Enter") {
+        return;
+      }
+
+      const buffer = scanBufferRef.current;
+      scanBufferRef.current = "";
+
+      const isStudentQr = QR_PATTERN.test(buffer);
+      if (!isStudentQr && buffer.length < MIN_BURST_LENGTH) {
+        // Manual typing — let the input's own Enter handler run the search.
+        return;
+      }
+
+      // Consume the scan completely: the seeding character the browser typed
+      // into the input must not also fire a name search on this same Enter.
+      e.preventDefault();
+      e.stopPropagation();
+      setInputValue("");
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+      if (isStudentQr) {
+        globalQrLookupRef.current.mutate({ type: "qr", value: buffer });
+      } else {
+        // Scanner fired but the code is not a student QR — show Not Found dialog.
+        setShowNotFoundDialog(true);
       }
     }
 
-    document.addEventListener("keydown", handleGlobalKeyDown);
-    return () => document.removeEventListener("keydown", handleGlobalKeyDown);
+    // Capture phase: this must run before the input's own React onKeyDown so a
+    // consumed scan can stop it from also searching the seeding character.
+    document.addEventListener("keydown", handleGlobalKeyDown, true);
+    return () =>
+      document.removeEventListener("keydown", handleGlobalKeyDown, true);
   }, []);
 
   function handleSelectFromDropdown(student: PosStudentSearchResult) {
@@ -449,10 +465,18 @@ export function StudentSearchInput({
     fullStudentMutation.mutate(student.id);
   }
 
-  const fireNameSearch = useCallback(
+  const fireDebouncedLookup = useCallback(
     (value: string) => {
-      if (!value.trim()) return;
-      lookupMutation.mutate({ type: "search", value: value.trim() });
+      const trimmed = value.trim();
+      if (!trimmed) return;
+
+      // Scanners that type slower than the burst threshold and send no Enter
+      // terminator deliver the code here as ordinary input. Route by the shape
+      // of the value, not by how it arrived, or a scan becomes a name search.
+      lookupMutation.mutate({
+        type: QR_PATTERN.test(trimmed) ? "qr" : "search",
+        value: trimmed,
+      });
     },
     [lookupMutation],
   );
@@ -483,7 +507,7 @@ export function StudentSearchInput({
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = setTimeout(() => {
         if (inputRef.current?.value.trim()) {
-          fireNameSearch(inputRef.current.value);
+          fireDebouncedLookup(inputRef.current.value);
         }
       }, 300);
     }
