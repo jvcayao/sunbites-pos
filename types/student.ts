@@ -1,10 +1,6 @@
 export type StudentType = "subscription" | "non_subscription";
 export type EnrollmentStatus =
-  | "enrolled"
-  | "paused"
-  | "unenrolled"
-  | "banned"
-  | "graduated";
+  "enrolled" | "paused" | "unenrolled" | "banned" | "graduated";
 export type SchoolMonth =
   | "june"
   | "july"
@@ -106,14 +102,6 @@ export interface PaginatedStudents {
 
 export interface StudentShowResponse {
   student: Student;
-  wallet_transactions: Array<{
-    id: number;
-    type: string;
-    amount: number;
-    balance_after: number;
-    note: string | null;
-    created_at: string;
-  }>;
   activity_logs: Array<{
     id: number;
     description: string;
@@ -214,4 +202,81 @@ export interface RecordPaymentPayload {
   school_month: SchoolMonth;
   year: number;
   amount: string;
+}
+
+// ---------------------------------------------------------------- credit (spec 14)
+
+export type LedgerEntryType =
+  | "deposit"
+  | "withdraw"
+  | "credit_charged"
+  | "credit_settled"
+  | "credit_waived"
+  | "credit_voided";
+
+export type CreditSettlementMethod =
+  "cash" | "gcash" | "bank_transfer" | "wallet";
+
+export type LedgerEntryFilter = "all" | "topup" | "purchase" | "credit";
+
+export interface LedgerEntry {
+  id: string;
+  date: string;
+  entry_type: LedgerEntryType;
+  entry_label: string;
+  direction: "debit" | "credit";
+  amount: number;
+  payment_method: CreditSettlementMethod | null;
+  reference_number: string | null;
+  note: string | null;
+  performed_by: string | null;
+}
+
+export interface StudentLedgerResponse {
+  data: LedgerEntry[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+  };
+}
+
+export interface StudentLedgerParams {
+  entry_type?: LedgerEntryFilter;
+  from?: string;
+  to?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface SettleCreditPayload {
+  amount: number;
+  payment_method: CreditSettlementMethod;
+  reference_number?: string;
+  note?: string;
+}
+
+export interface WaiveCreditPayload {
+  amount: number;
+  reason: string;
+}
+
+export interface CreditMutationResponse {
+  message: string;
+  amount_settled?: number;
+  amount_waived?: number;
+  credit_balance: number;
+  wallet_balance: number;
+  transaction: {
+    id: string;
+    date: string | null;
+    type: string | null;
+    amount: number;
+    payment_method: CreditSettlementMethod | null;
+    reference_number: string | null;
+    note: string | null;
+  };
 }

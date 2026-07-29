@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import type { CreditSettlementMethod } from "@/types/student";
 
 export async function exportReport(
   path: string,
@@ -132,10 +133,16 @@ export interface WalletReportRow {
 }
 
 export interface WalletSummary {
+  /** Wallet deposits. Labelled "Total Deposits" in the UI — "credits" here means money
+   *  paid IN, which is the opposite of the Credit column's meaning (debt owed). */
   total_credits: number;
   total_debits: number;
   net_movement: number;
   students_below_100: number;
+  /** Branch-wide outstanding credit; always agrees with the credit report's
+   *  net_outstanding because both derive from students.credit_balance. */
+  total_outstanding_credit: number;
+  students_with_credit: number;
 }
 
 export interface WalletHistoryItem {
@@ -217,17 +224,25 @@ export interface CreditRow {
     student_number: string;
     grade_level: string;
   };
-  type: "charged" | "settled" | "voided";
+  type: "charged" | "settled" | "waived" | "voided";
   amount: number;
+  payment_method: CreditSettlementMethod | null;
+  payment_method_label: string | null;
+  reference_number: string | null;
   notes: string | null;
-  performed_by: { first_name: string; last_name: string } | null;
+  /** The API returns a formatted name string, never an object. */
+  performed_by: string | null;
 }
 
 export interface CreditSummary {
   total_charged: number;
   total_settled: number;
+  total_waived: number;
   total_voided: number;
   net_outstanding: number;
+  settled_by_method: Record<CreditSettlementMethod, number>;
+  /** Settlements that brought physical money in — excludes wallet-funded ones. */
+  settled_bringing_in_cash: number;
 }
 
 export interface BillingSummary {
@@ -296,6 +311,20 @@ export interface DailySummaryData {
     amount: number;
   }>;
   items_sold: Array<{ name: string; quantity_sold: number }>;
+  /**
+   * Credit collected today. Deliberately NOT part of total_revenue — that revenue was
+   * already booked on the original order date, so adding it again would double-count.
+   * `from_wallet` moves an existing balance and brings no cash into the drawer.
+   */
+  credit_collections: {
+    total: number;
+    count: number;
+    cash: number;
+    gcash: number;
+    bank_transfer: number;
+    from_wallet: number;
+    expected_in_drawer: number;
+  };
 }
 
 // ---------------------------------------------------------------------------
