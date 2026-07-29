@@ -637,8 +637,59 @@ export const handlers = [
   http.get(`${API}/students/:id`, () =>
     HttpResponse.json({
       student: studentFixture,
-      wallet_transactions: [],
       activity_logs: [],
+    }),
+  ),
+
+  // Unified wallet + credit ledger (spec 14). Replaced the `wallet_transactions`
+  // array that the student show payload used to return.
+  http.get(`${API}/students/:id/ledger`, () =>
+    HttpResponse.json({
+      data: [],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        total: 0,
+        from: null,
+        to: null,
+      },
+    }),
+  ),
+
+  http.post(`${API}/students/:id/credit/settle`, () =>
+    HttpResponse.json({
+      message: "Credit settled.",
+      amount_settled: 150,
+      credit_balance: 0,
+      wallet_balance: 0,
+      transaction: {
+        id: "credit-1",
+        date: "2026-07-29T10:00:00+08:00",
+        type: "settled",
+        amount: 150,
+        payment_method: "cash",
+        reference_number: null,
+        note: null,
+      },
+    }),
+  ),
+
+  http.post(`${API}/students/:id/credit/waive`, () =>
+    HttpResponse.json({
+      message: "Credit waived.",
+      amount_waived: 150,
+      credit_balance: 0,
+      wallet_balance: 0,
+      transaction: {
+        id: "credit-2",
+        date: "2026-07-29T10:00:00+08:00",
+        type: "waived",
+        amount: 150,
+        payment_method: null,
+        reference_number: null,
+        note: "Written off.",
+      },
     }),
   ),
 

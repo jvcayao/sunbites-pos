@@ -50,6 +50,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { contactApi } from "@/lib/api/contacts";
 import { studentApi } from "@/lib/api/students";
+
+import { SettleCreditDialog } from "./_components/settle-credit-dialog";
+import { WaiveCreditDialog } from "./_components/waive-credit-dialog";
+import { WalletTab } from "./_components/wallet-tab";
 import { useAuthStore } from "@/lib/store/auth";
 import { getCardAccentColors } from "@/lib/utils/card-accent-colors";
 import { cn } from "@/lib/utils";
@@ -375,6 +379,8 @@ interface WalletTopUpModalProps {
   onClose: () => void;
   studentId: number;
   currentBalance: number;
+  creditBalance: number;
+  onSettleCredit: () => void;
 }
 
 function WalletTopUpModal({
@@ -382,6 +388,8 @@ function WalletTopUpModal({
   onClose,
   studentId,
   currentBalance,
+  creditBalance,
+  onSettleCredit,
 }: WalletTopUpModalProps) {
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState("");
@@ -449,6 +457,27 @@ function WalletTopUpModal({
             Add funds to this student&apos;s wallet.
           </DialogDescription>
         </DialogHeader>
+
+        {creditBalance > 0 && (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+            <p className="font-medium text-destructive">
+              This student owes ₱{creditBalance.toFixed(2)} in credit.
+            </p>
+            <p className="mt-0.5 text-muted-foreground">
+              Topping up does not pay this.
+            </p>
+            <button
+              type="button"
+              className="mt-1.5 text-sm font-medium text-primary hover:underline"
+              onClick={() => {
+                onClose();
+                onSettleCredit();
+              }}
+            >
+              Settle Credit →
+            </button>
+          </div>
+        )}
 
         {successMsg ? (
           <>
@@ -2446,6 +2475,10 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     user?.roles.includes("admin") === true ||
     user?.roles.includes("manager") === true;
 
+  // Waiving destroys a receivable rather than collecting it — admin only, matching the
+  // `role:admin` middleware on POST /students/{student}/credit/waive.
+  const canWaiveCredit = user?.roles.includes("admin") === true;
+
   const canChangeType =
     user?.roles.includes("admin") === true ||
     user?.roles.includes("manager") === true ||
@@ -2454,6 +2487,8 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
   const canDeleteStudent = user?.roles.includes("admin") === true;
 
   const [showTopUp, setShowTopUp] = useState(false);
+  const [showSettleCredit, setShowSettleCredit] = useState(false);
+  const [showWaiveCredit, setShowWaiveCredit] = useState(false);
   const [showStatusPicker, setShowStatusPicker] = useState(false);
   const [showChangeType, setShowChangeType] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -2807,6 +2842,17 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
             <DropdownMenuItem onClick={() => window.print()}>
               Print QR Code
             </DropdownMenuItem>
+            {canWaiveCredit && Number(student.credit_balance ?? 0) > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setShowWaiveCredit(true)}
+                >
+                  Waive Credit
+                </DropdownMenuItem>
+              </>
+            )}
             {canDeleteStudent && (
               <>
                 <DropdownMenuSeparator />
@@ -2921,6 +2967,16 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
                 ₱{Number(student.wallet_balance ?? 0).toFixed(2)}
               </span>
             </div>
+            {Number(student.credit_balance ?? 0) > 0 && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
+                <span className="text-xs text-destructive block">
+                  Credit Owed
+                </span>
+                <span className="font-bold text-destructive">
+                  ₱{Number(student.credit_balance).toFixed(2)}
+                </span>
+              </div>
+            )}
             <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
               <span className="text-xs text-muted-foreground block">QR ID</span>
               <span className="font-mono text-xs">
@@ -3075,76 +3131,14 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
           </div>
         </TabsContent>
 
-        {/* Wallet Tab */}
+        {/* Wallet Tab — unified ledger (wallet + credit), Spec 14 */}
         <TabsContent value="wallet">
-          <div className="mt-4 space-y-4">
-            <div className="rounded-xl border border-border bg-card p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Current Balance
-                  </p>
-                  <p className="text-2xl font-bold text-foreground">
-                    ₱{Number(student.wallet_balance ?? 0).toFixed(2)}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => setShowTopUp(true)}
-                >
-                  + Top Up
-                </Button>
-              </div>
-
-              {data?.wallet_transactions &&
-              data.wallet_transactions.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/40">
-                        <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">
-                          Date
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">
-                          Type
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">
-                          Amount
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">
-                          Note
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.wallet_transactions.map((tx) => (
-                        <tr
-                          key={tx.id}
-                          className="border-b border-border hover:bg-muted/20"
-                        >
-                          <td className="px-3 py-2 text-xs text-muted-foreground">
-                            {new Date(tx.created_at).toLocaleDateString()}
-                          </td>
-                          <td className="px-3 py-2 capitalize">{tx.type}</td>
-                          <td className="px-3 py-2 font-medium">
-                            ₱{Number(tx.amount).toFixed(2)}
-                          </td>
-                          <td className="px-3 py-2 text-xs text-muted-foreground">
-                            {tx.note ?? "—"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No transactions yet.
-                </p>
-              )}
-            </div>
-          </div>
+          <WalletTab
+            studentId={student.id}
+            walletBalance={Number(student.wallet_balance ?? 0)}
+            creditBalance={Number(student.credit_balance ?? 0)}
+            onTopUp={() => setShowTopUp(true)}
+          />
         </TabsContent>
 
         {/* Order History Tab */}
@@ -3210,11 +3204,28 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
       </Tabs>
 
       {/* Modals */}
+      <SettleCreditDialog
+        open={showSettleCredit}
+        onClose={() => setShowSettleCredit(false)}
+        studentId={studentId!}
+        outstandingCredit={Number(student.credit_balance ?? 0)}
+        walletBalance={Number(student.wallet_balance ?? 0)}
+      />
+
+      <WaiveCreditDialog
+        open={showWaiveCredit}
+        onClose={() => setShowWaiveCredit(false)}
+        studentId={studentId!}
+        outstandingCredit={Number(student.credit_balance ?? 0)}
+      />
+
       <WalletTopUpModal
         open={showTopUp}
         onClose={() => setShowTopUp(false)}
         studentId={studentId!}
         currentBalance={Number(student.wallet_balance ?? 0)}
+        creditBalance={Number(student.credit_balance ?? 0)}
+        onSettleCredit={() => setShowSettleCredit(true)}
       />
 
       <StatusPickerDialog

@@ -205,6 +205,66 @@ export default function DailySummaryPage() {
             </div>
           </div>
 
+          {/*
+            Credit collections. Kept visually separate from sales because it is a
+            receivable converting to cash, not a new sale — the drawer reconciles as
+            Sales + Top-ups + Credit Collections.
+          */}
+          <div>
+            <h3 className="mb-2 font-semibold text-foreground">
+              Credit Collections
+            </h3>
+            <div className="overflow-x-auto rounded-xl border border-border bg-card">
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-b border-border">
+                    <td className="px-4 py-2.5">Cash</td>
+                    <td className="px-4 py-2.5 text-right font-medium">
+                      {formatPeso(summary.credit_collections.cash)}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-border">
+                    <td className="px-4 py-2.5">GCash</td>
+                    <td className="px-4 py-2.5 text-right font-medium">
+                      {formatPeso(summary.credit_collections.gcash)}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-border">
+                    <td className="px-4 py-2.5">Bank Transfer</td>
+                    <td className="px-4 py-2.5 text-right font-medium">
+                      {formatPeso(summary.credit_collections.bank_transfer)}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <td className="px-4 py-2.5">
+                      From wallet{" "}
+                      <span className="text-xs">(no cash received)</span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right font-medium">
+                      {formatPeso(summary.credit_collections.from_wallet)}
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot className="bg-muted/40">
+                  <tr>
+                    <td className="px-4 py-2.5 font-bold text-foreground">
+                      Collected in cash today
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        {summary.credit_collections.count} settlement
+                        {summary.credit_collections.count === 1 ? "" : "s"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-lg font-extrabold text-green-700">
+                      {formatPeso(
+                        summary.credit_collections.expected_in_drawer,
+                      )}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
           {/* Per-cashier breakdown */}
           <div>
             <h3 className="mb-2 font-semibold text-foreground">
