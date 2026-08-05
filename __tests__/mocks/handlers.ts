@@ -715,6 +715,16 @@ export const handlers = [
     }),
   ),
 
+  http.post(`${API}/students/:id/wallet/top-ups/:transactionId/void`, () =>
+    HttpResponse.json({
+      message: "Top-up voided successfully.",
+      voided_amount: 500.0,
+      shortfall_amount: 0,
+      new_wallet_balance: 450.0,
+      new_credit_balance: 0,
+    }),
+  ),
+
   http.get(`${API}/students/:id/payments`, () =>
     HttpResponse.json(paymentsFixture),
   ),

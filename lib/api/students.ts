@@ -21,6 +21,8 @@ import type {
   SubscriptionPeriodPayload,
   UpdateStatusPayload,
   UpdateStudentPayload,
+  VoidWalletTopUpPayload,
+  VoidWalletTopUpResponse,
   WaiveCreditPayload,
   WalletTopUpPayload,
 } from "@/types/student";
@@ -92,6 +94,16 @@ export const studentApi = {
   topUp: (id: number, payload: WalletTopUpPayload) =>
     apiClient.post<{ message: string; new_balance: number }>(
       `/students/${id}/wallet/top-up`,
+      payload,
+    ),
+
+  voidTopUp: (
+    studentId: number,
+    walletTransactionId: number,
+    payload: VoidWalletTopUpPayload,
+  ) =>
+    apiClient.post<VoidWalletTopUpResponse>(
+      `/students/${studentId}/wallet/top-ups/${walletTransactionId}/void`,
       payload,
     ),
 
