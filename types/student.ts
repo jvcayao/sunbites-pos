@@ -209,6 +209,7 @@ export interface RecordPaymentPayload {
 export type LedgerEntryType =
   | "deposit"
   | "withdraw"
+  | "topup_voided"
   | "credit_charged"
   | "credit_settled"
   | "credit_waived"
@@ -230,6 +231,8 @@ export interface LedgerEntry {
   reference_number: string | null;
   note: string | null;
   performed_by: string | null;
+  voided: boolean;
+  wallet_transaction_id: number | null;
 }
 
 export interface StudentLedgerResponse {
@@ -262,6 +265,18 @@ export interface SettleCreditPayload {
 export interface WaiveCreditPayload {
   amount: number;
   reason: string;
+}
+
+export interface VoidWalletTopUpPayload {
+  reason: string;
+}
+
+export interface VoidWalletTopUpResponse {
+  message: string;
+  voided_amount: number;
+  shortfall_amount: number;
+  new_wallet_balance: number;
+  new_credit_balance: number;
 }
 
 export interface CreditMutationResponse {

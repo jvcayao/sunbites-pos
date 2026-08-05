@@ -5,9 +5,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStudentLedger } from "@/hooks/use-student-ledger";
+import { useAuthStore } from "@/lib/store/auth";
 import { cn } from "@/lib/utils";
 
 import { SettleCreditDialog } from "./settle-credit-dialog";
+import { VoidTopUpDialog } from "./void-topup-dialog";
 
 import type { LedgerEntry, LedgerEntryFilter } from "@/types/student";
 
@@ -34,8 +36,16 @@ export function WalletTab({
   const [filter, setFilter] = useState<LedgerEntryFilter>("all");
   const [page, setPage] = useState(1);
   const [showSettle, setShowSettle] = useState(false);
+  const [voidTarget, setVoidTarget] = useState<LedgerEntry | null>(null);
 
   const { data, isLoading, error } = useStudentLedger(studentId, filter, page);
+
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.roles.includes("admin") === true;
+  const canVoidTopUp =
+    isAdmin ||
+    user?.roles.includes("manager") === true ||
+    user?.roles.includes("supervisor") === true;
 
   const owesCredit = creditBalance > 0;
 
@@ -154,11 +164,20 @@ export function WalletTab({
                     <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">
                       Staff
                     </th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.data.map((entry) => (
-                    <LedgerRow key={entry.id} entry={entry} />
+                    <LedgerRow
+                      key={entry.id}
+                      entry={entry}
+                      canVoidTopUp={canVoidTopUp}
+                      isAdmin={isAdmin}
+                      onVoid={setVoidTarget}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -202,12 +221,34 @@ export function WalletTab({
         outstandingCredit={creditBalance}
         walletBalance={walletBalance}
       />
+
+      {voidTarget && voidTarget.wallet_transaction_id !== null && (
+        <VoidTopUpDialog
+          open
+          onClose={() => setVoidTarget(null)}
+          studentId={studentId}
+          walletTransactionId={voidTarget.wallet_transaction_id}
+          originalAmount={voidTarget.amount}
+          currentWalletBalance={walletBalance}
+        />
+      )}
     </div>
   );
 }
 
-function LedgerRow({ entry }: { entry: LedgerEntry }) {
+interface LedgerRowProps {
+  entry: LedgerEntry;
+  canVoidTopUp: boolean;
+  isAdmin: boolean;
+  onVoid: (entry: LedgerEntry) => void;
+}
+
+function LedgerRow({ entry, canVoidTopUp, isAdmin, onVoid }: LedgerRowProps) {
   const isDebit = entry.direction === "debit";
+  const isVoidableDeposit = entry.entry_type === "deposit" && !entry.voided;
+  const isToday =
+    new Date(entry.date).toDateString() === new Date().toDateString();
+  const disabledBySameDayWindow = !isAdmin && !isToday;
 
   return (
     <tr className="border-b border-border hover:bg-muted/20">
@@ -230,6 +271,7 @@ function LedgerRow({ entry }: { entry: LedgerEntry }) {
         className={cn(
           "px-3 py-2 font-medium",
           isDebit ? "text-destructive" : "text-green-700",
+          entry.voided && "line-through",
         )}
       >
         {isDebit ? "−" : "+"}₱{entry.amount.toFixed(2)}
@@ -239,6 +281,29 @@ function LedgerRow({ entry }: { entry: LedgerEntry }) {
       </td>
       <td className="px-3 py-2 text-xs text-muted-foreground">
         {entry.performed_by ?? "—"}
+      </td>
+      <td className="px-3 py-2">
+        {entry.entry_type === "deposit" && entry.voided && (
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+            Voided
+          </span>
+        )}
+        {isVoidableDeposit && canVoidTopUp && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={disabledBySameDayWindow}
+            title={
+              disabledBySameDayWindow
+                ? "Only an admin can void a top-up from a previous day."
+                : undefined
+            }
+            onClick={() => onVoid(entry)}
+          >
+            Void
+          </Button>
+        )}
       </td>
     </tr>
   );
